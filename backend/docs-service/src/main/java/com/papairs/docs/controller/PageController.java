@@ -4,9 +4,13 @@ import com.papairs.docs.dto.request.CreatePageRequest;
 import com.papairs.docs.dto.request.UpdatePageRequest;
 import com.papairs.docs.model.Page;
 import com.papairs.docs.service.PageService;
+import com.papairs.docs.util.UserId;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/docs")
@@ -19,12 +23,14 @@ public class PageController {
     }
 
     /**
-     * Get user ID from request header: X-User-Id
-     * @param request HTTP servlet request
-     * @return User ID
+     * Get list of pages for the user
+     * @param httpRequest HTTP servlet request
+     * @return ResponseEntity with list of pages
      */
-    private String getUserId(HttpServletRequest request) {
-        return request.getHeader("X-User-Id");
+    @GetMapping("/pages")
+    public ResponseEntity<List<Page>> getPages(HttpServletRequest httpRequest) {
+        List<Page> pages = pageService.getUserPages(UserId.extract(httpRequest));
+        return ResponseEntity.ok(pages);
     }
 
     /**
@@ -35,11 +41,10 @@ public class PageController {
      */
     @PostMapping("/pages")
     public ResponseEntity<Page> createPage(
-            @RequestBody CreatePageRequest request,
+            @Valid @RequestBody CreatePageRequest request,
             HttpServletRequest httpRequest
     ) {
-        String userId = getUserId(httpRequest);
-        Page page = pageService.createPage(request.getTitle(), userId);
+        Page page = pageService.createPage(request.getTitle(), request.getParentFolderId(), UserId.extract(httpRequest));
         return ResponseEntity.status(201).body(page);
     }
 
