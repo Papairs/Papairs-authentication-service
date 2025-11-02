@@ -3,6 +3,7 @@ package com.papairs.docs.service;
 import com.papairs.docs.model.Page;
 import com.papairs.docs.repository.PageRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,7 +11,6 @@ import java.util.UUID;
 @Service
 public class PageService {
     private final PageRepository pageRepository;
-
     public PageService(PageRepository pageRepository) {
         this.pageRepository = pageRepository;
     }
@@ -21,10 +21,12 @@ public class PageService {
      * @param ownerId owner's user ID
      * @return Created Page entity
      */
-    public Page createPage(String title, String ownerId) {
+    @Transactional
+    public Page createPage(String title, String ownerId, String folderId) {
         Page page = new Page();
         page.setPageId(UUID.randomUUID().toString());
         page.setTitle(title);
+        page.setFolderId(folderId);
         page.setOwnerId(ownerId);
         page.setContent("");
         return pageRepository.save(page);
@@ -36,6 +38,7 @@ public class PageService {
      * @param content new content
      * @return Updated Page entity
      */
+    @Transactional
     public Page updatePage(String pageId, String content) {
         Page page = pageRepository.findById(pageId)
                 .orElseThrow(() -> new IllegalArgumentException("Page not found"));
@@ -66,7 +69,45 @@ public class PageService {
      * Delete a page by ID
      * @param pageId page ID
      */
+    @Transactional
     public void deletePage(String pageId) {
         pageRepository.deleteById(pageId);
     }
+
+    /**
+     * Check if a folder has any pages
+     * @param folderId folder ID
+     * @return true if folder has pages, else false
+     */
+    public boolean folderHasPages(String folderId) {
+        return pageRepository.existsByFolderId(folderId);
+    }
+
+    /**
+     * Get page count in a folder
+     * @param folderId
+     * @return
+     */
+    public long getPageCountInFolder(String folderId) {
+        return pageRepository.countByFolderId(folderId);
+    }
+
+    /**
+     * Delete all pages in a folder
+     * @param folderId folder ID
+     */
+    @Transactional
+    public void deleteAllPagesInFolder(String folderId) {
+        pageRepository.deleteByFolderId(folderId);
+    }
+
+    /**
+     * Move a page to a different folder
+     * @param pageId page ID
+     * @param targetFolderId target folder ID
+     * @return Updated Page entity
+     */
+    @Transactional
+    public Page movePage(String pageId, String targetFolderId) {
+        Page page = getPage(pageId);
 }
