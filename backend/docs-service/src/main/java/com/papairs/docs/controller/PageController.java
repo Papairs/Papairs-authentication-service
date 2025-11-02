@@ -75,6 +75,21 @@ public class PageController {
     }
 
     /**
+     * Rename a page
+     * @param pageId page ID
+     * @param request rename page request
+     * @return ResponseEntity with renamed page
+     */
+    @PostMapping("/pages/{pageId}")
+    public ResponseEntity<Page> renamePage(
+            @PathVariable String pageId,
+            @RequestBody RenamePageRequest request
+    ) {
+        Page renamed = pageService.renamePage(pageId, request.getNewTitle());
+        return ResponseEntity.ok(renamed);
+    }
+
+    /**
      * Move a page to a new folder
      * @param pageId page ID
      * @param request move page request

@@ -46,6 +46,13 @@ public class PageService {
         return pageRepository.save(page);
     }
 
+    @Transactional
+    public Page renamePage(String pageId, String newTitle) {
+        Page page = getPage(pageId);
+        page.setTitle(newTitle);
+        return pageRepository.save(page);
+    }
+
     /**
      * Get a page by ID
      * @param pageId page ID
