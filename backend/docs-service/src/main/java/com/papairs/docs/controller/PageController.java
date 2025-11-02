@@ -1,6 +1,7 @@
 package com.papairs.docs.controller;
 
 import com.papairs.docs.dto.request.CreatePageRequest;
+import com.papairs.docs.dto.request.MovePageRequest;
 import com.papairs.docs.dto.request.UpdatePageRequest;
 import com.papairs.docs.model.Page;
 import com.papairs.docs.service.PageService;
@@ -71,6 +72,21 @@ public class PageController {
     ) {
         Page updated = pageService.updatePage(pageId, request.getContent());
         return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * Move a page to a new folder
+     * @param pageId page ID
+     * @param request move page request
+     * @return
+     */
+    @PostMapping("/pages/{pageId}/move")
+    public ResponseEntity<Page> movePage(
+            @PathVariable String pageId,
+            @Valid @RequestBody MovePageRequest request
+    ) {
+        Page moved = pageService.movePage(pageId, request.getNewParentId());
+        return ResponseEntity.ok(moved);
     }
 
     /**
