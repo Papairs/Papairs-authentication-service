@@ -1,5 +1,6 @@
 package com.papairs.docs.service;
 
+import com.papairs.docs.exception.ResourceNotFoundException;
 import com.papairs.docs.model.Page;
 import com.papairs.docs.repository.PageRepository;
 import org.springframework.stereotype.Service;
@@ -40,8 +41,7 @@ public class PageService {
      */
     @Transactional
     public Page updatePage(String pageId, String content) {
-        Page page = pageRepository.findById(pageId)
-                .orElseThrow(() -> new IllegalArgumentException("Page not found"));
+        Page page = getPage(pageId);
         page.setContent(content);
         return pageRepository.save(page);
     }
@@ -53,7 +53,7 @@ public class PageService {
      */
     public Page getPage(String pageId) {
         return pageRepository.findById(pageId)
-                .orElseThrow(() -> new IllegalArgumentException("Page not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
     }
 
     /**
