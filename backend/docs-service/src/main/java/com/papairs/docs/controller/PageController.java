@@ -2,6 +2,7 @@ package com.papairs.docs.controller;
 
 import com.papairs.docs.dto.request.CreatePageRequest;
 import com.papairs.docs.dto.request.MovePageRequest;
+import com.papairs.docs.dto.request.RenamePageRequest;
 import com.papairs.docs.dto.request.UpdatePageRequest;
 import com.papairs.docs.model.Page;
 import com.papairs.docs.service.PageService;
@@ -36,6 +37,7 @@ public class PageController {
 
     /**
      * Create a new page
+     * TODO: Validate parent folder exists and belongs to the user
      * @param request create page request
      * @param httpRequest HTTP servlet request
      * @return ResponseEntity with created page
@@ -51,6 +53,7 @@ public class PageController {
 
     /**
      * Get a page by ID
+     * TODO: Check if the page belongs to the user
      * @param pageId page ID
      * @return ResponseEntity with the page
      */
@@ -61,6 +64,7 @@ public class PageController {
 
     /**
      * Update a page's content
+     * TODO: Check if the page belongs to the user
      * @param pageId page ID
      * @param request update page request
      * @return ResponseEntity with updated page
@@ -76,6 +80,7 @@ public class PageController {
 
     /**
      * Rename a page
+     * TODO: Check if the page belongs to the user
      * @param pageId page ID
      * @param request rename page request
      * @return ResponseEntity with renamed page
@@ -91,9 +96,10 @@ public class PageController {
 
     /**
      * Move a page to a new folder
+     * TODO: Check if the new parent folder exists and belongs to the user
      * @param pageId page ID
      * @param request move page request
-     * @return
+     * @return ResponseEntity with moved page
      */
     @PostMapping("/pages/{pageId}/move")
     public ResponseEntity<Page> movePage(
@@ -106,6 +112,7 @@ public class PageController {
 
     /**
      * Delete a page by ID
+     * TODO: Check if the page belongs to the user
      * @param pageId page ID
      * @return ResponseEntity with no content
      */
