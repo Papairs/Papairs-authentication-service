@@ -85,8 +85,8 @@ public class PageService {
 
     /**
      * Get page count in a folder
-     * @param folderId
-     * @return
+     * @param folderId folder ID
+     * @return number of pages in the folder
      */
     public long getPageCountInFolder(String folderId) {
         return pageRepository.countByFolderId(folderId);
@@ -110,4 +110,7 @@ public class PageService {
     @Transactional
     public Page movePage(String pageId, String targetFolderId) {
         Page page = getPage(pageId);
+        page.setFolderId(targetFolderId);
+        return pageRepository.save(page);
+    }
 }
