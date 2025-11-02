@@ -1,6 +1,5 @@
 package com.papairs.docs.service;
 
-import com.papairs.docs.exception.ResourceNotFoundException;
 import com.papairs.docs.model.Page;
 import com.papairs.docs.repository.PageRepository;
 import org.springframework.stereotype.Service;
@@ -12,8 +11,11 @@ import java.util.UUID;
 @Service
 public class PageService {
     private final PageRepository pageRepository;
-    public PageService(PageRepository pageRepository) {
+    private final PermissionService permissionService;
+
+    public PageService(PageRepository pageRepository, PermissionService permissionService) {
         this.pageRepository = pageRepository;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -24,6 +26,8 @@ public class PageService {
      */
     @Transactional
     public Page createPage(String title, String ownerId, String folderId) {
+        permissionService.verifyFolderOwnership(folderId, ownerId);
+
         Page page = new Page();
         page.setPageId(UUID.randomUUID().toString());
         page.setTitle(title);
@@ -40,15 +44,22 @@ public class PageService {
      * @return Updated Page entity
      */
     @Transactional
-    public Page updatePage(String pageId, String content) {
-        Page page = getPage(pageId);
+    public Page updatePage(String pageId, String userId, String content) {
+        Page page = permissionService.getPageWithCheck(pageId, userId);
         page.setContent(content);
         return pageRepository.save(page);
     }
 
+    /**
+     * Rename a page
+     * @param pageId page ID
+     * @param userId user ID
+     * @param newTitle new title
+     * @return Updated Page entity
+     */
     @Transactional
-    public Page renamePage(String pageId, String newTitle) {
-        Page page = getPage(pageId);
+    public Page renamePage(String pageId, String userId, String newTitle) {
+        Page page = permissionService.getPageWithCheck(pageId, userId);
         page.setTitle(newTitle);
         return pageRepository.save(page);
     }
@@ -58,9 +69,8 @@ public class PageService {
      * @param pageId page ID
      * @return Page entity
      */
-    public Page getPage(String pageId) {
-        return pageRepository.findById(pageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
+    public Page getPage(String pageId, String userId) {
+        return permissionService.getPageWithCheck(pageId, userId);
     }
 
     /**
@@ -77,8 +87,9 @@ public class PageService {
      * @param pageId page ID
      */
     @Transactional
-    public void deletePage(String pageId) {
-        pageRepository.deleteById(pageId);
+    public void deletePage(String pageId, String userId) {
+        Page page = permissionService.getPageWithCheck(pageId, userId);
+        pageRepository.delete(page);
     }
 
     /**
@@ -115,8 +126,10 @@ public class PageService {
      * @return Updated Page entity
      */
     @Transactional
-    public Page movePage(String pageId, String targetFolderId) {
-        Page page = getPage(pageId);
+    public Page movePage(String pageId, String targetFolderId, String userId) {
+        Page page = permissionService.getPageWithCheck(pageId, userId);
+        permissionService.verifyFolderOwnership(targetFolderId, userId);
+
         page.setFolderId(targetFolderId);
         return pageRepository.save(page);
     }

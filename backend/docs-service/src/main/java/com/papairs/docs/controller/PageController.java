@@ -37,7 +37,6 @@ public class PageController {
 
     /**
      * Create a new page
-     * TODO: Validate parent folder exists and belongs to the user
      * @param request create page request
      * @param httpRequest HTTP servlet request
      * @return ResponseEntity with created page
@@ -47,24 +46,25 @@ public class PageController {
             @Valid @RequestBody CreatePageRequest request,
             HttpServletRequest httpRequest
     ) {
-        Page page = pageService.createPage(request.getTitle(), request.getParentFolderId(), UserId.extract(httpRequest));
+        Page page = pageService.createPage(request.getTitle(), UserId.extract(httpRequest), request.getParentFolderId());
         return ResponseEntity.status(201).body(page);
     }
 
     /**
      * Get a page by ID
-     * TODO: Check if the page belongs to the user
      * @param pageId page ID
      * @return ResponseEntity with the page
      */
     @GetMapping("/pages/{pageId}")
-    public ResponseEntity<Page> getPage(@PathVariable String pageId) {
-        return ResponseEntity.ok(pageService.getPage(pageId));
+    public ResponseEntity<Page> getPage(
+            @PathVariable String pageId,
+            HttpServletRequest request
+    ) {
+        return ResponseEntity.ok(pageService.getPage(pageId, UserId.extract(request)));
     }
 
     /**
      * Update a page's content
-     * TODO: Check if the page belongs to the user
      * @param pageId page ID
      * @param request update page request
      * @return ResponseEntity with updated page
@@ -72,15 +72,15 @@ public class PageController {
     @PutMapping("/pages/{pageId}")
     public ResponseEntity<Page> updatePage(
             @PathVariable String pageId,
-            @RequestBody UpdatePageRequest request
+            @RequestBody UpdatePageRequest updatePageRequest,
+            HttpServletRequest request
     ) {
-        Page updated = pageService.updatePage(pageId, request.getContent());
+        Page updated = pageService.updatePage(pageId, UserId.extract(request), updatePageRequest.getContent());
         return ResponseEntity.ok(updated);
     }
 
     /**
      * Rename a page
-     * TODO: Check if the page belongs to the user
      * @param pageId page ID
      * @param request rename page request
      * @return ResponseEntity with renamed page
@@ -88,15 +88,15 @@ public class PageController {
     @PostMapping("/pages/{pageId}")
     public ResponseEntity<Page> renamePage(
             @PathVariable String pageId,
-            @RequestBody RenamePageRequest request
+            @RequestBody RenamePageRequest renamePageRequest,
+            HttpServletRequest request
     ) {
-        Page renamed = pageService.renamePage(pageId, request.getNewTitle());
+        Page renamed = pageService.renamePage(pageId, UserId.extract(request), renamePageRequest.getNewTitle());
         return ResponseEntity.ok(renamed);
     }
 
     /**
      * Move a page to a new folder
-     * TODO: Check if the new parent folder exists and belongs to the user
      * @param pageId page ID
      * @param request move page request
      * @return ResponseEntity with moved page
@@ -104,21 +104,24 @@ public class PageController {
     @PostMapping("/pages/{pageId}/move")
     public ResponseEntity<Page> movePage(
             @PathVariable String pageId,
-            @Valid @RequestBody MovePageRequest request
+            @Valid @RequestBody MovePageRequest movePageRequest,
+            HttpServletRequest request
     ) {
-        Page moved = pageService.movePage(pageId, request.getNewParentId());
+        Page moved = pageService.movePage(pageId, movePageRequest.getNewParentId(), UserId.extract(request));
         return ResponseEntity.ok(moved);
     }
 
     /**
      * Delete a page by ID
-     * TODO: Check if the page belongs to the user
      * @param pageId page ID
      * @return ResponseEntity with no content
      */
     @DeleteMapping("/pages/{pageId}")
-    public ResponseEntity<Void> deletePage(@PathVariable String pageId) {
-        pageService.deletePage(pageId);
+    public ResponseEntity<Void> deletePage(
+            @PathVariable String pageId,
+            HttpServletRequest request
+    ) {
+        pageService.deletePage(pageId, UserId.extract(request));
         return ResponseEntity.noContent().build();
     }
 
