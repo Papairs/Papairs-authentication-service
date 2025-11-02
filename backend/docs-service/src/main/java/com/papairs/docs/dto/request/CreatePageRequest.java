@@ -7,12 +7,18 @@ public class CreatePageRequest {
     @NotBlank(message = "Title is required")
     @Size(max = 255, message = "Title cannot exceed 255 characters")
     private String title;
+    @NotBlank(message = "Parent folder ID is required")
+    private String parentFolderId;
 
     public CreatePageRequest() {
     }
 
-    public CreatePageRequest(String title) {
-        this.title = title;
+    public String getParentFolderId() {
+        return parentFolderId;
+    }
+
+    public void setParentFolderId(String parentFolderId) {
+        this.parentFolderId = parentFolderId;
     }
 
     public String getTitle() {
