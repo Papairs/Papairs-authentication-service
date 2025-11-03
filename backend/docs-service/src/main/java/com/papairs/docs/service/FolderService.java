@@ -10,7 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class FolderService {
@@ -146,37 +148,63 @@ public class FolderService {
 
     /**
      * Get folder tree starting from a folder
+     * Uses a single recursive query to fetch all descendants at once,
+     * then builds the tree in memory without additional database calls.
      * @param folderId folder ID
      * @param userId user ID
      * @return FolderTree structure
      */
     public FolderTree getFolderTree(String folderId, String userId) {
-        Folder folder = permissionService.getFolderWithCheck(folderId, userId);
-        return buildFolderTree(folder);
+        Folder rootFolder = permissionService.getFolderWithCheck(folderId, userId);
+
+        // Fetch all descendants in a single query using recursion
+        List<Folder> allDescendants = folderRepository.findAllDescendants(folderId);
+        allDescendants.add(rootFolder);
+
+        // Group folders by parent for O(1) lookup
+        Map<String, List<Folder>> childrenMap = allDescendants.stream()
+            .filter(f -> f.getParentFolderId() != null)
+            .collect(Collectors.groupingBy(Folder::getParentFolderId));
+
+        // Fetch page counts for all folders in a single batch query
+        List<String> folderIds = allDescendants.stream()
+            .map(Folder::getFolderId)
+            .collect(Collectors.toList());
+        Map<String, Long> pageCountMap = pageService.getPageCountsForFolders(folderIds);
+
+        // Build tree using pre-fetched data
+        return buildFolderTree(rootFolder, childrenMap, pageCountMap);
     }
 
     /**
-     * Build folder tree recursively
-     * Builds the tree using depth-first traversal
-     * TODO: Optimize to reduce database queries (N+1 problem)
+     * Build folder tree recursively using pre-fetched data
+     * No database queries - uses in-memory maps
      * @param folder folder entity
+     * @param childrenMap map of parent folder ID to list of child folders
+     * @param pageCountMap map of folder ID to page count
      * @return FolderTree structure
      */
-    private FolderTree buildFolderTree(Folder folder) {
+    private FolderTree buildFolderTree(
+            Folder folder,
+            Map<String, List<Folder>> childrenMap,
+            Map<String, Long> pageCountMap
+    ) {
         FolderTree tree = new FolderTree();
 
         tree.setFolderId(folder.getFolderId());
         tree.setName(folder.getName());
         tree.setCreatedAt(folder.getCreatedAt());
 
-        long pageCount = pageService.getPageCountInFolder(folder.getFolderId());
+        // Get page count from pre-fetched map
+        long pageCount = pageCountMap.getOrDefault(folder.getFolderId(), 0L);
         tree.setPageCount(pageCount);
 
-        List<Folder> children = folderRepository.findByParentFolderId(folder.getFolderId());
+        // Get children from pre-fetched map
+        List<Folder> children = childrenMap.getOrDefault(folder.getFolderId(), new ArrayList<>());
         List<FolderTree> childTrees = new ArrayList<>();
 
         for (Folder child : children) {
-            childTrees.add(buildFolderTree(child));
+            childTrees.add(buildFolderTree(child, childrenMap, pageCountMap));
         }
 
         tree.setChildren(childTrees);
@@ -187,15 +215,33 @@ public class FolderService {
 
     /**
      * Get folder trees for all root folders of a user
+     * Fetches all folders at once and builds all trees in memory
      * @param userId user ID
      * @return List of FolderTree structures
      */
     public List<FolderTree> getUserFolderTrees(String userId) {
-        List<Folder> rootFolders = folderRepository.findByOwnerIdAndParentFolderIdIsNull(userId);
-        List<FolderTree> folderTrees = new ArrayList<>();
+        List<Folder> allFolders = folderRepository.findByOwnerId(userId);
 
+        // Find root folders
+        List<Folder> rootFolders = allFolders.stream()
+            .filter(f -> f.getParentFolderId() == null)
+            .collect(Collectors.toList());
+
+        // Group all folders by parent for O(1) lookup
+        Map<String, List<Folder>> childrenMap = allFolders.stream()
+            .filter(f -> f.getParentFolderId() != null)
+            .collect(Collectors.groupingBy(Folder::getParentFolderId));
+
+        // Fetch page counts for all folders in a single batch query
+        List<String> folderIds = allFolders.stream()
+            .map(Folder::getFolderId)
+            .collect(Collectors.toList());
+        Map<String, Long> pageCountMap = pageService.getPageCountsForFolders(folderIds);
+
+        // Build all trees using pre-fetched data
+        List<FolderTree> folderTrees = new ArrayList<>();
         for (Folder rootFolder : rootFolders) {
-            folderTrees.add(buildFolderTree(rootFolder));
+            folderTrees.add(buildFolderTree(rootFolder, childrenMap, pageCountMap));
         }
 
         return folderTrees;

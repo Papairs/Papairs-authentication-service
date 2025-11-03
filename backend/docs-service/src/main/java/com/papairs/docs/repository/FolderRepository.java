@@ -2,6 +2,7 @@ package com.papairs.docs.repository;
 
 import com.papairs.docs.model.Folder;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -28,6 +29,22 @@ public interface FolderRepository extends JpaRepository<Folder, String> {
      * @return List of Folder entities
      */
     List<Folder> findByParentFolderId(String parentFolderId);
+
+    /**
+     * Find all descendant folders of a given folder using recursion
+     * @param folderId folder ID
+     * @return List of descendant Folder entities
+     */
+    @Query(value =
+            "WITH RECURSIVE folder_tree AS (" +
+                    "SELECT * FROM folder " +
+                    "WHERE parent_folder_id = :folderId " +
+                    "UNION ALL " +
+                    "SELECT f.* FROM folder f " +
+                    "INNER JOIN folder_tree ft ON f.parent_folder_id = ft.folder_id) " +
+                    "SELECT * FROM folder_tree",
+            nativeQuery = true)
+    List<Folder> findAllDescendants(String folderId);
 
     /**
      * Check if any folders exist in the parent folder

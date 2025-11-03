@@ -40,6 +40,15 @@ public interface PageRepository extends JpaRepository<Page, String> {
     long countByFolderId(String folderId);
 
     /**
+     * Get page counts for multiple folders in a single query
+     * Returns a list of Object arrays where [0] is folderId and [1] is count
+     * @param folderIds list of folder IDs
+     * @return List of Object arrays [folderId, count]
+     */
+    @Query("SELECT p.folderId, COUNT(p) FROM Page p WHERE p.folderId IN :folderIds GROUP BY p.folderId")
+    List<Object[]> countByFolderIdIn(List<String> folderIds);
+
+    /**
      * Delete pages by folder ID
      * @param folderId folder ID
      */
