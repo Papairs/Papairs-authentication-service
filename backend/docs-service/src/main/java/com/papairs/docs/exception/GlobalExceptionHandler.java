@@ -23,6 +23,18 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(e.getMessage()));
     }
 
+
+    /**
+     * Handle invalid request
+     * @param e exception
+     * @return ResponseEntity (400 Bad Request)
+     */
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ApiResponse> handleInvalidRequestException(InvalidRequestException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+    }
+
     /**
      * Handle validation errors from @Valid annotation
      * Aggregate all field errors into a single message
