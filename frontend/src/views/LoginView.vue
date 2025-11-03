@@ -1,28 +1,3 @@
-<template>
-  <div class="min-h-screen bg-surface-light dark:bg-surface-dark" :style="gridBg">
-    <!-- Header with height 100px -->
-    <LoginHeader />
-    
-    <!-- Main content area with specified padding -->
-    <div class="px-32 py-16">
-      <div class="flex min-h-[calc(100vh-364px)]">
-        <!-- Login Form Component - width 500px + 10px padding -->
-        <LoginForm 
-          ref="loginForm"
-          @login="handleLogin"
-          @create-account="handleCreateAccount"
-        />
-        
-        <!-- Image Panel Component - fills remaining space with 16:9 ratio -->
-        <ImagePanel 
-          :image-src="previewImg"
-          image-alt="Papairs preview"
-        />
-      </div>
-    </div>
-  </div>
-</template>
-
 <script>
 import axios from 'axios'
 import preview from '../../Images/7 Semester Recording Oct 13 2025.gif'
@@ -85,3 +60,30 @@ input[type="checkbox"] {
   accent-color: #000; /* modern browsers will render black check */
 }
 </style>
+
+
+<template>
+  <div class="min-h-screen bg-surface-light dark:bg-surface-dark" :style="gridBg">
+    <!-- Header with height 100px -->
+    <LoginHeader />
+    
+    <!-- Main content area with specified padding -->
+    <div class="px-32 py-16">
+      <div class="flex min-h-[calc(100vh-364px)]">
+        <!-- Login Form Component - width 500px + 10px padding -->
+        <LoginForm 
+          ref="loginForm"
+          @login="handleLogin"
+          @create-account="handleCreateAccount"
+        />
+        
+        <!-- Image Panel Component - fills remaining space with 16:9 ratio -->
+        <ImagePanel 
+          :image-src="previewImg"
+          image-alt="Papairs preview"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+

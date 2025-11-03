@@ -1,3 +1,80 @@
+<script>
+export default {
+  name: 'RegisterForm',
+  emits: ['register', 'back-to-login'],
+  data() {
+    return {
+      formData: {
+        email: '',
+        password: '',
+        confirmPassword: ''
+      },
+      loading: false,
+      error: null,
+      success: null
+    }
+  },
+  computed: {
+    hasLowercase() {
+      return /[a-z]/.test(this.formData.password)
+    },
+    hasUppercase() {
+      return /[A-Z]/.test(this.formData.password)
+    },
+    hasNumber() {
+      return /\d/.test(this.formData.password)
+    },
+    hasSpecial() {
+      return /[@$!%*?&]/.test(this.formData.password)
+    },
+    hasMinLength() {
+      return this.formData.password.length >= 8
+    },
+    passwordsMatch() {
+      return this.formData.password === this.formData.confirmPassword
+    },
+    isPasswordValid() {
+      return this.hasLowercase && this.hasUppercase && this.hasNumber && this.hasSpecial && this.hasMinLength
+    },
+    isFormValid() {
+      return this.formData.email && 
+             this.isPasswordValid && 
+             this.passwordsMatch && 
+             this.formData.confirmPassword
+    }
+  },
+  methods: {
+    handleSubmit() {
+      this.error = null
+      this.success = null
+      
+      if (!this.passwordsMatch) {
+        this.error = 'Passwords do not match'
+        return
+      }
+      
+      if (!this.isPasswordValid) {
+        this.error = 'Password does not meet requirements'
+        return
+      }
+      
+      this.loading = true
+      
+      this.$emit('register', {
+        email: this.formData.email,
+        password: this.formData.password
+      })
+    }
+  }
+}
+</script>
+
+<style scoped>
+input[type="checkbox"] {
+  accent-color: #FF7700;
+}
+</style>
+
 <template>
   <div class="w-[500px] p-2.5 flex-shrink-0">
     <div class="pt-12">
@@ -82,80 +159,3 @@
     </div>
   </div>
 </template>
-
-<script>
-export default {
-  name: 'RegisterForm',
-  emits: ['register', 'back-to-login'],
-  data() {
-    return {
-      formData: {
-        email: '',
-        password: '',
-        confirmPassword: ''
-      },
-      loading: false,
-      error: null,
-      success: null
-    }
-  },
-  computed: {
-    hasLowercase() {
-      return /[a-z]/.test(this.formData.password)
-    },
-    hasUppercase() {
-      return /[A-Z]/.test(this.formData.password)
-    },
-    hasNumber() {
-      return /\d/.test(this.formData.password)
-    },
-    hasSpecial() {
-      return /[@$!%*?&]/.test(this.formData.password)
-    },
-    hasMinLength() {
-      return this.formData.password.length >= 8
-    },
-    passwordsMatch() {
-      return this.formData.password === this.formData.confirmPassword
-    },
-    isPasswordValid() {
-      return this.hasLowercase && this.hasUppercase && this.hasNumber && this.hasSpecial && this.hasMinLength
-    },
-    isFormValid() {
-      return this.formData.email && 
-             this.isPasswordValid && 
-             this.passwordsMatch && 
-             this.formData.confirmPassword
-    }
-  },
-  methods: {
-    handleSubmit() {
-      this.error = null
-      this.success = null
-      
-      if (!this.passwordsMatch) {
-        this.error = 'Passwords do not match'
-        return
-      }
-      
-      if (!this.isPasswordValid) {
-        this.error = 'Password does not meet requirements'
-        return
-      }
-      
-      this.loading = true
-      
-      this.$emit('register', {
-        email: this.formData.email,
-        password: this.formData.password
-      })
-    }
-  }
-}
-</script>
-
-<style scoped>
-input[type="checkbox"] {
-  accent-color: #FF7700;
-}
-</style>

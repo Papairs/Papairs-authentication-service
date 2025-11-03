@@ -1,3 +1,39 @@
+<script>
+export default {
+  name: 'LoginForm',
+  emits: ['login', 'create-account'],
+  data() {
+    return {
+      formData: {
+        email: '',
+        password: '',
+        remember: false
+      },
+      loading: false,
+      error: null
+    }
+  },
+  methods: {
+    handleSubmit() {
+      this.error = null
+      this.loading = true
+      
+      this.$emit('login', {
+        email: this.formData.email,
+        password: this.formData.password,
+        remember: this.formData.remember
+      })
+    }
+  }
+}
+</script>
+
+<style scoped>
+input[type="checkbox"] {
+  accent-color: #FF7700; /* Use theme accent color */
+}
+</style>
+
 <template>
   <div class="w-[500px] p-2.5 flex-shrink-0">
     <div class="pt-12">
@@ -65,38 +101,3 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'LoginForm',
-  emits: ['login', 'create-account'],
-  data() {
-    return {
-      formData: {
-        email: '',
-        password: '',
-        remember: false
-      },
-      loading: false,
-      error: null
-    }
-  },
-  methods: {
-    handleSubmit() {
-      this.error = null
-      this.loading = true
-      
-      this.$emit('login', {
-        email: this.formData.email,
-        password: this.formData.password,
-        remember: this.formData.remember
-      })
-    }
-  }
-}
-</script>
-
-<style scoped>
-input[type="checkbox"] {
-  accent-color: #FF7700; /* Use theme accent color */
-}
-</style>
