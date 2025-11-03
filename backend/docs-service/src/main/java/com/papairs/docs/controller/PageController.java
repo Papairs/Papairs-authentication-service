@@ -37,22 +37,23 @@ public class PageController {
 
     /**
      * Create a new page
-     * @param request create page request
-     * @param httpRequest HTTP servlet request
+     * @param createPageRequest create page request
+     * @param request HTTP servlet request
      * @return ResponseEntity with created page
      */
     @PostMapping("/pages")
     public ResponseEntity<Page> createPage(
-            @Valid @RequestBody CreatePageRequest request,
-            HttpServletRequest httpRequest
+            @Valid @RequestBody CreatePageRequest createPageRequest,
+            HttpServletRequest request
     ) {
-        Page page = pageService.createPage(request.getTitle(), UserId.extract(httpRequest), request.getParentFolderId());
+        Page page = pageService.createPage(createPageRequest.getTitle(), UserId.extract(request), createPageRequest.getParentFolderId());
         return ResponseEntity.status(201).body(page);
     }
 
     /**
      * Get a page by ID
      * @param pageId page ID
+     * @param request HTTP servlet request
      * @return ResponseEntity with the page
      */
     @GetMapping("/pages/{pageId}")
@@ -66,7 +67,8 @@ public class PageController {
     /**
      * Update a page's content
      * @param pageId page ID
-     * @param request update page request
+     * @param updatePageRequest update page request
+     * @param request HTTP servlet request
      * @return ResponseEntity with updated page
      */
     @PutMapping("/pages/{pageId}")
@@ -82,7 +84,8 @@ public class PageController {
     /**
      * Rename a page
      * @param pageId page ID
-     * @param request rename page request
+     * @param renamePageRequest rename page request
+     * @param request HTTP servlet request
      * @return ResponseEntity with renamed page
      */
     @PostMapping("/pages/{pageId}")
@@ -98,7 +101,8 @@ public class PageController {
     /**
      * Move a page to a new folder
      * @param pageId page ID
-     * @param request move page request
+     * @param movePageRequest move page request
+     * @param request HTTP servlet request
      * @return ResponseEntity with moved page
      */
     @PostMapping("/pages/{pageId}/move")
@@ -114,6 +118,7 @@ public class PageController {
     /**
      * Delete a page by ID
      * @param pageId page ID
+     * @param request HTTP servlet request
      * @return ResponseEntity with no content
      */
     @DeleteMapping("/pages/{pageId}")
