@@ -18,6 +18,12 @@ public class PermissionService {
         this.pageRepository = pageRepository;
     }
 
+    /**
+     * Verify folder ownership
+     * TODO: Used for future implementation
+     * @param folderId folder ID
+     * @param userId user ID
+     */
     public void verifyFolderOwnership(String folderId, String userId) {
         if (folderId == null || folderId.isEmpty()) {
             return;
@@ -30,6 +36,11 @@ public class PermissionService {
         }
     }
 
+    /**
+     * Verify page ownership
+     * @param pageId page ID
+     * @param userId user ID
+     */
     public void verifyPageOwnership(String pageId, String userId) {
         Page page = pageRepository.findById(pageId).orElseThrow(() -> new ResourceNotFoundException("Page not found"));
 
@@ -38,6 +49,13 @@ public class PermissionService {
         }
     }
 
+    /**
+     * Get folder with ownership check
+     * TODO: Used for future implementation
+     * @param folderId folder ID
+     * @param userId user ID
+     * @return Folder entity
+     */
     public Folder getFolderWithCheck(String folderId, String userId) {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
@@ -49,6 +67,12 @@ public class PermissionService {
         return folder;
     }
 
+    /**
+     * Get page with ownership check
+     * @param pageId page ID
+     * @param userId user ID
+     * @return Page entity
+     */
     public Page getPageWithCheck(String pageId, String userId) {
         Page page = pageRepository.findById(pageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
