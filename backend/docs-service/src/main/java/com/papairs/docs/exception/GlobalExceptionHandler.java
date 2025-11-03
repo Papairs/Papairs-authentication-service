@@ -23,6 +23,16 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(e.getMessage()));
     }
 
+    /**
+     * Handle unauthorized access
+     * @param e exception
+     * @return ResponseEntity (403 Forbidden)
+     */
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<ApiResponse> handleUnauthorizedAccess(UnauthorizedAccessException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(e.getMessage()));
+    }
 
     /**
      * Handle invalid request
