@@ -46,6 +46,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle folder not empty
+     * @param e exception
+     * @return ResponseEntity (409 Conflict)
+     */
+    @ExceptionHandler(ResourceConflictException.class)
+    public ResponseEntity<ApiResponse> handleResourceNotFoundException(ResourceConflictException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(e.getMessage()));
+    }
+
+    /**
      * Handle validation errors from @Valid annotation
      * Aggregate all field errors into a single message
      * @param e exception
