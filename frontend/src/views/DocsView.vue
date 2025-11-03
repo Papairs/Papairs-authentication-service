@@ -1,34 +1,10 @@
 <script>
-import axios from 'axios'
 import SidebarBase from '@/components/SidebarBase.vue'
 
 export default {
   name: 'DocsView',
   components: {
     SidebarBase
-  },
-  data() {
-    return {
-      documents: [],
-      loading: false
-    }
-  },
-  async mounted() {
-    await this.loadDocuments();
-  },
-  methods: {
-    async loadDocuments() {
-      this.loading = true;
-      try {
-        const response = await axios.get('http://localhost:8082/api/docs/all');
-        this.documents = response.data;
-      } catch (error) {
-        console.error('Error loading documents:', error);
-        this.documents = [];
-      } finally {
-        this.loading = false;
-      }
-    }
   }
 }
 </script>
