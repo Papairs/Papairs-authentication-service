@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface-light dark:bg-surface-dark transition-colors">
-    <nav v-if="$route.name !== 'Login'" class="bg-surface-light dark:bg-surface-dark-secondary shadow-lg">
+    <nav v-if="$route.name !== 'Login' && $route.name !== 'Register'" class="bg-surface-light dark:bg-surface-dark-secondary shadow-lg">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
@@ -41,7 +41,7 @@
       </div>
     </nav>
 
-    <main v-if="$route.name !== 'Login'" class="max-w-7xl mx-auto py-6 px-4">
+    <main v-if="$route.name !== 'Login' && $route.name !== 'Register'" class="max-w-7xl mx-auto py-6 px-4">
       <router-view /> 
     </main>
 
