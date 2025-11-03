@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve --port 3000 --host 0.0.0.0",
+    "serve": "vue-cli-service serve --port 3000 --host 0.0.0.0 --hot",
+    "serve:poll": "vue-cli-service serve --port 3000 --host 0.0.0.0 --hot --watch-options-poll 1000",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
