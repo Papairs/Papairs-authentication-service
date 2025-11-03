@@ -20,7 +20,6 @@ public class PermissionService {
 
     /**
      * Verify folder ownership
-     * TODO: Used for future implementation
      * @param folderId folder ID
      * @param userId user ID
      */
@@ -51,7 +50,6 @@ public class PermissionService {
 
     /**
      * Get folder with ownership check
-     * TODO: Used for future implementation
      * @param folderId folder ID
      * @param userId user ID
      * @return Folder entity
