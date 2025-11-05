@@ -20,7 +20,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry
             .addHandler(handler, "/ws/doc")
-            // Dev-only: allow all. In prod, set explicit origins.
             .setAllowedOriginPatterns("*");
     }
 }

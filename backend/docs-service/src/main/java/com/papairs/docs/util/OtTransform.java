@@ -1,8 +1,8 @@
 package com.papairs.docs.util;
 
-import com.papairs.docs.model.DeleteOp;
-import com.papairs.docs.model.InsertOp;
-import com.papairs.docs.model.Op;
+import com.papairs.docs.model.OT.DeleteOp;
+import com.papairs.docs.model.OT.InsertOp;
+import com.papairs.docs.model.OT.Op;
 
 public class OtTransform {
     private static int tiebreak(String aClient, String aId, String bClient, String bId){

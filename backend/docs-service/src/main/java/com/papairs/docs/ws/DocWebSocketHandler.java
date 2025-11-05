@@ -1,7 +1,11 @@
 package com.papairs.docs.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.papairs.docs.model.*;
+import com.papairs.docs.model.Message;
+import com.papairs.docs.model.OT.AppliedOp;
+import com.papairs.docs.model.OT.DeleteOp;
+import com.papairs.docs.model.OT.InsertOp;
+import com.papairs.docs.model.OT.Op;
 import com.papairs.docs.util.OtTransform;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
