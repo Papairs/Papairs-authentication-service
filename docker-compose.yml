@@ -67,6 +67,8 @@ services:
     container_name: papairs-docs-service
     ports:
       - "8082:8082"
+    env_file:
+      - ./backend/docs-service/.env
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
