@@ -51,8 +51,28 @@ public interface PageRepository extends JpaRepository<Page, String> {
     /**
      * Delete pages by folder ID
      * @param folderId folder ID
+     * Finds all pages that are shared with a specific user via a {@code PageMember} association
+     * This does not include pages owned by the user unless they are also explicitly a member
+     * @param userId The ID of the user who is a member of the pages
+     * @return A {@link List} of {@link Page} entities shared with the user
+     */
+    @Query("SELECT p FROM Page p " +
+            "JOIN PageMember pm ON p.pageId = pm.pageId " +
+            "WHERE pm.userId = :userId")
+    List<Page> findPagesSharedWithUser(String userId);
      */
     @Modifying
     @Query("DELETE FROM Page p WHERE p.folderId = :folderId")
     void deleteByFolderId(String folderId);
+
+    /**
+     * Deletes all pages within a given list of folder IDs in a single bulk operation
+     * The {@code clearAutomatically = true} option ensures the persistence context is cleared
+     * after the query which preventing issues with detached entities.
+     * @param folderIds A {@link List} of folder IDs to delete pages from.
+     * @see Modifying#clearAutomatically()
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Page p WHERE p.folderId IN :folderIds")
+    void deleteAllByFolderIdIn(List<String> folderIds);
 }
