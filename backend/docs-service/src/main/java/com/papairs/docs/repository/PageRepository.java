@@ -1,5 +1,6 @@
 package com.papairs.docs.repository;
 
+import com.papairs.docs.model.FolderPageCount;
 import com.papairs.docs.model.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -41,13 +42,17 @@ public interface PageRepository extends JpaRepository<Page, String> {
     long countByFolderId(String folderId);
 
     /**
-     * Get page counts for multiple folders in a single query
-     * Returns a list of Object arrays where [0] is folderId and [1] is count
-     * @param folderIds list of folder IDs
-     * @return List of Object arrays [folderId, count]
+     * Counts the number of pages for multiple folders in a single query
+     * This method uses a JPQL constructor expression to map the results of the
+     * GROUP BY query directly into a {@link FolderPageCount} model
+     * @param folderIds A {@link List} of folder IDs for which to count pages
+     * @return A {@link List} of {@link FolderPageCount} DTOs, each containing a folderId and its
+     * corresponding page count. Folders with zero pages will not be included in the result list
      */
-    @Query("SELECT p.folderId, COUNT(p) FROM Page p WHERE p.folderId IN :folderIds GROUP BY p.folderId")
-    List<Object[]> countByFolderIdIn(List<String> folderIds);
+    @Query("SELECT new com.papairs.docs.model.FolderPageCount(p.folderId, COUNT(p)) " +
+            "FROM Page p WHERE p.folderId IN :folderIds GROUP BY p.folderId")
+    List<FolderPageCount> countPagesInFolders(List<String> folderIds);
+
 
     /**
      * Finds all pages that are shared with a specific user via a {@code PageMember} association
