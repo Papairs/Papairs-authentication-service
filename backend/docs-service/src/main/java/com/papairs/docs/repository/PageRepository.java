@@ -12,30 +12,31 @@ import java.util.List;
 public interface PageRepository extends JpaRepository<Page, String> {
 
     /**
-     * Find pages by owner ID
-     * @param ownerId owner's user ID
-     * @return List of pages owned by the user
+     * Finds all pages owned by a specific user
+     * @param ownerId The ID of the owner
+     * @return A {@link List} of {@link Page} entities owned by the user
      */
     List<Page> findByOwnerId(String ownerId);
 
     /**
-     * Find pages by folder ID
-     * @param folderId folder ID
-     * @return List of pages in the folder
+     * Finds all pages located within a specific folder
+     * @param folderId The ID of the folder
+     * @return A {@link List} of {@link Page} entities within the folder.
      */
     List<Page> findByFolderId(String folderId);
 
     /**
-     * Check if any pages exist in the folder
-     * @param folderId folder ID
-     * @return true if pages exist, else false
+     * Checks if any pages exist within a specific folder.
+     * This is more performant than fetching the list of pages and checking if it's empty
+     * @param folderId The ID of the folder
+     * @return {@code true} if at least one page exists, {@code false} otherwise
      */
     boolean existsByFolderId(String folderId);
 
     /**
-     * Count pages in the folder
-     * @param folderId folder ID
-     * @return number of pages in the folder
+     * Counts the total number of pages within a specific folder
+     * @param folderId The ID of the folder
+     * @return The number of pages in the folder
      */
     long countByFolderId(String folderId);
 
@@ -49,8 +50,6 @@ public interface PageRepository extends JpaRepository<Page, String> {
     List<Object[]> countByFolderIdIn(List<String> folderIds);
 
     /**
-     * Delete pages by folder ID
-     * @param folderId folder ID
      * Finds all pages that are shared with a specific user via a {@code PageMember} association
      * This does not include pages owned by the user unless they are also explicitly a member
      * @param userId The ID of the user who is a member of the pages
@@ -60,10 +59,15 @@ public interface PageRepository extends JpaRepository<Page, String> {
             "JOIN PageMember pm ON p.pageId = pm.pageId " +
             "WHERE pm.userId = :userId")
     List<Page> findPagesSharedWithUser(String userId);
+
+    /**
+     * Deletes all pages located within a specific folder
+     * This is a bulk operation and may have performance implications on large datasets
+     * @param folderId The ID of the folder whose pages should be deleted
      */
     @Modifying
     @Query("DELETE FROM Page p WHERE p.folderId = :folderId")
-    void deleteByFolderId(String folderId);
+    void deleteAllByFolderId(String folderId);
 
     /**
      * Deletes all pages within a given list of folder IDs in a single bulk operation
