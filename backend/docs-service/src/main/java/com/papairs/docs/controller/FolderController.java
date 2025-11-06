@@ -36,7 +36,6 @@ public class FolderController {
             HttpServletRequest request
     ) {
         Folder folder = folderService.getFolder(folderId, UserId.extract(request));
-
         return ResponseEntity.ok(folder);
     }
 
@@ -52,11 +51,10 @@ public class FolderController {
             HttpServletRequest request
     ) {
         Folder folder = folderService.createFolder(
-                createFolderRequest.getName(),
-                UserId.extract(request),
-                createFolderRequest.getParentFolderId()
+            createFolderRequest.getName(),
+            UserId.extract(request),
+            createFolderRequest.getParentFolderId()
         );
-
         return ResponseEntity.status(201).body(folder);
     }
 
@@ -67,14 +65,17 @@ public class FolderController {
      * @param request HTTP servlet request
      * @return ResponseEntity with renamed folder
      */
-    @PostMapping("/folders/{folderId}")
+    @PatchMapping("/folders/{folderId}")
     public ResponseEntity<Folder> renameFolder(
             @PathVariable String folderId,
             @Valid @RequestBody RenameFolderRequest renameFolderRequest,
             HttpServletRequest request
     ) {
-        Folder renamed = folderService.renameFolder(folderId, UserId.extract(request), renameFolderRequest.getNewName());
-
+        Folder renamed = folderService.renameFolder(
+            folderId,
+            UserId.extract(request),
+            renameFolderRequest.getNewName()
+        );
         return ResponseEntity.ok(renamed);
     }
 
@@ -92,14 +93,11 @@ public class FolderController {
             @RequestParam(required = false, defaultValue = "false") boolean recursive,
             HttpServletRequest request
     ) {
-        String userId = UserId.extract(request);
-
-        if (recursive) {
-            folderService.deleteFolderRecursive(folderId, userId);
-        } else {
-            folderService.deleteFolder(folderId, userId);
-        }
-
+        folderService.deleteFolder(
+            folderId,
+            UserId.extract(request),
+            recursive
+        );
         return ResponseEntity.noContent().build();
     }
 
@@ -177,7 +175,10 @@ public class FolderController {
             @PathVariable String folderId,
             HttpServletRequest request
     ) {
-        List<Folder> path = folderService.getFolderPath(folderId, UserId.extract(request));
+        List<Folder> path = folderService.getFolderPath(
+            folderId,
+            UserId.extract(request)
+        );
         return ResponseEntity.ok(path);
     }
 
@@ -187,14 +188,17 @@ public class FolderController {
      * @param moveFolderRequest move folder request
      * @return ResponseEntity with moved folder
      */
-    @PostMapping("/folders/{folderId}/move")
+    @PatchMapping("/folders/{folderId}/move")
     public ResponseEntity<Folder> moveFolder(
             @PathVariable String folderId,
             @RequestBody MoveFolderRequest moveFolderRequest,
             HttpServletRequest request
     ) {
-        Folder moved = folderService.moveFolder(folderId, UserId.extract(request), moveFolderRequest.getNewParentFolderId());
-
+        Folder moved = folderService.moveFolder(
+            folderId,
+            UserId.extract(request),
+            moveFolderRequest.getParentFolderId()
+        );
         return ResponseEntity.ok(moved);
     }
 }
