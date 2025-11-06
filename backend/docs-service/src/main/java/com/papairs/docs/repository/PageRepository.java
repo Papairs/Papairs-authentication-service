@@ -35,13 +35,6 @@ public interface PageRepository extends JpaRepository<Page, String> {
     boolean existsByFolderId(String folderId);
 
     /**
-     * Counts the total number of pages within a specific folder
-     * @param folderId The ID of the folder
-     * @return The number of pages in the folder
-     */
-    long countByFolderId(String folderId);
-
-    /**
      * Counts the number of pages for multiple folders in a single query
      * This method uses a JPQL constructor expression to map the results of the
      * GROUP BY query directly into a {@link FolderPageCount} model
@@ -53,26 +46,15 @@ public interface PageRepository extends JpaRepository<Page, String> {
             "FROM Page p WHERE p.folderId IN :folderIds GROUP BY p.folderId")
     List<FolderPageCount> countPagesInFolders(List<String> folderIds);
 
-
     /**
-     * Finds all pages that are shared with a specific user via a {@code PageMember} association
-     * This does not include pages owned by the user unless they are also explicitly a member
-     * @param userId The ID of the user who is a member of the pages
-     * @return A {@link List} of {@link Page} entities shared with the user
+     * Finds all pages a user has access to, either as the owner or as a member
+     * @param userId The ID of the user.
+     * @return A {@link List} of distinct {@link Page} entities.
      */
-    @Query("SELECT p FROM Page p " +
-            "JOIN PageMember pm ON p.pageId = pm.pageId " +
-            "WHERE pm.userId = :userId")
-    List<Page> findPagesSharedWithUser(String userId);
-
-    /**
-     * Deletes all pages located within a specific folder
-     * This is a bulk operation and may have performance implications on large datasets
-     * @param folderId The ID of the folder whose pages should be deleted
-     */
-    @Modifying
-    @Query("DELETE FROM Page p WHERE p.folderId = :folderId")
-    void deleteAllByFolderId(String folderId);
+    @Query("SELECT DISTINCT p FROM Page p " +
+            "LEFT JOIN PageMember pm ON p.pageId = pm.pageId " +
+            "WHERE p.ownerId = :userId OR pm.userId = :userId")
+    List<Page> findAllAccessibleByUserId(String userId);
 
     /**
      * Deletes all pages within a given list of folder IDs in a single bulk operation
