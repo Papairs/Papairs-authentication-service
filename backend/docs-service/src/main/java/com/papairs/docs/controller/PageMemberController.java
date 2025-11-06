@@ -22,6 +22,13 @@ public class PageMemberController {
         this.pageMemberService = pageMemberService;
     }
 
+    /**
+     * Retrieves a list of all members for a specific page
+     * The requesting user must have access to the page to view its members
+     * @param pageId The ID of the page
+     * @param request The incoming HTTP request which is used to identify the requesting user
+     * @return A {@link ResponseEntity} containing a list of {@link PageMember} objects
+     */
     @GetMapping("/pages/{pageId}/members")
     public ResponseEntity<List<PageMember>> getPageMembers(
             @PathVariable String pageId,
@@ -31,22 +38,39 @@ public class PageMemberController {
         return ResponseEntity.ok(members);
     }
 
+    /**
+     * Adds a new member to a page
+     * This action is restricted to the page owner or members with an editor role
+     * @param pageId The ID of the page to add the member to.
+     * @param addPageMemberRequest The request body containing the target user's ID and role
+     * @param request The incoming HTTP request
+     * @return A {@link ResponseEntity} with status 201 (Created) and the new {@link PageMember}.
+     */
     @PostMapping("/pages/{pageId}/members")
     public ResponseEntity<PageMember> addMember(
             @PathVariable String pageId,
             @Valid @RequestBody AddPageMemberRequest addPageMemberRequest,
             HttpServletRequest request
     ) {
-        PageMember member = pageMemberService.addMember(
+        PageMember newMember = pageMemberService.addMember(
             pageId,
             UserId.extract(request),
             addPageMemberRequest.getUserId(),
             addPageMemberRequest.getRole()
         );
 
-        return ResponseEntity.status(201).body(member);
+        return ResponseEntity.status(201).body(newMember);
     }
 
+    /**
+     * Updates the role of an existing member on a page
+     * This action is restricted to the page owner or members with an editor role
+     * @param pageId The ID of the page
+     * @param userId The ID of the member whose role is being updated
+     * @param updatePageMemberRequest The request body containing the new role
+     * @param request The incoming HTTP request
+     * @return A {@link ResponseEntity} containing the updated {@link PageMember}
+     */
     @PatchMapping("/pages/{pageId}/members/{userId}")
     public ResponseEntity<PageMember> updateMemberRole(
             @PathVariable String pageId,
@@ -54,18 +78,26 @@ public class PageMemberController {
             @Valid @RequestBody UpdatePageMemberRequest updatePageMemberRequest,
             HttpServletRequest request
             ) {
-        PageMember updated = pageMemberService.updateMemberRole(
+        PageMember updatedMember = pageMemberService.updateMemberRole(
             pageId,
             UserId.extract(request),
             userId,
             updatePageMemberRequest.getRole()
         );
 
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(updatedMember);
     }
 
+    /**
+     * Removes a member from a page
+     * This action is restricted to the page owner or members with an editor role
+     * @param pageId  The ID of the page
+     * @param userId  The ID of the member to remove
+     * @param request The incoming HTTP request
+     * @return A {@link ResponseEntity} with status 204 (No Content)
+     */
     @DeleteMapping("/pages/{pageId}/members/{userId}")
-    public ResponseEntity<Void> deleteMember(
+    public ResponseEntity<Void> removeMember(
             @PathVariable String pageId,
             @PathVariable String userId,
             HttpServletRequest request
@@ -79,7 +111,14 @@ public class PageMemberController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/pages/{pageId}/leave")
+    /**
+     * Allows a user to leave a page by removing their own membership
+     * The page owner cannot leave a page and must delete the page instead
+     * @param pageId  The ID of the page to leave
+     * @param request The incoming HTTP request
+     * @return A {@link ResponseEntity} with status 204 (No Content)
+     */
+    @DeleteMapping("/pages/{pageId}/leave")
     public ResponseEntity<Void> leavePage(
             @PathVariable String pageId,
             HttpServletRequest request
