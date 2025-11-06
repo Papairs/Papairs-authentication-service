@@ -5,7 +5,9 @@ import com.papairs.docs.repository.PageRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -132,5 +134,28 @@ public class PageService {
 
         page.setFolderId(targetFolderId);
         return pageRepository.save(page);
+    }
+
+    /**
+     * Get page counts for multiple folders in a single query
+     * Batch query to eliminate N+1 problem when building folder trees
+     * @param folderIds list of folder IDs
+     * @return Map of folder ID to page count
+     */
+    public Map<String, Long> getPageCountsForFolders(List<String> folderIds) {
+        if (folderIds == null || folderIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        List<Object[]> results = pageRepository.countByFolderIdIn(folderIds);
+        Map<String, Long> pageCountMap = new HashMap<>();
+
+        for (Object[] result : results) {
+            String folderId = (String) result[0];
+            Long count = (Long) result[1];
+            pageCountMap.put(folderId, count);
+        }
+
+        return pageCountMap;
     }
 }
