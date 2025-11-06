@@ -71,10 +71,9 @@ public interface PageMemberRepository extends JpaRepository<PageMember, PageMemb
     void deleteByPageIdAndUserId(String pageId, String userId);
 
     /**
-     * Deletes all memberships associated with a specific page
-     * This is a bulk operation and should be used with care
-     * @param pageId The ID of the page to remove all members from
+     * Deletes all member memberships for a specific page in a single bulk operation
+     * @param pageId The ID of the page whose members should be deleted
      */
     @Modifying
-    void deleteByPageId(String pageId);
+    void deleteAllByPageId(String pageId);
 }
