@@ -1,7 +1,6 @@
 package com.papairs.docs.model.enums;
 
 public enum MemberRole {
-    OWNER("Owner", 3),
     EDITOR("Editor", 2),
     VIEWER("Viewer", 1);
 
@@ -10,8 +9,8 @@ public enum MemberRole {
 
     /**
      * Constructor for MemberRole enum
-     * @param roleName
-     * @param permissionLevel
+     * @param roleName role name
+     * @param permissionLevel numeric permission level
      */
     MemberRole(String roleName, int permissionLevel) {
         this.roleName = roleName;
@@ -36,26 +35,26 @@ public enum MemberRole {
 
     /**
      * Check if the role can page content
-     * @return true if role is EDITOR or OWNER
+     * @return true if role is EDITOR
      */
     public boolean canEdit() {
-        return this == EDITOR || this == OWNER;
+        return this == EDITOR;
     }
 
     /**
      * Check if the role can delete the page
-     * @return true only if role is OWNER
+     * @return true only if role is EDITOR
      */
     public boolean canDelete() {
-        return this == OWNER;
+        return this == EDITOR;
     }
 
     /**
      * Check if the role can manage page members (add/remove/change roles)
-     * @return true only if role is OWNER
+     * @return true only if role is EDITOR
      */
     public boolean canManageMembers() {
-        return this == OWNER;
+        return this == EDITOR;
     }
 
     /**
