@@ -2,6 +2,7 @@ package com.papairs.docs.repository;
 
 import com.papairs.docs.model.PageMember;
 import com.papairs.docs.model.PageMemberId;
+import com.papairs.docs.model.enums.MemberRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -44,16 +45,13 @@ public interface PageMemberRepository extends JpaRepository<PageMember, PageMemb
     boolean existsByPageIdAndUserId(String pageId, String userId);
 
     /**
-     * Verifies if a member has at least {@code EDITOR}-level permissions on a page
-     * This query checks for {@code EDITOR} role
+     * Checks if a member exists for a given page and user with a specific role
      * @param pageId The ID of the page
      * @param userId The ID of the user
-     * @return {@code true} if the user has edit permissions, {@code false} otherwise
+     * @param role The role to check for
+     * @return {@code true} if such a member exists, {@code false} otherwise
      */
-    @Query("SELECT COUNT(pm) > 0 FROM PageMember pm " +
-            "WHERE pm.pageId = :pageId AND pm.userId = :userId " +
-            "AND pm.role = 'EDITOR'")
-    boolean hasEditPermission(String pageId, String userId);
+    boolean existsByPageIdAndUserIdAndRole(String pageId, String userId, MemberRole role);
 
     /**
      * Retrieves all page IDs for a given user
