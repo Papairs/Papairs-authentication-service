@@ -12,7 +12,7 @@ public class UserId {
     public static String extract(HttpServletRequest request) {
         String userId = request.getHeader("X-User-Id");
 
-        if (userId == null || userId.isEmpty()) {
+        if (userId == null || userId.isBlank()) {
             throw new InvalidRequestException("Missing X-User-Id header");
         }
 
