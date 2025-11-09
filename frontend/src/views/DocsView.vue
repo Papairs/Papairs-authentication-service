@@ -4,6 +4,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useDocument } from '@/composables/useDocument'
 import { createErrorHandler } from '@/utils/errorHandler'
+import auth from '@/utils/auth'
 
 export default {
   name: 'DocsView',
@@ -32,8 +33,9 @@ export default {
     // WebSocket event handlers
     webSocket.onOpen(() => {
       errorHandler.safe(() => {
-        webSocket.send({ action: 'join', docId: documentId.value })
-        console.log('[Application] Joined document session:', documentId.value)
+        const userId = auth.getUserId() || 'anonymous'
+        webSocket.send({ action: 'join', docId: documentId.value, userId: userId })
+        console.log('[Application] Joined document session:', documentId.value, 'as user:', userId)
       })
     })
 
@@ -66,8 +68,18 @@ export default {
     function onInput(event) {
       errorHandler.safe(() => {
         const operation = document.handleTextInput(event.target.value)
-        if (operation && !webSocket.send({ action: 'op', docId: documentId.value, op: operation })) {
-          errorHandler.websocket('Failed to send operation to server')
+        if (operation) {
+          // Add user ID to the operation
+          const userId = auth.getUserId() || 'anonymous'
+          const messageWithUser = { 
+            action: 'op', 
+            docId: documentId.value, 
+            op: operation,
+            userId: userId
+          }
+          if (!webSocket.send(messageWithUser)) {
+            errorHandler.websocket('Failed to send operation to server')
+          }
         }
         updateTextarea()
       })

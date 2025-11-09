@@ -1,3 +1,89 @@
+<script>
+import axios from 'axios'
+import auth from '@/utils/auth'
+
+export default {
+  name: 'HomeView',
+  data() {
+    return {
+      authResult: null,
+      docsResult: null,
+      pageName: '',
+      pageResult: null,
+      pageError: null,
+      creatingPage: false
+    }
+  },
+  methods: {
+    async testAuth() {
+      try {
+        const response = await axios.get('http://localhost:8081/api/auth/health');
+        this.authResult = JSON.stringify(response.data, null, 2);
+      } catch (error) {
+        this.authResult = `Error: ${error.message}`;
+      }
+    },
+    async testDocs() {
+      try {
+        const response = await axios.get('http://localhost:8082/api/docs/health');
+        this.docsResult = JSON.stringify(response.data, null, 2);
+      } catch (error) {
+        this.docsResult = `Error: ${error.message}`;
+      }
+    },
+    async createPage() {
+      // Reset previous results
+      this.pageResult = null
+      this.pageError = null
+      
+      // Validate inputs
+      if (!this.pageName.trim()) {
+        this.pageError = 'Page name is required'
+        return
+      }
+      
+      const userId = auth.getUserId()
+      console.log('User ID from auth.getUserId():', userId)
+      console.log('User data from localStorage:', auth.getUser())
+      console.log('Auth headers:', auth.getUserIdHeader())
+      
+      // Temporary workaround: use a known user ID if no user is logged in
+      const actualUserId = userId
+      console.log('Using user ID:', actualUserId)
+      if (!actualUserId) {
+        this.pageError = 'You must be logged in to create a page'
+        return
+      }
+      
+      this.creatingPage = true
+      
+      try {
+        const response = await axios.post('http://localhost:8082/api/docs/pages', {
+          title: this.pageName.trim(),
+          folderId: null // Optional - no folder for now
+        }, {
+          headers: {
+            'X-User-Id': actualUserId, // Use the fallback user ID
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        this.pageResult = response.data
+        this.pageName = '' // Clear the form
+        
+        console.log('Page created successfully:', response.data)
+        
+      } catch (error) {
+        console.error('Error creating page:', error)
+        this.pageError = error.response?.data?.message || error.message || 'Failed to create page'
+      } finally {
+        this.creatingPage = false
+      }
+    }
+  }
+}
+</script>
+
 <template>
   <div class="text-center">
     <h1 class="text-4xl font-bold text-content-primary dark:text-content-inverse mb-4 transition-colors">
@@ -88,13 +174,13 @@
         >
           <div class="text-content-primary dark:text-content-inverse text-sm">
             <div class="font-semibold mb-2">Page Created Successfully!</div>
-            <div><strong>ID:</strong> {{ pageResult.id }}</div>
+            <div><strong>ID:</strong> {{ pageResult.pageId }}</div>
             <div><strong>Name:</strong> {{ pageResult.title }}</div>
             <div class="mt-2">
               <a 
-                :href="`/docs/${pageResult.id}`" 
+                :href="`/docs/${pageResult.pageId}`" 
                 class="text-accent hover:text-[#E66900] underline"
-                @click.prevent="$router.push(`/docs/${pageResult.id}`)"
+                @click.prevent="$router.push(`/docs/${pageResult.pageId}`)"
               >
                 Open Page →
               </a>
@@ -114,89 +200,3 @@
     </div>
   </div>
 </template>
-
-<script>
-import axios from 'axios'
-import auth from '@/utils/auth'
-
-export default {
-  name: 'HomeView',
-  data() {
-    return {
-      authResult: null,
-      docsResult: null,
-      pageName: '',
-      pageResult: null,
-      pageError: null,
-      creatingPage: false
-    }
-  },
-  methods: {
-    async testAuth() {
-      try {
-        const response = await axios.get('http://localhost:8081/api/auth/health');
-        this.authResult = JSON.stringify(response.data, null, 2);
-      } catch (error) {
-        this.authResult = `Error: ${error.message}`;
-      }
-    },
-    async testDocs() {
-      try {
-        const response = await axios.get('http://localhost:8082/api/docs/health');
-        this.docsResult = JSON.stringify(response.data, null, 2);
-      } catch (error) {
-        this.docsResult = `Error: ${error.message}`;
-      }
-    },
-    async createPage() {
-      // Reset previous results
-      this.pageResult = null
-      this.pageError = null
-      
-      // Validate inputs
-      if (!this.pageName.trim()) {
-        this.pageError = 'Page name is required'
-        return
-      }
-      
-      const userId = auth.getUserId()
-      console.log('User ID from auth.getUserId():', userId)
-      console.log('User data from localStorage:', auth.getUser())
-      console.log('Auth headers:', auth.getUserIdHeader())
-      
-      // Temporary workaround: use a known user ID if no user is logged in
-      const actualUserId = userId || 'default-user'
-      console.log('Using user ID:', actualUserId)
-      if (!actualUserId) {
-        this.pageError = 'You must be logged in to create a page'
-        return
-      }
-      
-      this.creatingPage = true
-      
-      try {
-        const response = await axios.post('http://localhost:8082/api/docs/pages', {
-          title: this.pageName.trim(),
-          folderId: null // Optional - no folder for now
-        }, {
-          headers: {
-            'X-User-Id': actualUserId, // Use the fallback user ID
-            'Content-Type': 'application/json'
-          }
-        })
-        
-        this.pageResult = response.data
-        this.pageName = '' // Clear the form
-        
-        console.log('Page created successfully:', response.data)
-        
-      } catch (error) {
-        console.error('Error creating page:', error)
-        this.pageError = error.response?.data?.message || error.message || 'Failed to create page'
-      } finally {
-        this.creatingPage = false
-      }
-    }
-  }
-}
-</script>

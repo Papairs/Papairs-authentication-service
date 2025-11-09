@@ -34,6 +34,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         int version = 0;
         final List<Op> history = new ArrayList<>();
         final Set<WebSocketSession> sessions = Collections.synchronizedSet(new HashSet<>());
+        final Map<WebSocketSession, String> sessionUsers = new ConcurrentHashMap<>(); // Track users
         boolean isDirty = false; // Track if document needs saving
         String docId;
         
@@ -46,28 +47,40 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         var msg = mapper.readValue(message.getPayload(), Message.class);
         var docId = msg.docId == null || msg.docId.isBlank() ? "default" : msg.docId;
+        var userId = msg.userId == null || msg.userId.isBlank() ? "anonymous" : msg.userId;
+        
         var doc = docs.computeIfAbsent(docId, k -> {
             var state = new DocState(k);
-            // Load existing content from database
-            state.content = documentService.getDocumentContent(k);
+            // Load existing content from database with user permission check
+            try {
+                state.content = documentService.getDocumentContent(k, userId);
+            } catch (Exception e) {
+                // If user doesn't have access or page doesn't exist, start with empty content
+                state.content = "";
+                System.out.println("[WebSocket] Starting with empty content for new page: " + k);
+            }
             return state;
         });
 
         switch (msg.action) {
-            case "join" -> handleJoin(session, doc);
-            case "op" -> handleOperation(msg.op, doc);
+            case "join" -> handleJoin(session, doc, userId);
+            case "op" -> handleOperation(msg.op, doc, session, userId);
         }
     }
 
     // Handle client joining document
-    private void handleJoin(WebSocketSession session, DocState doc) throws Exception {
+    private void handleJoin(WebSocketSession session, DocState doc, String userId) throws Exception {
         doc.sessions.add(session);
+        doc.sessionUsers.put(session, userId);
         send(session, createSnapshot(doc));
+        System.out.println("User " + userId + " joined document " + doc.docId);
     }
 
     // Handle operational transform
-    private void handleOperation(Op incoming, DocState doc) throws Exception {
+    private void handleOperation(Op incoming, DocState doc, WebSocketSession session, String userId) throws Exception {
         if (incoming == null) return;
+
+        System.out.println("User " + userId + " made operation on document " + doc.docId + ": " + incoming.type);
 
         // Transform against concurrent operations
         var transformed = transformOp(incoming, doc);
@@ -97,11 +110,14 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
 
     private void saveDocumentToDatabase(DocState doc) {
         try {
-            documentService.saveDocument(doc.docId, doc.content, "Document " + doc.docId);
+            // Get any user from the current session to perform the save
+            // In a real application, you might want to save with the document owner's permissions
+            String userId = doc.sessionUsers.values().stream().findFirst().orElse("system");
+            documentService.saveDocument(doc.docId, doc.content, userId);
             doc.isDirty = false;
-            System.out.println("Saved document " + doc.docId + " to database");
+            System.out.println("[WebSocket] Saved document " + doc.docId + " to database");
         } catch (Exception e) {
-            System.err.println("Failed to save document " + doc.docId + ": " + e.getMessage());
+            System.err.println("Failed to save page " + doc.docId + ": " + e.getMessage());
         }
     }
 
@@ -196,10 +212,20 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         docs.values().forEach(doc -> {
+            String userId = doc.sessionUsers.remove(session);
             doc.sessions.remove(session);
+            if (userId != null) {
+                System.out.println("User " + userId + " disconnected from document " + doc.docId);
+            }
             // Save document when last user disconnects
             if (doc.sessions.isEmpty() && doc.isDirty) {
-                saveDocumentToDatabase(doc);
+                try {
+                    // Use system user for final save when all users disconnect
+                    documentService.saveDocument(doc.docId, doc.content, "system");
+                    System.out.println("[WebSocket] Auto-saved document " + doc.docId + " on disconnect");
+                } catch (Exception e) {
+                    System.err.println("Failed to auto-save page " + doc.docId + " on disconnect: " + e.getMessage());
+                }
             }
         });
     }

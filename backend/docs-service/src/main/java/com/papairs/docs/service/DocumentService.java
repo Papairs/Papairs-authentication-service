@@ -1,86 +1,79 @@
 package com.papairs.docs.service;
 
-import com.papairs.docs.model.Document;
-import com.papairs.docs.repository.DocumentRepository;
+import com.papairs.docs.model.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
+/**
+ * Service class for WebSocket document operations.
+ * Acts as a bridge between WebSocket handlers and the PageService.
+ * This service handles document content for real-time collaborative editing.
+ * 
+ * @author Papairs Team
+ * @since 1.0
+ */
 @Service
 public class DocumentService {
 
-    private final DocumentRepository documentRepository;
+    private final PageService pageService;
 
     @Autowired
-    public DocumentService(DocumentRepository documentRepository) {
-        this.documentRepository = documentRepository;
+    public DocumentService(PageService pageService) {
+        this.pageService = pageService;
     }
 
-    // Save document content (called from WebSocket handler)
-    public Document saveDocument(String docId, String content, String title) {
-        try {
-            Long id = Long.parseLong(docId);
-            Optional<Document> existingDoc = documentRepository.findById(id);
-            
-            if (existingDoc.isPresent()) {
-                Document doc = existingDoc.get();
-                doc.setContent(content);
-                return documentRepository.save(doc);
-            } else {
-                // Create new document
-                Document newDoc = new Document();
-                newDoc.setId(id);
-                newDoc.setTitle(title != null ? title : "Untitled Document");
-                newDoc.setContent(content);
-                newDoc.setCreatedAt(LocalDateTime.now());
-                return documentRepository.save(newDoc);
-            }
-        } catch (NumberFormatException e) {
-            // Handle non-numeric docIds by creating new document
-            Document newDoc = new Document();
-            newDoc.setTitle(title != null ? title : docId);
-            newDoc.setContent(content);
-            newDoc.setCreatedAt(LocalDateTime.now());
-            return documentRepository.save(newDoc);
-        }
+    /**
+     * Save document content (called from WebSocket handler).
+     * This method updates page content through the PageService.
+     * 
+     * @param docId the document/page ID as a string
+     * @param content the document content to save
+     * @param userId the user ID performing the save operation
+     * @return the updated Page entity
+     * @throws com.papairs.docs.exception.ResourceNotFoundException if page not found
+     * @throws com.papairs.docs.exception.UnauthorizedAccessException if user lacks permission
+     */
+    public Page saveDocument(String docId, String content, String userId) {
+        return pageService.updatePage(docId, userId, content);
     }
 
-    // Get document content (for WebSocket initialization)
-    public String getDocumentContent(String docId) {
+    /**
+     * Get document content (for WebSocket initialization).
+     * This method retrieves page content through the PageService.
+     * 
+     * @param docId the document/page ID as a string
+     * @param userId the user ID requesting the content
+     * @return the document content, or empty string if document not found or no access
+     */
+    public String getDocumentContent(String docId, String userId) {
         try {
-            Long id = Long.parseLong(docId);
-            return documentRepository.findById(id)
-                    .map(Document::getContent)
-                    .orElse("");
-        } catch (NumberFormatException e) {
-            // For non-numeric IDs, return empty content
+            Page page = pageService.getPage(docId, userId);
+            return page.getContent() != null ? page.getContent() : "";
+        } catch (Exception e) {
+            // Return empty content if page not found or access denied
+            // This allows WebSocket to start with empty content for new documents
             return "";
         }
     }
 
-    // Standard CRUD operations
-    public List<Document> getAllDocuments() {
-        return documentRepository.findAll();
-    }
-
-    public Optional<Document> getDocumentById(Long id) {
-        return documentRepository.findById(id);
-    }
-
-    public Document createDocument(Document document) {
-        document.setCreatedAt(LocalDateTime.now());
-        return documentRepository.save(document);
-    }
-
-    public Document updateDocument(Long id, Document document) {
-        document.setId(id);
-        return documentRepository.save(document);
-    }
-
-    public void deleteDocument(Long id) {
-        documentRepository.deleteById(id);
+    /**
+     * Get document content without user permission check (for WebSocket backwards compatibility).
+     * WARNING: This method bypasses permission checks and should only be used 
+     * when user permissions are verified elsewhere.
+     * 
+     * @param docId the document/page ID as a string
+     * @return the document content, or empty string if document not found
+     * @deprecated Use {@link #getDocumentContent(String, String)} with proper user validation
+     */
+    @Deprecated
+    public String getDocumentContent(String docId) {
+        // For backwards compatibility, try to get content without permission check
+        // This is unsafe and should be migrated to use userId parameter
+        try {
+            // This is a temporary fallback - in production, all access should be through proper permissions
+            return ""; // Return empty for security - force migration to user-based access
+        } catch (Exception e) {
+            return "";
+        }
     }
 }

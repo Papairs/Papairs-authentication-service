@@ -84,10 +84,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-/* keep checkbox looking neat in all browsers */
-input[type="checkbox"] {
-  accent-color: #000; /* modern browsers will render black check */
-}
-</style>
