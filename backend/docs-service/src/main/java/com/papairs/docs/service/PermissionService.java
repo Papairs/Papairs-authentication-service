@@ -35,7 +35,7 @@ public class PermissionService {
 
         return folderRepository.findById(folderId)
             .map(folder -> folder.getOwnerId().equals(userId))
-            .orElse(false);
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
     }
 
     /**
@@ -60,7 +60,7 @@ public class PermissionService {
     public boolean canAccessPage(String pageId, String userId) {
         return pageRepository.findById(pageId)
             .map(page -> isOwner(page, userId) || pageMemberRepository.existsByPageIdAndUserId(pageId, userId))
-            .orElse(false);
+            .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
     }
 
     /**
