@@ -106,7 +106,7 @@ public class PageService {
      */
     @Transactional
     public void deletePage(String pageId, String userId) {
-        permissionService.requirePageAccess(pageId, userId);
+        permissionService.requirePageDeletion(pageId, userId);
         contentService.deletePageWithMembers(pageId);
     }
 

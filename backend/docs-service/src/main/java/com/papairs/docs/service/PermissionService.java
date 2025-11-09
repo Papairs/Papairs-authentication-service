@@ -118,6 +118,18 @@ public class PermissionService {
     }
 
     /**
+     * Enforces page deletion permissions, throwing an exception if the user cannot delete
+     * @param pageId The ID of the page
+     * @param userId The ID of the user
+     * @throws UnauthorizedAccessException if the user lacks deletion permissions
+     */
+    public void requirePageDeletion(String pageId, String userId) {
+        if (!canEditPage(pageId, userId)) {
+            throw new UnauthorizedAccessException("You don't have permission to delete");
+        }
+    }
+
+    /**
      * Enforces member management permissions, throwing an exception if the user is unauthorized
      * @param pageId The ID of the page
      * @param userId The ID of the user
