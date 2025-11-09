@@ -48,12 +48,14 @@ public interface PageRepository extends JpaRepository<Page, String> {
 
     /**
      * Finds all pages a user has access to, either as the owner or as a member
+     * Results are sorted numerically by {@code updatedAt}
      * @param userId The ID of the user.
      * @return A {@link List} of distinct {@link Page} entities.
      */
     @Query("SELECT DISTINCT p FROM Page p " +
             "LEFT JOIN PageMember pm ON p.pageId = pm.pageId " +
-            "WHERE p.ownerId = :userId OR pm.userId = :userId")
+            "WHERE p.ownerId = :userId OR pm.userId = :userId " +
+            "ORDER BY p.updatedAt DESC")
     List<Page> findAllAccessibleByUserId(String userId);
 
     /**
