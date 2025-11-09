@@ -16,7 +16,7 @@ import java.util.logging.Level;
 @Component
 public class AutoSaveManager {
     private static final Logger logger = Logger.getLogger(AutoSaveManager.class.getName());
-    private static final int SAVE_DELAY_SECONDS = 10;
+    private static final int SAVE_DELAY_SECONDS = 5;
     
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private final DocumentService documentService;
