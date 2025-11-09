@@ -57,7 +57,6 @@ public class PageService {
         permissionService.requireFolderAccess(folderId, ownerId);
 
         Page page = new Page();
-        page.setPageId(UUID.randomUUID().toString());
         page.setTitle(title);
         page.setFolderId(folderId);
         page.setOwnerId(ownerId);
