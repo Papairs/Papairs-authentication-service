@@ -2,9 +2,10 @@ package com.papairs.docs.controller;
 
 import com.papairs.docs.model.Document;
 import com.papairs.docs.model.ApiResponse;
+import com.papairs.docs.service.DocumentService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +13,13 @@ import java.util.Map;
 @RequestMapping("/api/docs")
 @CrossOrigin(origins = "http://localhost:3000")
 public class DocsController {
+
+    private final DocumentService documentService;
+
+    @Autowired
+    public DocsController(DocumentService documentService) {
+        this.documentService = documentService;
+    }
 
     @GetMapping("/health")
     public ApiResponse health() {
@@ -23,47 +31,31 @@ public class DocsController {
 
     @GetMapping("/all")
     public List<Document> getAllDocuments() {
-        // Mock documents
-        List<Document> documents = new ArrayList<>();
-        documents.add(new Document(1L, "Getting Started", 
-                                  "Learn how to get started with Papairs", 
-                                  LocalDateTime.now().minusDays(5)));
-        documents.add(new Document(2L, "API Documentation", 
-                                  "Complete API reference for developers", 
-                                  LocalDateTime.now().minusDays(3)));
-        documents.add(new Document(3L, "User Guide", 
-                                  "Comprehensive user guide for end users", 
-                                  LocalDateTime.now().minusDays(1)));
-        return documents;
+        return documentService.getAllDocuments();
     }
 
     @GetMapping("/{id}")
     public ApiResponse getDocument(@PathVariable Long id) {
-        // Mock document retrieval
-        Document doc = new Document(id, "Sample Document", 
-                                   "This is a sample document content", 
-                                   LocalDateTime.now());
-        return new ApiResponse("success", "Document retrieved successfully", doc);
+        return documentService.getDocumentById(id)
+                .map(doc -> new ApiResponse("success", "Document retrieved successfully", doc))
+                .orElse(new ApiResponse("error", "Document not found", null));
     }
 
     @PostMapping
     public ApiResponse createDocument(@RequestBody Document document) {
-        // Mock document creation
-        document.setId(System.currentTimeMillis());
-        document.setCreatedAt(LocalDateTime.now());
-        return new ApiResponse("success", "Document created successfully", document);
+        Document savedDoc = documentService.createDocument(document);
+        return new ApiResponse("success", "Document created successfully", savedDoc);
     }
 
     @PutMapping("/{id}")
     public ApiResponse updateDocument(@PathVariable Long id, @RequestBody Document document) {
-        // Mock document update
-        document.setId(id);
-        return new ApiResponse("success", "Document updated successfully", document);
+        Document updatedDoc = documentService.updateDocument(id, document);
+        return new ApiResponse("success", "Document updated successfully", updatedDoc);
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse deleteDocument(@PathVariable Long id) {
-        // Mock document deletion
+        documentService.deleteDocument(id);
         return new ApiResponse("success", "Document deleted successfully", 
                               Map.of("deletedId", id));
     }

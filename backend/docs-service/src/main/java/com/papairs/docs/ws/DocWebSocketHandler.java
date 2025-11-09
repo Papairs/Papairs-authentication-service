@@ -6,12 +6,13 @@ import com.papairs.docs.model.OT.AppliedOp;
 import com.papairs.docs.model.OT.DeleteOp;
 import com.papairs.docs.model.OT.InsertOp;
 import com.papairs.docs.model.OT.Op;
+import com.papairs.docs.service.DocumentService;
 import com.papairs.docs.util.OtTransform;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,103 +20,187 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DocWebSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private final Map<String, DocState> docs = new ConcurrentHashMap<>();
+    private final DocumentService documentService;
 
+    @Autowired
+    public DocWebSocketHandler(DocumentService documentService) {
+        this.documentService = documentService;
+    }
+
+    // Smart document state container
     private static class DocState {
         String content = "";
         int version = 0;
         final List<Op> history = new ArrayList<>();
         final Set<WebSocketSession> sessions = Collections.synchronizedSet(new HashSet<>());
-    }
-
-    private final Map<String, DocState> docs = new ConcurrentHashMap<>();
-
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) {
-        // no-op
+        boolean isDirty = false; // Track if document needs saving
+        String docId;
+        
+        DocState(String docId) {
+            this.docId = docId;
+        }
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        Message msg = mapper.readValue(message.getPayload(), Message.class);
-        String docId = (msg.docId == null || msg.docId.isBlank()) ? "default" : msg.docId;
-        DocState doc = docs.computeIfAbsent(docId, k -> new DocState());
+        var msg = mapper.readValue(message.getPayload(), Message.class);
+        var docId = msg.docId == null || msg.docId.isBlank() ? "default" : msg.docId;
+        var doc = docs.computeIfAbsent(docId, k -> {
+            var state = new DocState(k);
+            // Load existing content from database
+            state.content = documentService.getDocumentContent(k);
+            return state;
+        });
 
-        if ("join".equals(msg.action)) {
-            doc.sessions.add(session);
-            AppliedOp snap = new AppliedOp();
-            snap.type = "snapshot";
-            snap.version = doc.version;
-            snap.content = doc.content;
-            session.sendMessage(new TextMessage(mapper.writeValueAsString(snap)));
-            return;
+        switch (msg.action) {
+            case "join" -> handleJoin(session, doc);
+            case "op" -> handleOperation(msg.op, doc);
         }
+    }
 
-        if ("op".equals(msg.action) && msg.op != null) {
-            Op incoming = msg.op;
+    // Handle client joining document
+    private void handleJoin(WebSocketSession session, DocState doc) throws Exception {
+        doc.sessions.add(session);
+        send(session, createSnapshot(doc));
+    }
 
-            // Transform against all ops since client's base version
-            for (int i = incoming.baseVersion; i < doc.version; i++) {
-                incoming = OtTransform.transform(incoming, doc.history.get(i));
-            }
+    // Handle operational transform
+    private void handleOperation(Op incoming, DocState doc) throws Exception {
+        if (incoming == null) return;
 
-            // Apply
-            if ("insert".equals(incoming.type)) {
-                InsertOp ins = (InsertOp) incoming;
-                int p = clamp(ins.pos, 0, doc.content.length());
-                doc.content = doc.content.substring(0, p) + ins.text + doc.content.substring(p);
-            } else if ("delete".equals(incoming.type)) {
-                DeleteOp del = (DeleteOp) incoming;
-                int start = clamp(del.pos, 0, doc.content.length());
-                int end = clamp(start + del.length, 0, doc.content.length());
-                doc.content = doc.content.substring(0, start) + doc.content.substring(end);
-            }
+        // Transform against concurrent operations
+        var transformed = transformOp(incoming, doc);
+        
+        // Apply to document content
+        doc.content = applyOp(doc.content, transformed);
+        doc.isDirty = true; // Mark for saving
+        
+        // Update history and version
+        doc.history.add(cloneOp(transformed));
+        doc.version++;
 
-            // Commit history
-            doc.history.add(cloneOp(incoming));
-            doc.version++;
+        // Broadcast to all clients
+        broadcast(doc, createAppliedOp(transformed, doc.version));
+        
+        // Save to database asynchronously (every few operations or after delay)
+        saveDocumentIfNeeded(doc);
+    }
 
-            // Broadcast
-            AppliedOp out = new AppliedOp();
-            out.type = incoming.type;
-            out.version = doc.version;
-            out.clientId = incoming.clientId;
-            out.opId = incoming.opId;
-            out.pos = incoming.pos;
-            if (incoming instanceof InsertOp) out.text = ((InsertOp) incoming).text;
-            if (incoming instanceof DeleteOp) out.length = ((DeleteOp) incoming).length;
-
-            broadcast(doc, out);
+    // Smart database saving strategy
+    private void saveDocumentIfNeeded(DocState doc) {
+        if (doc.isDirty && doc.version % 5 == 0) { // Save every 5 operations
+            saveDocumentToDatabase(doc);
         }
+        // You could also implement time-based saving here
+    }
+
+    private void saveDocumentToDatabase(DocState doc) {
+        try {
+            documentService.saveDocument(doc.docId, doc.content, "Document " + doc.docId);
+            doc.isDirty = false;
+            System.out.println("Saved document " + doc.docId + " to database");
+        } catch (Exception e) {
+            System.err.println("Failed to save document " + doc.docId + ": " + e.getMessage());
+        }
+    }
+
+    // Smart operation transformation
+    private Op transformOp(Op op, DocState doc) {
+        for (int i = op.baseVersion; i < doc.version; i++) {
+            op = OtTransform.transform(op, doc.history.get(i));
+        }
+        return op;
+    }
+
+    // Clever content application
+    private String applyOp(String content, Op op) {
+        return switch (op.type) {
+            case "insert" -> {
+                var ins = (InsertOp) op;
+                var pos = clamp(ins.pos, 0, content.length());
+                yield content.substring(0, pos) + ins.text + content.substring(pos);
+            }
+            case "delete" -> {
+                var del = (DeleteOp) op;
+                var start = clamp(del.pos, 0, content.length());
+                var end = clamp(start + del.length, 0, content.length());
+                yield content.substring(0, start) + content.substring(end);
+            }
+            default -> content;
+        };
+    }
+
+    // Factory methods for response objects
+    private AppliedOp createSnapshot(DocState doc) {
+        var snap = new AppliedOp();
+        snap.type = "snapshot";
+        snap.version = doc.version;
+        snap.content = doc.content;
+        return snap;
+    }
+
+    private AppliedOp createAppliedOp(Op op, int version) {
+        var applied = new AppliedOp();
+        applied.type = op.type;
+        applied.version = version;
+        applied.clientId = op.clientId;
+        applied.opId = op.opId;
+        applied.pos = op.pos;
+        
+        if (op instanceof InsertOp ins) applied.text = ins.text;
+        if (op instanceof DeleteOp del) applied.length = del.length;
+        
+        return applied;
+    }
+
+    // Smart operation cloning
+    private Op cloneOp(Op op) {
+        return switch (op.type) {
+            case "insert" -> {
+                var ins = (InsertOp) op;
+                var clone = new InsertOp();
+                clone.type = "insert"; clone.pos = ins.pos; clone.baseVersion = ins.baseVersion;
+                clone.clientId = ins.clientId; clone.opId = ins.opId; clone.text = ins.text;
+                yield clone;
+            }
+            case "delete" -> {
+                var del = (DeleteOp) op;
+                var clone = new DeleteOp();
+                clone.type = "delete"; clone.pos = del.pos; clone.baseVersion = del.baseVersion;
+                clone.clientId = del.clientId; clone.opId = del.opId; clone.length = del.length;
+                yield clone;
+            }
+            default -> op;
+        };
+    }
+
+    // Utility functions
+    private void send(WebSocketSession session, Object obj) throws Exception {
+        session.sendMessage(new TextMessage(mapper.writeValueAsString(obj)));
+    }
+
+    private void broadcast(DocState doc, AppliedOp op) throws Exception {
+        var json = mapper.writeValueAsString(op);
+        synchronized (doc.sessions) {
+            for (var session : doc.sessions) {
+                if (session.isOpen()) session.sendMessage(new TextMessage(json));
+            }
+        }
+    }
+
+    private int clamp(int x, int min, int max) { 
+        return Math.max(min, Math.min(max, x)); 
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        docs.values().forEach(d -> d.sessions.remove(session));
-    }
-
-    private void broadcast(DocState doc, AppliedOp out) throws IOException {
-        String json = mapper.writeValueAsString(out);
-        synchronized (doc.sessions) {
-            for (WebSocketSession s : doc.sessions) {
-                if (s.isOpen()) s.sendMessage(new TextMessage(json));
+        docs.values().forEach(doc -> {
+            doc.sessions.remove(session);
+            // Save document when last user disconnects
+            if (doc.sessions.isEmpty() && doc.isDirty) {
+                saveDocumentToDatabase(doc);
             }
-        }
-    }
-
-    private int clamp(int x, int a, int b) { return Math.max(a, Math.min(b, x)); }
-
-    private Op cloneOp(Op op) {
-        if (op instanceof InsertOp ins) {
-            InsertOp c = new InsertOp();
-            c.type = "insert"; c.pos = ins.pos; c.baseVersion = ins.baseVersion;
-            c.clientId = ins.clientId; c.opId = ins.opId; c.text = ins.text;
-            return c;
-        } else if (op instanceof DeleteOp del) {
-            DeleteOp c = new DeleteOp();
-            c.type = "delete"; c.pos = del.pos; c.baseVersion = del.baseVersion;
-            c.clientId = del.clientId; c.opId = del.opId; c.length = del.length;
-            return c;
-        }
-        return op;
+        });
     }
 }
