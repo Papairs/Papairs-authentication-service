@@ -55,25 +55,4 @@ public class DocumentService {
             return "";
         }
     }
-
-    /**
-     * Get document content without user permission check (for WebSocket backwards compatibility).
-     * WARNING: This method bypasses permission checks and should only be used 
-     * when user permissions are verified elsewhere.
-     * 
-     * @param docId the document/page ID as a string
-     * @return the document content, or empty string if document not found
-     * @deprecated Use {@link #getDocumentContent(String, String)} with proper user validation
-     */
-    @Deprecated
-    public String getDocumentContent(String docId) {
-        // For backwards compatibility, try to get content without permission check
-        // This is unsafe and should be migrated to use userId parameter
-        try {
-            // This is a temporary fallback - in production, all access should be through proper permissions
-            return ""; // Return empty for security - force migration to user-based access
-        } catch (Exception e) {
-            return "";
-        }
-    }
 }

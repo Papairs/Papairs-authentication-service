@@ -15,34 +15,50 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * WebSocket handler for real-time collaborative document editing.
+ * Handles operational transform, document state management, and auto-save.
+ */
 @Component
 public class DocWebSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, DocState> docs = new ConcurrentHashMap<>();
     private final DocumentService documentService;
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
     @Autowired
     public DocWebSocketHandler(DocumentService documentService) {
         this.documentService = documentService;
     }
 
-    // Smart document state container
+    /**
+     * Document state container for collaborative editing session.
+     */
     private static class DocState {
         String content = "";
         int version = 0;
         final List<Op> history = new ArrayList<>();
         final Set<WebSocketSession> sessions = Collections.synchronizedSet(new HashSet<>());
-        final Map<WebSocketSession, String> sessionUsers = new ConcurrentHashMap<>(); // Track users
-        boolean isDirty = false; // Track if document needs saving
+        final Map<WebSocketSession, String> sessionUsers = new ConcurrentHashMap<>();
+        boolean isDirty = false;
         String docId;
+        ScheduledFuture<?> saveTimer;
         
         DocState(String docId) {
             this.docId = docId;
         }
     }
 
+    /**
+     * Handles incoming WebSocket text messages for document collaboration.
+     * Processes join requests and operational transforms.
+     */
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         var msg = mapper.readValue(message.getPayload(), Message.class);
@@ -68,7 +84,10 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // Handle client joining document
+    /**
+     * Handles client joining a document session.
+     * Adds session to document state and sends current snapshot.
+     */
     private void handleJoin(WebSocketSession session, DocState doc, String userId) throws Exception {
         doc.sessions.add(session);
         doc.sessionUsers.put(session, userId);
@@ -76,7 +95,10 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         System.out.println("User " + userId + " joined document " + doc.docId);
     }
 
-    // Handle operational transform
+    /**
+     * Handles operational transform for collaborative editing.
+     * Applies operation, updates document state, and broadcasts to all clients.
+     */
     private void handleOperation(Op incoming, DocState doc, WebSocketSession session, String userId) throws Exception {
         if (incoming == null) return;
 
@@ -96,18 +118,34 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         // Broadcast to all clients
         broadcast(doc, createAppliedOp(transformed, doc.version));
         
-        // Save to database asynchronously (every few operations or after delay)
-        saveDocumentIfNeeded(doc);
+        // Schedule save 10 seconds after input stops
+        scheduleDelayedSave(doc);
     }
 
-    // Smart database saving strategy
-    private void saveDocumentIfNeeded(DocState doc) {
-        if (doc.isDirty && doc.version % 5 == 0) { // Save every 5 operations
-            saveDocumentToDatabase(doc);
+    /**
+     * Schedules a delayed save 10 seconds after last input.
+     * Cancels existing timer if present.
+     */
+    private void scheduleDelayedSave(DocState doc) {
+        // Cancel existing timer if any
+        if (doc.saveTimer != null && !doc.saveTimer.isDone()) {
+            doc.saveTimer.cancel(false);
         }
-        // You could also implement time-based saving here
+        
+        // Schedule new save timer for 10 seconds from now
+        if (doc.isDirty) {
+            doc.saveTimer = scheduler.schedule(() -> {
+                if (doc.isDirty) {
+                    saveDocumentToDatabase(doc);
+                }
+            }, 10, TimeUnit.SECONDS);
+        }
     }
 
+    /**
+     * Saves document content to database.
+     * Called by the delayed save timer.
+     */
     private void saveDocumentToDatabase(DocState doc) {
         try {
             // Get any user from the current session to perform the save
@@ -121,7 +159,9 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // Smart operation transformation
+    /**
+     * Transforms operation against document history for conflict resolution.
+     */
     private Op transformOp(Op op, DocState doc) {
         for (int i = op.baseVersion; i < doc.version; i++) {
             op = OtTransform.transform(op, doc.history.get(i));
@@ -129,7 +169,10 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         return op;
     }
 
-    // Clever content application
+    /**
+     * Applies operation to document content.
+     * Handles insert and delete operations with position clamping.
+     */
     private String applyOp(String content, Op op) {
         return switch (op.type) {
             case "insert" -> {
@@ -147,7 +190,9 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         };
     }
 
-    // Factory methods for response objects
+    /**
+     * Creates snapshot message for client initialization.
+     */
     private AppliedOp createSnapshot(DocState doc) {
         var snap = new AppliedOp();
         snap.type = "snapshot";
@@ -156,6 +201,9 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         return snap;
     }
 
+    /**
+     * Creates applied operation message for broadcasting to clients.
+     */
     private AppliedOp createAppliedOp(Op op, int version) {
         var applied = new AppliedOp();
         applied.type = op.type;
@@ -170,7 +218,9 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         return applied;
     }
 
-    // Smart operation cloning
+    /**
+     * Creates deep copy of operation for history storage.
+     */
     private Op cloneOp(Op op) {
         return switch (op.type) {
             case "insert" -> {
@@ -191,11 +241,16 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         };
     }
 
-    // Utility functions
+    /**
+     * Sends JSON message to specific WebSocket session.
+     */
     private void send(WebSocketSession session, Object obj) throws Exception {
         session.sendMessage(new TextMessage(mapper.writeValueAsString(obj)));
     }
 
+    /**
+     * Broadcasts operation to all sessions in document.
+     */
     private void broadcast(DocState doc, AppliedOp op) throws Exception {
         var json = mapper.writeValueAsString(op);
         synchronized (doc.sessions) {
@@ -205,10 +260,17 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    /**
+     * Clamps value between min and max bounds.
+     */
     private int clamp(int x, int min, int max) { 
         return Math.max(min, Math.min(max, x)); 
     }
 
+    /**
+     * Handles WebSocket connection closure.
+     * Auto-saves documents when last user disconnects.
+     */
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         docs.values().forEach(doc -> {
@@ -219,14 +281,34 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
             }
             // Save document when last user disconnects
             if (doc.sessions.isEmpty() && doc.isDirty) {
+                // Cancel any pending timer and save immediately
+                if (doc.saveTimer != null && !doc.saveTimer.isDone()) {
+                    doc.saveTimer.cancel(false);
+                }
                 try {
                     // Use system user for final save when all users disconnect
                     documentService.saveDocument(doc.docId, doc.content, "system");
+                    doc.isDirty = false;
                     System.out.println("[WebSocket] Auto-saved document " + doc.docId + " on disconnect");
                 } catch (Exception e) {
                     System.err.println("Failed to auto-save page " + doc.docId + " on disconnect: " + e.getMessage());
                 }
             }
         });
+    }
+
+    /**
+     * Shuts down the scheduler and cleans up resources.
+     */
+    public void cleanup() {
+        scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }
