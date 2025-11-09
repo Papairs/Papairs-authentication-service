@@ -42,7 +42,7 @@ public class PermissionService {
      * Enforces folder access, throwing an exception if the user lacks permission
      * @param folderId The ID of the folder
      * @param userId The ID of the user
-     * @throws UnauthorizedAccessException if the user does not have access.
+     * @throws UnauthorizedAccessException if the user does not have access
      */
     public void requireFolderAccess(String folderId, String userId) {
         if (!canAccessFolder(folderId, userId)) {
@@ -68,7 +68,7 @@ public class PermissionService {
      * Permission is granted if the user is the owner or a member with the {@code EDITOR} role
      * @param pageId The ID of the page
      * @param userId The ID of the user
-     * @return {@code true} if the user has edit permissions, {@code false} otherwise.
+     * @return {@code true} if the user has edit permissions, {@code false} otherwise
      */
     public boolean canEditPage(String pageId, String userId) {
         Page page = pageRepository.findById(pageId)
@@ -87,7 +87,7 @@ public class PermissionService {
      * Logic is currently the same as edit permissions
      * @param pageId The ID of the page
      * @param userId The ID of the user
-     * @return {@code true} if the user can manage members, {@code false} otherwise.
+     * @return {@code true} if the user can manage members, {@code false} otherwise
      */
     public boolean canManageMembers(String pageId, String userId) {
         return canEditPage(pageId, userId);
@@ -143,9 +143,9 @@ public class PermissionService {
 
     /**
      * Determines if a user is the owner of a page
-     * @param pageId The ID of the page.
-     * @param userId The ID of the user.
-     * @return true if the user is the owner, false otherwise.
+     * @param pageId The ID of the page
+     * @param userId The ID of the user
+     * @return true if the user is the owner, false otherwise
      */
     public boolean isOwner(String pageId, String userId) {
         return pageRepository.findById(pageId)
