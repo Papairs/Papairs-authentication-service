@@ -29,6 +29,7 @@ import preview from '../../Images/7 Semester Recording Oct 13 2025.gif'
 import LoginHeader from '../components/LoginHeader.vue'
 import LoginForm from '../components/LoginForm.vue'
 import ImagePanel from '../components/ImagePanel.vue'
+import auth from '@/utils/auth'
 
 export default {
   name: 'LoginView',
@@ -59,11 +60,16 @@ export default {
         })
         
         const token = resp.data?.sessionToken || null
-        if (token) {
-          localStorage.setItem('papairs_token', token)
+        const user = resp.data?.user || null
+        
+        if (token && user) {
+          // Store auth data using utility
+          auth.setAuthData(token, user)
+          
+          console.log('Login successful, stored user ID:', user.id)
           setTimeout(() => this.$router.push({ name: 'Home' }), 700)
         } else {
-          this.$refs.loginForm.error = 'Login succeeded but no token returned.'
+          this.$refs.loginForm.error = 'Login succeeded but no token or user data returned.'
         }
       } catch (err) {
         this.$refs.loginForm.error = err.response?.data?.message || err.message || 'Login failed'
