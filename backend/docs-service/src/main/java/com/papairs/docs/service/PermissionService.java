@@ -72,7 +72,7 @@ public class PermissionService {
      */
     public boolean canEditPage(String pageId, String userId) {
         Page page = pageRepository.findById(pageId)
-            .orElseThrow(() -> new ResourceNotFoundException("Page not found."));
+            .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
 
         if (isOwner(page, userId)) {
             return true;
@@ -113,7 +113,7 @@ public class PermissionService {
      */
     public void requirePageEdit(String pageId, String userId) {
         if (!canEditPage(pageId, userId)) {
-            throw new UnauthorizedAccessException("You don't have edit permission");
+            throw new UnauthorizedAccessException("You don't have permission to edit");
         }
     }
 
