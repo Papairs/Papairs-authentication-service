@@ -13,10 +13,6 @@ public class RenamePageRequest {
     public RenamePageRequest() {
     }
 
-    public RenamePageRequest(String newTitle) {
-        this.newTitle = newTitle;
-    }
-
     public String getNewTitle() {
         return newTitle;
     }
