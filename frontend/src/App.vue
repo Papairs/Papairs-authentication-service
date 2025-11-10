@@ -1,11 +1,3 @@
-<template>
-  <div>
-    <main>
-      <router-view /> 
-    </main>
-  </div>
-</template>
-
 <script setup>
 import { onMounted } from 'vue';
 import { useTheme } from '@/composables/useTheme';
@@ -16,3 +8,11 @@ onMounted(() => {
   initTheme();
 });
 </script>
+
+<template>
+  <div>
+    <main>
+      <router-view /> 
+    </main>
+  </div>
+</template>

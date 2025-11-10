@@ -1,3 +1,14 @@
+<script>
+import User3Icon from '@/components/icons/User3Icon.vue'
+
+export default {
+  name: 'SidebarBase',
+  components: {
+    User3Icon
+  }
+}
+</script>
+
 <template>
     <div class="flex flex-col w-[250px] bg-surface-light-secondary border-r border-border-light-subtle">
         <div class="h-[50px] w-full flex flex-row items-center px-3">
@@ -13,14 +24,3 @@
     </div>
 
 </template>
-
-<script>
-import User3Icon from '@/components/icons/User3Icon.vue'
-
-export default {
-  name: 'SidebarBase',
-  components: {
-    User3Icon
-  }
-}
-</script>

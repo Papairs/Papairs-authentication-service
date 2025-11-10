@@ -1,3 +1,19 @@
+<script>
+export default {
+  name: 'User3Icon',
+  props: {
+    size: {
+      type: [String, Number],
+      default: '24'
+    },
+    className: {
+      type: String,
+      default: ''
+    }
+  }
+}
+</script>
+
 <template>
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
@@ -20,19 +36,3 @@
     </g>
   </svg>
 </template>
-
-<script>
-export default {
-  name: 'User3Icon',
-  props: {
-    size: {
-      type: [String, Number],
-      default: '24'
-    },
-    className: {
-      type: String,
-      default: ''
-    }
-  }
-}
-</script>
