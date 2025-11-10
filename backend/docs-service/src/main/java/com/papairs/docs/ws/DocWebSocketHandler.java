@@ -2,7 +2,7 @@ package com.papairs.docs.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.papairs.docs.model.Message;
-import com.papairs.docs.service.DocumentService;
+import com.papairs.docs.service.PageService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -23,19 +23,19 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, DocumentSession> documentSessions = new ConcurrentHashMap<>();
     
-    private final DocumentService documentService;
+    private final PageService pageService;
     private final OperationHandler operationHandler;
     private final AutoSaveManager autoSaveManager;
     private final MessageFactory messageFactory;
     private final WebSocketMessageBroker messageBroker;
 
     public DocWebSocketHandler(
-            DocumentService documentService,
+            PageService pageService,
             OperationHandler operationHandler,
             AutoSaveManager autoSaveManager,
             MessageFactory messageFactory,
             WebSocketMessageBroker messageBroker) {
-        this.documentService = documentService;
+        this.pageService = pageService;
         this.operationHandler = operationHandler;
         this.autoSaveManager = autoSaveManager;
         this.messageFactory = messageFactory;
@@ -128,7 +128,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     private DocumentSession getOrCreateDocumentSession(String docId, String userId) {
         return documentSessions.computeIfAbsent(docId, k -> {
             try {
-                String initialContent = documentService.getDocumentContent(k, userId);
+                String initialContent = pageService.getPage(k, userId).getContent();
                 return new DocumentSession(k, initialContent);
             } catch (Exception e) {
                 logger.info("Starting with empty content for new document: " + k);

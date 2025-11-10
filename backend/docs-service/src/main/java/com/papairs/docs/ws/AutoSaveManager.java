@@ -1,6 +1,6 @@
 package com.papairs.docs.ws;
 
-import com.papairs.docs.service.DocumentService;
+import com.papairs.docs.service.PageService;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,10 +19,10 @@ public class AutoSaveManager {
     private static final int SAVE_DELAY_SECONDS = 5;
     
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-    private final DocumentService documentService;
+    private final PageService pageService;
 
-    public AutoSaveManager(DocumentService documentService) {
-        this.documentService = documentService;
+    public AutoSaveManager(PageService pageService) {
+        this.pageService = pageService;
     }
 
     /**
@@ -65,10 +65,10 @@ public class AutoSaveManager {
 
         try {
             String userId = document.getAnyActiveUser();
-            documentService.saveDocument(
+            pageService.updatePage(
                 document.getDocumentId(), 
-                document.getContent(), 
-                userId
+                userId,
+                document.getContent()
             );
             document.markClean();
             logger.info("Successfully saved document: " + document.getDocumentId());
