@@ -50,6 +50,23 @@
           <pre class="text-content-primary dark:text-content-inverse text-sm overflow-x-auto">{{ docsResult }}</pre>
         </div>
       </div>
+
+      <div class="bg-surface-light dark:bg-surface-dark-secondary p-6 rounded-lg shadow-md transition-colors">
+        <h2 class="text-2xl font-semibold text-content-primary dark:text-content-inverse mb-4 transition-colors">
+          Autocomplete test
+        </h2>
+        <p class="text-content-secondary mb-4 transition-colors">
+          Test page, showing autocomplete functionality.
+        </p>
+        <router-link 
+          to="/autocomplete" 
+          class="bg-accent hover:bg-[#E66900] text-content-inverse font-bold py-2 px-4 rounded transition-colors inline-block"
+        >
+          Autocomplete Test
+        </router-link>
+      </div>
+
+
     </div>
   </div>
 </template>
@@ -81,7 +98,7 @@ export default {
       } catch (error) {
         this.docsResult = `Error: ${error.message}`;
       }
-    }
+    },
   }
 }
 </script>
