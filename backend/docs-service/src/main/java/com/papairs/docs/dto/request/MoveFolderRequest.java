@@ -1,16 +1,16 @@
 package com.papairs.docs.dto.request;
 
 public class MoveFolderRequest {
-    private String newParentFolderId;
+    private String parentFolderId;
 
     public MoveFolderRequest() {
     }
 
-    public String getNewParentFolderId() {
-        return newParentFolderId;
+    public String getParentFolderId() {
+        return parentFolderId;
     }
 
-    public void setNewParentFolderId(String newParentFolderId) {
-        this.newParentFolderId = newParentFolderId;
+    public void setParentFolderId(String parentFolderId) {
+        this.parentFolderId = parentFolderId;
     }
 }

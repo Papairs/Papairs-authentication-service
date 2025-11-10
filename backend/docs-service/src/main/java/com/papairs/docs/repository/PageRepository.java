@@ -1,5 +1,6 @@
 package com.papairs.docs.repository;
 
+import com.papairs.docs.model.FolderPageCount;
 import com.papairs.docs.model.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -12,47 +13,59 @@ import java.util.List;
 public interface PageRepository extends JpaRepository<Page, String> {
 
     /**
-     * Find pages by owner ID
-     * @param ownerId owner's user ID
-     * @return List of pages owned by the user
+     * Finds all pages owned by a specific user
+     * @param ownerId The ID of the owner
+     * @return A {@link List} of {@link Page} entities owned by the user
      */
     List<Page> findByOwnerId(String ownerId);
 
     /**
-     * Find pages by folder ID
-     * @param folderId folder ID
-     * @return List of pages in the folder
+     * Finds all pages located within a specific folder
+     * @param folderId The ID of the folder
+     * @return A {@link List} of {@link Page} entities within the folder.
      */
     List<Page> findByFolderId(String folderId);
 
     /**
-     * Check if any pages exist in the folder
-     * @param folderId folder ID
-     * @return true if pages exist, else false
+     * Checks if any pages exist within a specific folder.
+     * This is more performant than fetching the list of pages and checking if it's empty
+     * @param folderId The ID of the folder
+     * @return {@code true} if at least one page exists, {@code false} otherwise
      */
     boolean existsByFolderId(String folderId);
 
     /**
-     * Count pages in the folder
-     * @param folderId folder ID
-     * @return number of pages in the folder
+     * Counts the number of pages for multiple folders in a single query
+     * This method uses a JPQL constructor expression to map the results of the
+     * GROUP BY query directly into a {@link FolderPageCount} model
+     * @param folderIds A {@link List} of folder IDs for which to count pages
+     * @return A {@link List} of {@link FolderPageCount} DTOs, each containing a folderId and its
+     * corresponding page count. Folders with zero pages will not be included in the result list
      */
-    long countByFolderId(String folderId);
+    @Query("SELECT new com.papairs.docs.model.FolderPageCount(p.folderId, COUNT(p)) " +
+            "FROM Page p WHERE p.folderId IN :folderIds GROUP BY p.folderId")
+    List<FolderPageCount> countPagesInFolders(List<String> folderIds);
 
     /**
-     * Get page counts for multiple folders in a single query
-     * Returns a list of Object arrays where [0] is folderId and [1] is count
-     * @param folderIds list of folder IDs
-     * @return List of Object arrays [folderId, count]
+     * Finds all pages a user has access to, either as the owner or as a member
+     * Results are sorted numerically by {@code updatedAt}
+     * @param userId The ID of the user.
+     * @return A {@link List} of distinct {@link Page} entities.
      */
-    @Query("SELECT p.folderId, COUNT(p) FROM Page p WHERE p.folderId IN :folderIds GROUP BY p.folderId")
-    List<Object[]> countByFolderIdIn(List<String> folderIds);
+    @Query("SELECT DISTINCT p FROM Page p " +
+            "LEFT JOIN PageMember pm ON p.pageId = pm.pageId " +
+            "WHERE p.ownerId = :userId OR pm.userId = :userId " +
+            "ORDER BY p.updatedAt DESC")
+    List<Page> findAllAccessibleByUserId(String userId);
 
     /**
-     * Delete pages by folder ID
-     * @param folderId folder ID
+     * Deletes all pages within a given list of folder IDs in a single bulk operation
+     * The {@code clearAutomatically = true} option ensures the persistence context is cleared
+     * after the query which preventing issues with detached entities.
+     * @param folderIds A {@link List} of folder IDs to delete pages from.
+     * @see Modifying#clearAutomatically()
      */
-    @Modifying
-    @Query("DELETE FROM Page p WHERE p.folderId = :folderId")
-    void deleteByFolderId(String folderId);
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Page p WHERE p.folderId IN :folderIds")
+    void deleteAllByFolderIdIn(List<String> folderIds);
 }

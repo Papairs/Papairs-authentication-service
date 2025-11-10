@@ -1,37 +1,62 @@
 package com.papairs.docs.service;
 
+import com.papairs.docs.exception.ResourceNotFoundException;
 import com.papairs.docs.model.Page;
 import com.papairs.docs.repository.PageRepository;
+import com.papairs.docs.util.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class PageService {
     private final PageRepository pageRepository;
     private final PermissionService permissionService;
+    private final ContentService contentService;
 
-    public PageService(PageRepository pageRepository, PermissionService permissionService) {
+    public PageService(PageRepository pageRepository, PermissionService permissionService, ContentService contentService) {
         this.pageRepository = pageRepository;
         this.permissionService = permissionService;
+        this.contentService = contentService;
     }
 
     /**
-     * Create a new page
-     * @param title page title
-     * @param ownerId owner's user ID
-     * @return Created Page entity
+     * Retrieves a single page by its ID, ensuring the user has access
+     * @param pageId The ID of the page to retrieve
+     * @param userId The ID of the user requesting the page
+     * @return The requested {@link Page} entity
+     * @throws ResourceNotFoundException if the page is not found
+     */
+    public Page getPage(String pageId, String userId) {
+        permissionService.requirePageAccess(pageId, userId);
+
+        return pageRepository.findById(pageId)
+            .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
+    }
+
+    /**
+     * Retrieves all pages that a user can access, either as an owner or as a member
+     * @param userId The ID of the user.
+     * @return A {@link List} of all accessible {@link Page} entities.
+     */
+    public List<Page> getAllAccessiblePages(String userId) {
+        return pageRepository.findAllAccessibleByUserId(userId);
+    }
+
+    /**
+     * Creates a new page within a specified folder for a given owner
+     * @param title The title of the new page
+     * @param ownerId  The ID of the user who will own the page
+     * @param folderId The ID of the parent folder. Can be {@code null} for a page at the root level
+     * @return The newly created {@link Page} entity
      */
     @Transactional
     public Page createPage(String title, String ownerId, String folderId) {
-        permissionService.verifyFolderOwnership(folderId, ownerId);
+        folderId = StringUtils.emptyToNull(folderId);
+        permissionService.requireFolderAccess(folderId, ownerId);
 
         Page page = new Page();
-        page.setPageId(UUID.randomUUID().toString());
         page.setTitle(title);
         page.setFolderId(folderId);
         page.setOwnerId(ownerId);
@@ -40,122 +65,73 @@ public class PageService {
     }
 
     /**
-     * Update page content
-     * @param pageId page ID
-     * @param content new content
-     * @return Updated Page entity
+     * Updates the content of a specific page
+     * @param pageId  The ID of the page to update
+     * @param userId  The ID of the user performing the update. Requires edit permission
+     * @param content The new content for the page
+     * @return The updated {@link Page} entity
      */
     @Transactional
     public Page updatePage(String pageId, String userId, String content) {
-        Page page = permissionService.getPageWithCheck(pageId, userId);
+        Page page = getPage(pageId, userId);
+
         page.setContent(content);
         return pageRepository.save(page);
     }
 
     /**
-     * Rename a page
-     * @param pageId page ID
-     * @param userId user ID
-     * @param newTitle new title
-     * @return Updated Page entity
+     * Renames a page
+     * @param pageId The ID of the page to rename
+     * @param userId The ID of the user performing the action. Requires edit permission
+     * @param newTitle The new title for the page
+     * @return The updated {@link Page} entity
+     * @throws ResourceNotFoundException if the page is not found
      */
     @Transactional
     public Page renamePage(String pageId, String userId, String newTitle) {
-        Page page = permissionService.getPageWithCheck(pageId, userId);
+        permissionService.requirePageEdit(pageId, userId);
+
+        Page page = pageRepository.findById(pageId)
+            .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
+
         page.setTitle(newTitle);
         return pageRepository.save(page);
     }
 
     /**
-     * Get a page by ID
-     * @param pageId page ID
-     * @return Page entity
-     */
-    public Page getPage(String pageId, String userId) {
-        return permissionService.getPageWithCheck(pageId, userId);
-    }
-
-    /**
-     * Get all pages for a user
-     * @param userId user ID
-     * @return List of Page entities
-     */
-    public List<Page> getUserPages(String userId) {
-        return pageRepository.findByOwnerId(userId);
-    }
-
-    /**
-     * Delete a page by ID
-     * @param pageId page ID
+     * Deletes a page and all its associated memberships
+     * @param pageId The ID of the page to delete
+     * @param userId The ID of the user performing the action. Requires edit permission
      */
     @Transactional
     public void deletePage(String pageId, String userId) {
-        Page page = permissionService.getPageWithCheck(pageId, userId);
-        pageRepository.delete(page);
+        permissionService.requirePageDeletion(pageId, userId);
+        contentService.deletePageWithMembers(pageId);
     }
 
     /**
-     * Check if a folder has any pages
-     * @param folderId folder ID
-     * @return true if folder has pages, else false
-     */
-    public boolean folderHasPages(String folderId) {
-        return pageRepository.existsByFolderId(folderId);
-    }
-
-    /**
-     * Get page count in a folder
-     * @param folderId folder ID
-     * @return number of pages in the folder
-     */
-    public long getPageCountInFolder(String folderId) {
-        return pageRepository.countByFolderId(folderId);
-    }
-
-    /**
-     * Delete all pages in a folder
-     * @param folderId folder ID
-     */
-    @Transactional
-    public void deleteAllPagesInFolder(String folderId) {
-        pageRepository.deleteByFolderId(folderId);
-    }
-
-    /**
-     * Move a page to a different folder
-     * @param pageId page ID
-     * @param targetFolderId target folder ID
-     * @return Updated Page entity
+     * Moves a page to a new folder or to the root level
+     * @param pageId The ID of the page to move
+     * @param userId The ID of the user performing the move. Requires edit permission on the page
+     *               and access to the target folder
+     * @param targetFolderId The ID of the destination folder. Can be {@code null} to move to the root
+     * @return The updated {@link Page} entity
+     * @throws ResourceNotFoundException if the page is not found
      */
     @Transactional
     public Page movePage(String pageId, String targetFolderId, String userId) {
-        Page page = permissionService.getPageWithCheck(pageId, userId);
-        permissionService.verifyFolderOwnership(targetFolderId, userId);
+        permissionService.requirePageEdit(pageId, userId);
+
+        targetFolderId = StringUtils.emptyToNull(targetFolderId);
+
+        if (targetFolderId != null) {
+            permissionService.requireFolderAccess(targetFolderId, userId);
+        }
+
+        Page page = pageRepository.findById(pageId)
+            .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
 
         page.setFolderId(targetFolderId);
         return pageRepository.save(page);
-    }
-
-    /**
-     * Get page counts for multiple folders in a single query
-     * Batch query to eliminate N+1 problem when building folder trees
-     * @param folderIds list of folder IDs
-     * @return Map of folder ID to page count
-     */
-    public Map<String, Long> getPageCountsForFolders(List<String> folderIds) {
-        if (folderIds == null || folderIds.isEmpty()) {
-            return new HashMap<>();
-        }
-
-        List<Object[]> results = pageRepository.countByFolderIdIn(folderIds);
-        Map<String, Long> pageCountMap = new HashMap<>();
-
-        for (Object[] result : results) {
-            String folderId = (String) result[0];
-            Long count = (Long) result[1];
-            pageCountMap.put(folderId, count);
-        }
-
-        return pageCountMap;
     }
 }
