@@ -15,6 +15,12 @@ const routes = [
     component: DocsView
   },
   {
+    path: '/docs/:id',
+    name: 'DocsWithId',
+    component: DocsView,
+    props: true
+  },
+  {
     path: '/login',
     name: 'Login',
     component: LoginView
