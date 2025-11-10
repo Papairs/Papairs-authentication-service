@@ -71,11 +71,11 @@ services:
     container_name: papairs-docs-service
     ports:
       - "8082:8082"
+    env_file:
+      - ./backend/docs-service/.env
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    env_file:
-      - ./backend/docs-service/.env
     environment:
       - SERVER_PORT=8082
       - CORS_ALLOWED_ORIGINS=http://localhost:3000
