@@ -58,7 +58,6 @@ public class PageService {
         page.setTitle(title);
         page.setFolderId(folderId);
         page.setOwnerId(ownerId);
-        page.setContent("");
         return pageRepository.save(page);
     }
 
