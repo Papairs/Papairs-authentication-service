@@ -453,7 +453,7 @@ public class FolderDeletionTest extends AbstractE2ETest {
     public void folderTreeUpdatedAfterDeletion() throws Exception {
         String rootFolderId = fixtures.createFolderAsUser(TEST_USER_1_ID, "Root");
         String child1Id = fixtures.createFolderAsUser(TEST_USER_1_ID, "Child 1", rootFolderId);
-        String child2Id = fixtures.createFolderAsUser(TEST_USER_1_ID, "Child 2", rootFolderId);
+        fixtures.createFolderAsUser(TEST_USER_1_ID, "Child 2", rootFolderId);
 
         mockMvc.perform(get("/api/docs/folders/" + rootFolderId + "/tree")
                         .header(USER_ID_HEADER, TEST_USER_1_ID))
