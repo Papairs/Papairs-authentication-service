@@ -90,8 +90,7 @@ public class PageService {
     public Page renamePage(String pageId, String userId, String newTitle) {
         permissionService.requirePageEdit(pageId, userId);
 
-        Page page = pageRepository.findById(pageId)
-            .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
+        Page page = getPage(pageId, userId);
 
         page.setTitle(newTitle);
         return pageRepository.save(page);
