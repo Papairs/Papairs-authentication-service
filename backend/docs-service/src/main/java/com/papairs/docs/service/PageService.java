@@ -63,6 +63,7 @@ public class PageService {
 
     /**
      * Updates the content of a specific page
+     * @deprecated Use the Websocket implementation for real-time updates {@link com.papairs.docs.ws.DocWebSocketHandler}
      * @param pageId  The ID of the page to update
      * @param userId  The ID of the user performing the update. Requires edit permission
      * @param content The new content for the page

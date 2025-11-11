@@ -70,6 +70,7 @@ public class PageController {
 
     /**
      * Update a page's content
+     * @deprecated Use the Websocket implementation for real-time updates {@link com.papairs.docs.ws.DocWebSocketHandler}
      * @param pageId page ID
      * @param updatePageRequest update page request
      * @param request HTTP servlet request
