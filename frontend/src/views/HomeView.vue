@@ -2,6 +2,7 @@
   import axios from 'axios'
   import auth from '@/utils/auth'
   import { useTheme } from '@/composables/useTheme';
+  import { driveService } from '@/utils/driveService'
 
   export default {
     name: 'HomeView',
@@ -9,6 +10,7 @@
       return {
         authResult: null,
         docsResult: null,
+        driveResult: null,
         pageName: '',
         pageResult: null,
         pageError: null,
@@ -42,6 +44,23 @@
           this.docsResult = JSON.stringify(response.data, null, 2);
         } catch (error) {
           this.docsResult = `Error: ${error.message}`;
+        }
+      },
+      async testDrive() {
+        try {
+          // Test fetching folders and documents
+          const folders = await driveService.getRootFolders();
+          const documents = await driveService.getAllDocuments();
+          
+          this.driveResult = JSON.stringify({
+            foldersCount: folders.length,
+            documentsCount: documents.length,
+            folders: folders.slice(0, 3), // Show first 3 folders
+            documents: documents.slice(0, 3) // Show first 3 documents
+          }, null, 2);
+        } catch (error) {
+          console.error('Drive test error:', error);
+          this.driveResult = `Error: ${error.response?.data?.message || error.message}`;
         }
       },
       async createPage() {
@@ -115,6 +134,12 @@
               Home
             </router-link>
             <router-link 
+              to="/drive" 
+              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
+            >
+              Drive
+            </router-link>
+            <router-link 
               to="/docs" 
               class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
             >
@@ -148,7 +173,7 @@
       A simple Vue.js frontend with Spring Boot backends
     </p>
     
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
 
       <div class="bg-surface-light dark:bg-surface-dark-secondary p-6 rounded-lg shadow-md transition-colors">
         <h2 class="text-2xl font-semibold text-content-primary dark:text-content-inverse mb-4 transition-colors">
@@ -189,6 +214,33 @@
           class="mt-4 p-2 bg-surface-light-secondary dark:bg-surface-dark rounded transition-colors"
         >
           <pre class="text-content-primary dark:text-content-inverse text-sm overflow-x-auto">{{ docsResult }}</pre>
+        </div>
+      </div>
+
+      <div class="bg-surface-light dark:bg-surface-dark-secondary p-6 rounded-lg shadow-md transition-colors">
+        <h2 class="text-2xl font-semibold text-content-primary dark:text-content-inverse mb-4 transition-colors">
+          Drive Service
+        </h2>
+        <p class="text-content-secondary mb-4 transition-colors">
+          Test folders and documents API
+        </p>
+        <button 
+          @click="testDrive" 
+          class="bg-accent hover:bg-[#E66900] text-content-inverse font-bold py-2 px-4 rounded transition-colors mb-2"
+        >
+          Test Drive Service
+        </button>
+        <router-link 
+          to="/drive"
+          class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+        >
+          Open Drive →
+        </router-link>
+        <div 
+          v-if="driveResult" 
+          class="mt-4 p-2 bg-surface-light-secondary dark:bg-surface-dark rounded transition-colors"
+        >
+          <pre class="text-content-primary dark:text-content-inverse text-sm overflow-x-auto">{{ driveResult }}</pre>
         </div>
       </div>
 
