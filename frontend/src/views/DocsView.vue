@@ -1,60 +1,153 @@
-<template>
-  <div>
-    <h1 class="text-3xl font-bold text-gray-900 mb-6">Documentation</h1>
-    
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-2xl font-semibold text-gray-800 mb-4">Available Documents</h2>
-      
-      <div v-if="loading" class="text-center py-4">
-        <p class="text-gray-600">Loading documents...</p>
-      </div>
-      
-      <div v-else-if="documents.length > 0" class="space-y-4">
-        <div v-for="doc in documents" :key="doc.id" class="border border-gray-200 rounded-lg p-4">
-          <h3 class="text-xl font-semibold text-gray-800">{{ doc.title }}</h3>
-          <p class="text-gray-600 mt-2">{{ doc.description }}</p>
-          <p class="text-sm text-gray-400 mt-2">Created: {{ doc.createdAt }}</p>
-        </div>
-      </div>
-      
-      <div v-else class="text-center py-8">
-        <p class="text-gray-500">No documents available</p>
-      </div>
-      
-      <button @click="loadDocuments" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Refresh Documents
-      </button>
-    </div>
-  </div>
-</template>
-
 <script>
-import axios from 'axios'
+import SidebarBase from '@/components/SidebarBase.vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useWebSocket } from '@/composables/useWebSocket'
+import { useDocument } from '@/composables/useDocument'
+import { createErrorHandler } from '@/utils/errorHandler'
+import auth from '@/utils/auth'
 
 export default {
   name: 'DocsView',
-  data() {
-    return {
-      documents: [],
-      loading: false
+  components: { SidebarBase },
+  props: {
+    id: {
+      type: String,
+      default: 'demo'
     }
   },
-  async mounted() {
-    await this.loadDocuments();
-  },
-  methods: {
-    async loadDocuments() {
-      this.loading = true;
-      try {
-        const response = await axios.get('http://localhost:8082/api/docs/all');
-        this.documents = response.data;
-      } catch (error) {
-        console.error('Error loading documents:', error);
-        this.documents = [];
-      } finally {
-        this.loading = false;
+  setup(props) {
+    // Initialize error handler and client ID
+    const errorHandler = createErrorHandler()
+    const clientId = crypto.randomUUID()
+    
+    // Use document ID from props or default to 'demo'
+    const documentId = computed(() => props.id)
+    
+    // Initialize document and WebSocket
+    const document = useDocument(clientId)
+    const webSocket = useWebSocket('ws://localhost:8082/ws/doc')
+    
+    // UI refs
+    const textarea = ref(null)
+
+    // WebSocket event handlers
+    webSocket.onOpen(() => {
+      errorHandler.safe(() => {
+        const userId = auth.getUserId() || 'anonymous'
+        webSocket.send({ action: 'join', docId: documentId.value, userId: userId })
+        console.log('[Application] Joined document session:', documentId.value, 'as user:', userId)
+      })
+    })
+
+    webSocket.onMessage((event) => {
+      errorHandler.safe(() => {
+        const message = JSON.parse(event.data)
+        console.log('[Application] Message received:', message.type)
+        
+        const success = message.type === 'snapshot' 
+          ? document.handleSnapshot(message)
+          : document.handleServerOperation(message)
+          
+        if (success) {
+          updateTextarea()
+        } else {
+          errorHandler.document('Failed to process server message')
+        }
+      })
+    })
+
+    webSocket.onError((error) => {
+      errorHandler.websocket('Connection error', error)
+    })
+
+    webSocket.onClose((event) => {
+      console.log('[Application] WebSocket closed:', event.code)
+    })
+
+    // Text input handling
+    function onInput(event) {
+      errorHandler.safe(() => {
+        const operation = document.handleTextInput(event.target.value)
+        if (operation) {
+          // Add user ID to the operation
+          const userId = auth.getUserId() || 'anonymous'
+          const messageWithUser = { 
+            action: 'op', 
+            docId: documentId.value, 
+            op: operation,
+            userId: userId
+          }
+          if (!webSocket.send(messageWithUser)) {
+            errorHandler.websocket('Failed to send operation to server')
+          }
+        }
+        updateTextarea()
+      })
+    }
+
+    // Update textarea value to match document state
+    function updateTextarea() {
+      if (textarea.value && textarea.value.value !== document.text.value) {
+        textarea.value.value = document.text.value
       }
+    }
+
+    // Lifecycle hooks
+    onMounted(() => {
+      console.log('[Application] Initializing document editor')
+      webSocket.connect()
+    })
+
+    onBeforeUnmount(() => {
+      console.log('[Application] Cleaning up document editor')
+      webSocket.disconnect()
+    })
+
+    return {
+      // UI refs
+      textarea,
+      
+      // Document state
+      text: document.text,
+      version: document.version,
+      hasPendingOperations: document.hasPendingOperations,
+      
+      // WebSocket state
+      connectionState: webSocket.connectionState,
+      connectionError: webSocket.connectionError,
+      
+      // Document info
+      documentId,
+      
+      // Event handlers
+      onInput
     }
   }
 }
 </script>
+
+
+<template>
+  <div class="flex flex-row h-screen w-screen bg-surface-light overflow-hidden">
+    <SidebarBase />
+    <div class="flex flex-col h-full w-full overflow-hidden">
+      <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0"></div>
+      <div class="flex flex-col flex-1 w-full justify-center items-center overflow-hidden">
+        <div class="flex flex-row h-[50px] w-[1200px] border-b border-border-light-subtle flex-shrink-0"></div>
+        <div class="flex flex-row flex-1">
+          <div class="flex-1 w-[1000px] bg-white border-x border-border-light-subtle px-12 overflow-hidden">
+            <textarea
+              ref="textarea"
+              :value="text"
+              @input="onInput"
+              name="document-content"
+              id="document-editor"
+              placeholder="Start writing your document..."
+              class="w-full h-full resize-none border-none focus:outline-none bg-transparent text-gray-800 text-base font-normal placeholder-gray-400 py-12"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
