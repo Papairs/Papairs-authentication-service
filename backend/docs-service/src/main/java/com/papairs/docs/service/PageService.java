@@ -70,6 +70,8 @@ public class PageService {
      */
     @Transactional
     public Page updatePage(String pageId, String userId, String content) {
+        permissionService.requirePageEdit(pageId, userId);
+
         Page page = getPage(pageId, userId);
 
         page.setContent(content);
