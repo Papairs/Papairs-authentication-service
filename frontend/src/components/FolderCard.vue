@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg hover:shadow-md transition-all cursor-pointer overflow-hidden"
+    class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg hover:shadow-md transition-all cursor-pointer overflow-visible"
     style="height: 50px; width: 100%"
     @click="$emit('click')"
   >
@@ -21,40 +21,43 @@
         </h3>
       </div>
       
-      <!-- Menu Button -->
-      <button 
-        @click.stop="showMenu = !showMenu"
-        class="flex-shrink-0 p-1 rounded hover:bg-surface-light-secondary dark:hover:bg-surface-dark transition-colors"
-      >
-        <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-      
-      <!-- Dropdown Menu -->
-      <div 
-        v-if="showMenu"
-        class="absolute right-4 top-12 w-40 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg z-10"
-      >
+      <!-- Menu Button Container -->
+      <div class="relative" ref="menuRef">
         <button 
-          @click.stop="handleRename"
-          class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark first:rounded-t-lg"
+          @click.stop="showMenu = !showMenu"
+          class="flex-shrink-0 p-1 rounded hover:bg-surface-light-secondary dark:hover:bg-surface-dark transition-colors"
         >
-          Rename
+          <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
         </button>
-        <button 
-          @click.stop="handleDelete"
-          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900 last:rounded-b-lg"
+        
+        <!-- Dropdown Menu -->
+        <div 
+          v-if="showMenu"
+          @click.stop
+          class="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg z-50"
         >
-          Delete
-        </button>
+          <button 
+            @click.stop="handleRename"
+            class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark first:rounded-t-lg"
+          >
+            Rename
+          </button>
+          <button 
+            @click.stop="handleDelete"
+            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900 last:rounded-b-lg"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 export default {
   name: 'FolderCard',
@@ -67,12 +70,27 @@ export default {
   emits: ['click', 'delete', 'rename'],
   setup(props, { emit }) {
     const showMenu = ref(false)
+    const menuRef = ref(null)
 
     const formatDate = (dateString) => {
       if (!dateString) return ''
       const date = new Date(dateString)
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }
+
+    const handleClickOutside = (event) => {
+      if (menuRef.value && !menuRef.value.contains(event.target)) {
+        showMenu.value = false
+      }
+    }
+
+    onMounted(() => {
+      document.addEventListener('click', handleClickOutside)
+    })
+
+    onBeforeUnmount(() => {
+      document.removeEventListener('click', handleClickOutside)
+    })
 
     const handleDelete = () => {
       showMenu.value = false
@@ -86,6 +104,7 @@ export default {
 
     return {
       showMenu,
+      menuRef,
       formatDate,
       handleDelete,
       handleRename

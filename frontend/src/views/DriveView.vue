@@ -237,16 +237,6 @@ export default {
                 @search="handleSearch"
               />
             </div>
-
-            <!-- User Actions -->
-            <div class="flex items-center space-x-4">
-              <button 
-                @click="$router.push('/')"
-                class="text-sm text-content-secondary hover:text-content-primary dark:hover:text-content-inverse"
-              >
-                Home
-              </button>
-            </div>
           </div>
         </div>
 
@@ -299,12 +289,6 @@ export default {
         <div class="mb-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-medium text-accent">Notebooks</h3>
-            <button 
-              @click="showCreateFolderModal = true"
-              class="text-sm text-content-secondary hover:text-accent"
-            >
-              + New Folder
-            </button>
           </div>
         </div>
 
