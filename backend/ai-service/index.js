@@ -36,7 +36,7 @@ app.post('/autocomplete', async (req, res) => {
         { role: 'user', content: userInput }
       ],
       model: 'gpt-5-mini',
-      max_tokens: 30,
+      max_completion_tokens: 30,
       temperature: 0.3,
     });
     

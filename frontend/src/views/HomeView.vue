@@ -5,6 +5,7 @@ import AuthSection from '@/components/controllerComponents/AuthSection.vue';
 import DocsSection from '@/components/controllerComponents/DocsSection.vue';
 import PageSection from '@/components/controllerComponents/PageSection.vue';
 import FolderSection from '@/components/controllerComponents/FolderSection.vue';
+import AISection from '@/components/controllerComponents/AISection.vue';
 
 export default {
   name: 'HomeView',
@@ -12,7 +13,8 @@ export default {
     AuthSection,
     DocsSection,
     PageSection,
-    FolderSection
+    FolderSection,
+    AISection
   },
   data() {
     return {
@@ -97,7 +99,7 @@ export default {
       <div class="mb-8 border-b border-border-light dark:border-border-dark">
         <nav class="flex space-x-8">
           <button 
-            v-for="section in ['auth', 'docs', 'pages', 'folders']" 
+            v-for="section in ['auth', 'ai', 'docs', 'pages', 'folders']" 
             :key="section"
             @click="activeSection = section"
             :class="[
@@ -115,6 +117,11 @@ export default {
       <!-- Test Sections -->
       <AuthSection 
         v-if="activeSection === 'auth'" 
+        :test-manager="testManager"
+      />
+      
+      <AISection 
+        v-if="activeSection === 'ai'" 
         :test-manager="testManager"
       />
       
