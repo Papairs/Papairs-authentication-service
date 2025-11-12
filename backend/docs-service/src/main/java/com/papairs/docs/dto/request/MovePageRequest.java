@@ -1,19 +1,21 @@
 package com.papairs.docs.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
+import com.papairs.docs.annotation.Sanitize;
+import jakarta.annotation.Nullable;
 
 public class MovePageRequest {
-    @NotBlank(message = "New parent ID is required")
-    private String newParentId;
+    @Nullable
+    @Sanitize(trim = true, blankToNull = true)
+    private String folderId;
 
     public MovePageRequest() {
     }
 
-    public String getNewParentId() {
-        return newParentId;
+    public String getFolderId() {
+        return folderId;
     }
 
-    public void setNewParentId(String newParentId) {
-        this.newParentId = newParentId;
+    public void setFolderId(String folderId) {
+        this.folderId = folderId;
     }
 }

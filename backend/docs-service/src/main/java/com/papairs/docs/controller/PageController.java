@@ -25,13 +25,13 @@ public class PageController {
     }
 
     /**
-     * Get list of pages for the user
+     * Get list of pages which the user has access to
      * @param httpRequest HTTP servlet request
      * @return ResponseEntity with list of pages
      */
     @GetMapping("/pages")
-    public ResponseEntity<List<Page>> getPages(HttpServletRequest httpRequest) {
-        List<Page> pages = pageService.getUserPages(UserId.extract(httpRequest));
+    public ResponseEntity<List<Page>> getUserPages(HttpServletRequest httpRequest) {
+        List<Page> pages = pageService.getAllAccessiblePages(UserId.extract(httpRequest));
         return ResponseEntity.ok(pages);
     }
 
@@ -46,7 +46,11 @@ public class PageController {
             @Valid @RequestBody CreatePageRequest createPageRequest,
             HttpServletRequest request
     ) {
-        Page page = pageService.createPage(createPageRequest.getTitle(), UserId.extract(request), createPageRequest.getParentFolderId());
+        Page page = pageService.createPage(
+            createPageRequest.getTitle(),
+            UserId.extract(request),
+            createPageRequest.getFolderId()
+        );
         return ResponseEntity.status(201).body(page);
     }
 
@@ -88,13 +92,17 @@ public class PageController {
      * @param request HTTP servlet request
      * @return ResponseEntity with renamed page
      */
-    @PostMapping("/pages/{pageId}")
+    @PatchMapping("/pages/{pageId}")
     public ResponseEntity<Page> renamePage(
             @PathVariable String pageId,
-            @RequestBody RenamePageRequest renamePageRequest,
+            @Valid @RequestBody RenamePageRequest renamePageRequest,
             HttpServletRequest request
     ) {
-        Page renamed = pageService.renamePage(pageId, UserId.extract(request), renamePageRequest.getNewTitle());
+        Page renamed = pageService.renamePage(
+            pageId,
+            UserId.extract(request),
+            renamePageRequest.getNewTitle()
+        );
         return ResponseEntity.ok(renamed);
     }
 
@@ -105,13 +113,17 @@ public class PageController {
      * @param request HTTP servlet request
      * @return ResponseEntity with moved page
      */
-    @PostMapping("/pages/{pageId}/move")
+    @PatchMapping("/pages/{pageId}/move")
     public ResponseEntity<Page> movePage(
             @PathVariable String pageId,
             @Valid @RequestBody MovePageRequest movePageRequest,
             HttpServletRequest request
     ) {
-        Page moved = pageService.movePage(pageId, movePageRequest.getNewParentId(), UserId.extract(request));
+        Page moved = pageService.movePage(
+            pageId,
+            movePageRequest.getFolderId(),
+            UserId.extract(request)
+        );
         return ResponseEntity.ok(moved);
     }
 
@@ -128,10 +140,5 @@ public class PageController {
     ) {
         pageService.deletePage(pageId, UserId.extract(request));
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/pages/{pageId}/members")
-    public String getPageMembers() {
-        return "List of page members";
     }
 }

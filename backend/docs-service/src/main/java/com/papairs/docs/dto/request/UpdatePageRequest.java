@@ -6,10 +6,6 @@ public class UpdatePageRequest {
     public UpdatePageRequest() {
     }
 
-    public UpdatePageRequest(String content) {
-        this.content = content;
-    }
-
     public String getContent() {
         return content;
     }
