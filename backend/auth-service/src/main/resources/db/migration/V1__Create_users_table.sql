@@ -1,7 +1,7 @@
 -- Migration: Create users table
 -- Description: Initial schema for user authentication
--- Author: System
--- Date: 2025-11-03
+-- Author: Gustaw
+-- Date: 2025 3. Nov
 
 CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(36) PRIMARY KEY,

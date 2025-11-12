@@ -1,7 +1,7 @@
 -- Migration: Create sessions table
--- Description: Session management for authenticated users
--- Author: System
--- Date: 2025-11-03
+-- Description: Initial schema for user sessions
+-- Author: Gustaw
+-- Date: 2025 3. Nov
 
 CREATE TABLE IF NOT EXISTS sessions (
     id VARCHAR(36) PRIMARY KEY,

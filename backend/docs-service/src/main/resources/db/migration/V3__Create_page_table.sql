@@ -1,5 +1,5 @@
 -- Migration: Create page table
--- Description: Document pages for content management
+-- Description: Initial schema for document pages
 -- Author: Gustaw
 -- Date: 2025 Nov 12
 

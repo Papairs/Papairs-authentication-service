@@ -1,5 +1,5 @@
 -- Migration: Create page_member table
--- Description: Page member permissions and sharing
+-- Description: Initial schema for page members
 -- Author: Gustaw
 -- Date: 2025 Nov 12
 

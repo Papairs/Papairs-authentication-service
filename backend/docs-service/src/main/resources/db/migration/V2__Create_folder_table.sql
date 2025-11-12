@@ -1,5 +1,5 @@
 -- Migration: Create folder table
--- Description: Folder structure for organizing documents
+-- Description: Initial schema for document folders
 -- Author: Gustaw
 -- Date: 2025 Nov 12
 

@@ -1,5 +1,5 @@
 -- Migration: Create user table
--- Description: User information for docs service
+-- Description: Initial schema for users in docs service
 -- Author: Gustaw
 -- Date: 2025 Nov 12
 
