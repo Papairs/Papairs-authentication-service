@@ -19,16 +19,14 @@ export class AIController extends BaseApiController {
 
   /**
    * Check if AI service is responding
-   * Note: AI service doesn't have a dedicated health endpoint, 
-   * so we'll test with a simple autocomplete request
    */
   async checkHealth() {
     try {
-      await this.post('/autocomplete', { userInput: 'test' });
+      const response = await this.get('/health');
       return {
         success: true,
-        data: { status: 'healthy', message: 'AI service is responding' },
-        status: 200
+        data: response.data,
+        status: response.status
       };
     } catch (error) {
       return {
