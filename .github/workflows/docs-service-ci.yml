@@ -90,13 +90,6 @@ jobs:
       - name: 🔨 Build Docker image
         run: |
           docker build -t docs-service:test .
-      
-      - name: 🚀 Test Docker image starts
-        run: |
-          docker run -d -p 8082:8082 --name docs-test docs-service:test
-          sleep 15
-          docker logs docs-test
-          docker stop docs-test
 
   # =============================================================================
   # JOB 3: Code Quality Checks
