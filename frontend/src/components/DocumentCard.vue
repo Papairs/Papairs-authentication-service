@@ -1,53 +1,58 @@
 <template>
   <div 
-    class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg p-4 hover:shadow-lg hover:border-accent transition-all cursor-pointer"
+    class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-xl hover:shadow-md transition-all cursor-pointer overflow-hidden"
+    style="aspect-ratio: 1; width: 100%"
     @click="$emit('click')"
   >
-    <div class="flex flex-col items-center">
-      <!-- Document Icon -->
-      <div class="text-5xl mb-2">📄</div>
+    <!-- Header with Icon, Title and Menu on same line -->
+    <div class="flex items-center justify-between p-4">
+      <!-- Icon and Title -->
+      <div class="flex items-center space-x-3 flex-1 min-w-0">
+        <!-- Document Icon -->
+        <div class="flex-shrink-0">
+          <svg class="w-5 h-5 text-content-primary dark:text-content-inverse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        
+        <!-- Document Title -->
+        <h3 class="text-sm font-medium text-content-primary dark:text-content-inverse truncate">
+          {{ document.title }}
+        </h3>
+      </div>
       
-      <!-- Document Title -->
-      <h3 class="text-sm font-medium text-content-primary dark:text-content-inverse text-center truncate w-full">
-        {{ document.title }}
-      </h3>
-      
-      <!-- Updated Date -->
-      <p class="text-xs text-content-secondary mt-1">
-        {{ formatDate(document.updatedAt) }}
-      </p>
-    </div>
-
-    <!-- Actions Menu (appears on hover) -->
-    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <!-- Menu Button -->
       <button 
         @click.stop="showMenu = !showMenu"
-        class="p-1 rounded-full hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
+        class="flex-shrink-0 p-1 rounded hover:bg-surface-light-secondary dark:hover:bg-surface-dark transition-colors"
       >
-        <svg class="w-5 h-5 text-content-secondary" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+        <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
       
       <!-- Dropdown Menu -->
       <div 
         v-if="showMenu"
-        class="absolute right-0 mt-2 w-40 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg z-10"
+        class="absolute right-4 top-12 w-40 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg z-10"
       >
         <button 
           @click.stop="handleRename"
-          class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
+          class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark first:rounded-t-lg"
         >
           Rename
         </button>
         <button 
           @click.stop="handleDelete"
-          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900"
+          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900 last:rounded-b-lg"
         >
           Delete
         </button>
       </div>
     </div>
+
+    <!-- Whitespace area for visual breathing room -->
+    <div class="flex-1"></div>
   </div>
 </template>
 
