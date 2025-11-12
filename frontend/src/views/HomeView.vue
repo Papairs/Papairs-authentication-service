@@ -1,4 +1,6 @@
 <script>
+import axios from 'axios'
+ import auth from '@/utils/auth'
 import { useTheme } from '@/composables/useTheme';
 import { ApiTestManager } from '@/controllers/ApiTestManager.js';
 import AuthSection from '@/components/controllerComponents/AuthSection.vue';
@@ -6,37 +8,129 @@ import DocsSection from '@/components/controllerComponents/DocsSection.vue';
 import PageSection from '@/components/controllerComponents/PageSection.vue';
 import FolderSection from '@/components/controllerComponents/FolderSection.vue';
 import AISection from '@/components/controllerComponents/AISection.vue';
+  import { driveService } from '@/utils/driveService'
 
-export default {
-  name: 'HomeView',
-  components: {
+  export default {
+    name: 'HomeView',
+    components: {
     AuthSection,
     DocsSection,
     PageSection,
     FolderSection,
     AISection
   },
-  data() {
-    return {
-      // Test manager
-      testManager: new ApiTestManager(),
+    data() {
+      return {
+        authResult: null,
+        docsResult: null,
+        driveResult: null,
+        pageName: '',
+        pageResult: null,
+        pageError: null,
+        creatingPage: false,
+        testManager: new ApiTestManager(),
       
-      // Active test section
-      activeSection: 'auth'
+        // Active test section
+        activeSection: 'auth'
+      }
+    },
+    setup() {
+      const { isDark, toggleTheme, initTheme } = useTheme();
+      
+      return {
+        isDark,
+        toggleTheme,
+        initTheme,
+      }
+    },
+    mounted() {
+      this.initTheme();
+    },
+    methods: {
+      async testAuth() {
+        try {
+          const response = await axios.get('http://localhost:8081/api/auth/health');
+          this.authResult = JSON.stringify(response.data, null, 2);
+        } catch (error) {
+          this.authResult = `Error: ${error.message}`;
+        }
+      },
+      async testDocs() {
+        try {
+          const response = await axios.get('http://localhost:8082/api/docs/health');
+          this.docsResult = JSON.stringify(response.data, null, 2);
+        } catch (error) {
+          this.docsResult = `Error: ${error.message}`;
+        }
+      },
+      async testDrive() {
+        try {
+          // Test fetching folders and documents
+          const folders = await driveService.getRootFolders();
+          const documents = await driveService.getAllDocuments();
+          
+          this.driveResult = JSON.stringify({
+            foldersCount: folders.length,
+            documentsCount: documents.length,
+            folders: folders.slice(0, 3), // Show first 3 folders
+            documents: documents.slice(0, 3) // Show first 3 documents
+          }, null, 2);
+        } catch (error) {
+          console.error('Drive test error:', error);
+          this.driveResult = `Error: ${error.response?.data?.message || error.message}`;
+        }
+      },
+      async createPage() {
+        // Reset previous results
+        this.pageResult = null
+        this.pageError = null
+        
+        // Validate inputs
+        if (!this.pageName.trim()) {
+          this.pageError = 'Page name is required'
+          return
+        }
+        
+        const userId = auth.getUserId()
+        console.log('User ID from auth.getUserId():', userId)
+        console.log('User data from localStorage:', auth.getUser())
+        console.log('Auth headers:', auth.getUserIdHeader())
+        
+        // Temporary workaround: use a known user ID if no user is logged in
+        const actualUserId = userId
+        console.log('Using user ID:', actualUserId)
+        if (!actualUserId) {
+          this.pageError = 'You must be logged in to create a page'
+          return
+        }
+        
+        this.creatingPage = true
+        
+        try {
+          const response = await axios.post('http://localhost:8082/api/docs/pages', {
+            title: this.pageName.trim(),
+            folderId: null // Optional - no folder for now
+          }, {
+            headers: {
+              'X-User-Id': actualUserId, // Use the fallback user ID
+              'Content-Type': 'application/json'
+            }
+          })
+          
+          this.pageResult = response.data
+          this.pageName = '' // Clear the form
+          
+          console.log('Page created successfully:', response.data)
+          
+        } catch (error) {
+          console.error('Error creating page:', error)
+          this.pageError = error.response?.data?.message || error.message || 'Failed to create page'
+        } finally {
+          this.creatingPage = false
+        }
+      }
     }
-  },
-  setup() {
-    const { isDark, toggleTheme, initTheme } = useTheme();
-    return { isDark, toggleTheme, initTheme }
-  },
-  mounted() {
-    this.initTheme();
-  },
-  computed: {
-  },
-  methods: {
   }
-}
 </script>
 
 <template>
@@ -63,7 +157,12 @@ export default {
             >
               Docs
             </router-link>
-            
+            <router-link 
+              to="/drive" 
+              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
+            >
+              Drive
+            </router-link>
             <button 
               @click="toggleTheme"
               class="p-2 rounded-md text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
