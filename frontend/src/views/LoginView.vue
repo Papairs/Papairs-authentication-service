@@ -1,34 +1,10 @@
-<template>
-  <div class="min-h-screen bg-surface-light" :style="gridBg">
-    <!-- Header with height 100px -->
-    <LoginHeader />
-    
-    <!-- Main content area with specified padding -->
-    <div class="px-32 py-16">
-      <div class="flex min-h-[calc(100vh-364px)]">
-        <!-- Login Form Component - width 500px + 10px padding -->
-        <LoginForm 
-          ref="loginForm"
-          @login="handleLogin"
-          @create-account="handleCreateAccount"
-        />
-        
-        <!-- Image Panel Component - fills remaining space with 16:9 ratio -->
-        <ImagePanel 
-          :image-src="previewImg"
-          image-alt="Papairs preview"
-        />
-      </div>
-    </div>
-  </div>
-</template>
-
 <script>
 import axios from 'axios'
 import preview from '../../Images/7 Semester Recording Oct 13 2025.gif'
 import LoginHeader from '../components/LoginHeader.vue'
 import LoginForm from '../components/LoginForm.vue'
 import ImagePanel from '../components/ImagePanel.vue'
+import auth from '@/utils/auth'
 
 export default {
   name: 'LoginView',
@@ -59,11 +35,16 @@ export default {
         })
         
         const token = resp.data?.sessionToken || null
-        if (token) {
-          localStorage.setItem('papairs_token', token)
+        const user = resp.data?.user || null
+        
+        if (token && user) {
+          // Store auth data using utility
+          auth.setAuthData(token, user)
+          
+          console.log('Login successful, stored user ID:', user.id)
           setTimeout(() => this.$router.push({ name: 'Home' }), 700)
         } else {
-          this.$refs.loginForm.error = 'Login succeeded but no token returned.'
+          this.$refs.loginForm.error = 'Login succeeded but no token or user data returned.'
         }
       } catch (err) {
         this.$refs.loginForm.error = err.response?.data?.message || err.message || 'Login failed'
@@ -79,9 +60,28 @@ export default {
 }
 </script>
 
-<style scoped>
-/* keep checkbox looking neat in all browsers */
-input[type="checkbox"] {
-  accent-color: #000; /* modern browsers will render black check */
-}
-</style>
+
+<template>
+  <div class="min-h-screen bg-surface-light dark:bg-surface-dark" :style="gridBg">
+    <!-- Header with height 100px -->
+    <LoginHeader />
+    
+    <!-- Main content area with specified padding -->
+    <div class="px-32 py-16">
+      <div class="flex min-h-[calc(100vh-364px)]">
+        <!-- Login Form Component - width 500px + 10px padding -->
+        <LoginForm 
+          ref="loginForm"
+          @login="handleLogin"
+          @create-account="handleCreateAccount"
+        />
+        
+        <!-- Image Panel Component - fills remaining space with 16:9 ratio -->
+        <ImagePanel 
+          :image-src="previewImg"
+          image-alt="Papairs preview"
+        />
+      </div>
+    </div>
+  </div>
+</template>
