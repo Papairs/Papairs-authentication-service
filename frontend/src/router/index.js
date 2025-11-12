@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import DocsView from '../views/DocsView.vue'
 import LoginView from '../views/LoginView.vue'
 import DriveView from '../views/DriveView.vue'
+import AutocompleteView from '../views/AutocompleteView.vue'
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: LoginView
+  },
+  {
+    path: '/autocomplete',
+    name: 'Autocomplete',
+    component: AutocompleteView
   }
 ]
 
