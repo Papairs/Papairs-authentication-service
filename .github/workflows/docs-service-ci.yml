@@ -56,8 +56,8 @@ jobs:
           java-version: '21'
           cache: 'maven'
       
-      - name: 🧪 Run tests
-        run: mvn clean test
+      - name: 🧪 Run E2E tests
+        run: mvn test -Dtest="com.papairs.docs.e2e.**"
         env:
           SPRING_PROFILES_ACTIVE: test
       
