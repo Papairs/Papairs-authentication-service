@@ -18,6 +18,14 @@ export class AIController extends BaseApiController {
   }
 
   /**
+   * Generate flashcards from content using AI
+   * @param {Object} requestData - { content, numberOfCards }
+   */
+  async generateFlashcards(requestData) {
+    return this.post('/generate-flashcards', requestData);
+  }
+
+  /**
    * Check if AI service is responding
    */
   async checkHealth() {
