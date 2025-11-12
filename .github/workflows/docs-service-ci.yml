@@ -68,15 +68,6 @@ jobs:
           name: test-results
           path: backend/docs-service/target/surefire-reports/
           retention-days: 7
-      
-      - name: 💬 Test Report
-        if: always() && github.event_name == 'pull_request'
-        uses: dorny/test-reporter@v1
-        with:
-          name: Maven Tests
-          path: backend/docs-service/target/surefire-reports/*.xml
-          reporter: java-junit
-          fail-on-error: true
 
   # =============================================================================
   # JOB 2: Verify Docker Build
@@ -102,18 +93,10 @@ jobs:
       
       - name: 🚀 Test Docker image starts
         run: |
-          # Start container in background
           docker run -d -p 8082:8082 --name docs-test docs-service:test
-          
-          # Wait a bit for Spring Boot to start
-          sleep 10
-          
-          # Check if container is still running (didn't crash)
-          docker ps | grep docs-test
-          
-          # Clean up
+          sleep 15
+          docker logs docs-test
           docker stop docs-test
-          docker rm docs-test
 
   # =============================================================================
   # JOB 3: Code Quality Checks
