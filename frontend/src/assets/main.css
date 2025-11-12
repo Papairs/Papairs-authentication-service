@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --accent: #FF7700;
+  --surface-light: #FFFFFF;
+  --surface-light-secondary: #F3F3F3;
+  --surface-dark: #191919;
+  --surface-dark-secondary: #202020;
+  --content-primary: #2A2A2A;
+  --content-secondary: #B8B8B8;
+  --content-inverse: #F0EFED;
+  --border-light: rgba(25, 25, 25, 0.75);
+  --border-dark: rgba(32, 32, 32, 0.75);
+}
+
+.dark {
+  --surface-light: #191919;
+  --surface-light-secondary: #202020;
+  --surface-dark: #FFFFFF;
+  --surface-dark-secondary: #F3F3F3;
+  --content-primary: #F0EFED;
+  --content-secondary: #B8B8B8;
+  --content-inverse: #2A2A2A;
+  --border-light: rgba(32, 32, 32, 0.75);
+  --border-dark: rgba(25, 25, 25, 0.75);
+}
