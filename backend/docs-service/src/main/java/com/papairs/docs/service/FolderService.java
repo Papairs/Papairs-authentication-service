@@ -6,7 +6,6 @@ import com.papairs.docs.exception.ResourceNotFoundException;
 import com.papairs.docs.model.Folder;
 import com.papairs.docs.model.FolderTree;
 import com.papairs.docs.repository.FolderRepository;
-import com.papairs.docs.util.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -267,7 +266,7 @@ public class FolderService {
             }
         }
 
-        folderToMove.setParentFolderId(StringUtils.emptyToNull(newParentFolderId));
+        folderToMove.setParentFolderId(newParentFolderId);
         return folderRepository.save(folderToMove);
     }
 

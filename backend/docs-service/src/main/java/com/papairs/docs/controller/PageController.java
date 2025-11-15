@@ -95,7 +95,7 @@ public class PageController {
     @PatchMapping("/pages/{pageId}")
     public ResponseEntity<Page> renamePage(
             @PathVariable String pageId,
-            @RequestBody RenamePageRequest renamePageRequest,
+            @Valid @RequestBody RenamePageRequest renamePageRequest,
             HttpServletRequest request
     ) {
         Page renamed = pageService.renamePage(
@@ -116,7 +116,7 @@ public class PageController {
     @PatchMapping("/pages/{pageId}/move")
     public ResponseEntity<Page> movePage(
             @PathVariable String pageId,
-            @RequestBody MovePageRequest movePageRequest,
+            @Valid @RequestBody MovePageRequest movePageRequest,
             HttpServletRequest request
     ) {
         Page moved = pageService.movePage(

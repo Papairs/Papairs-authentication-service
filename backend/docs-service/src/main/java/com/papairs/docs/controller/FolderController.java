@@ -191,7 +191,7 @@ public class FolderController {
     @PatchMapping("/folders/{folderId}/move")
     public ResponseEntity<Folder> moveFolder(
             @PathVariable String folderId,
-            @RequestBody MoveFolderRequest moveFolderRequest,
+            @Valid @RequestBody MoveFolderRequest moveFolderRequest,
             HttpServletRequest request
     ) {
         Folder moved = folderService.moveFolder(
