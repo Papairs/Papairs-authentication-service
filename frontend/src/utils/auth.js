@@ -71,12 +71,31 @@ export const auth = {
   },
 
   /**
-   * Get user ID header for API requests (for services that need X-User-Id)
+   * Get all auth headers for API requests (Authorization + UserId)
+   * @returns {Promise<object>} Combined auth headers object
+   */
+  async getAuthHeaders() {
+    const token = this.getToken()
+    const userId = this.getUserId()
+    
+    const headers = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    if (userId) {
+      headers['UserId'] = userId
+    }
+    
+    return headers
+  },
+
+  /**
+   * Get user ID header for API requests (for services that need UserId)
    * @returns {object} User ID header object or empty object
    */
   getUserIdHeader() {
     const userId = this.getUserId()
-    return userId ? { 'X-User-Id': userId } : {}
+    return userId ? { 'UserId': userId } : {}
   },
 
   /**

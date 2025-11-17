@@ -25,7 +25,7 @@ public class FlashcardController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse> createFlashcard(
-            @RequestHeader("User-Id") String userId,
+            @RequestHeader("UserId") String userId,
             @RequestBody Flashcard flashcard) {
         
         flashcard.setOwnerId(userId);
@@ -40,7 +40,7 @@ public class FlashcardController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse> getUserFlashcards(
-            @RequestHeader("User-Id") String userId) {
+            @RequestHeader("UserId") String userId) {
         
         List<Flashcard> flashcards = flashcardRepository.findByOwnerId(userId);
         return ResponseEntity.ok(ApiResponse.success("Flashcards retrieved successfully", flashcards));
@@ -51,7 +51,7 @@ public class FlashcardController {
      */
     @GetMapping("/page/{pageId}")
     public ResponseEntity<ApiResponse> getPageFlashcards(
-            @RequestHeader("User-Id") String userId,
+            @RequestHeader("UserId") String userId,
             @PathVariable String pageId) {
         
         List<Flashcard> flashcards = flashcardRepository.findByPageIdAndOwnerId(pageId, userId);
@@ -63,7 +63,7 @@ public class FlashcardController {
      */
     @DeleteMapping("/{flashcardId}")
     public ResponseEntity<ApiResponse> deleteFlashcard(
-            @RequestHeader("User-Id") String userId,
+            @RequestHeader("UserId") String userId,
             @PathVariable String flashcardId) {
         
         Flashcard flashcard = flashcardRepository.findById(flashcardId)
