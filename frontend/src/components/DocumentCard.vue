@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-xl hover:shadow-md transition-all cursor-pointer overflow-hidden"
+    class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-xl hover:shadow-md transition-all cursor-pointer overflow-visible"
     style="aspect-ratio: 1; width: 100%"
     @click="$emit('click')"
   >
@@ -21,33 +21,42 @@
         </h3>
       </div>
       
-      <!-- Menu Button -->
-      <button 
-        @click.stop="showMenu = !showMenu"
-        class="flex-shrink-0 p-1 rounded hover:bg-surface-light-secondary dark:hover:bg-surface-dark transition-colors"
-      >
-        <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-      
-      <!-- Dropdown Menu -->
-      <div 
-        v-if="showMenu"
-        class="absolute right-4 top-12 w-40 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg z-10"
-      >
+      <!-- Menu Button Container - Only show if user has EDITOR role or is owner -->
+      <div v-if="canManageDocument" class="relative" ref="menuRef">
         <button 
-          @click.stop="handleRename"
-          class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark first:rounded-t-lg"
+          @click.stop="showMenu = !showMenu"
+          class="flex-shrink-0 p-1 rounded hover:bg-surface-light-secondary dark:hover:bg-surface-dark transition-colors"
         >
-          Rename
+          <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
         </button>
-        <button 
-          @click.stop="handleDelete"
-          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900 last:rounded-b-lg"
+        
+        <!-- Dropdown Menu -->
+        <div 
+          v-if="showMenu"
+          @click.stop
+          class="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg z-50"
         >
-          Delete
-        </button>
+          <button 
+            @click.stop="handleRename"
+            class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark first:rounded-t-lg"
+          >
+            Rename
+          </button>
+          <button 
+            @click.stop="handleShare"
+            class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
+          >
+            Share
+          </button>
+          <button 
+            @click.stop="handleDelete"
+            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900 last:rounded-b-lg"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
 
@@ -57,7 +66,8 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import auth from '@/utils/auth'
 
 export default {
   name: 'DocumentCard',
@@ -67,15 +77,58 @@ export default {
       required: true
     }
   },
-  emits: ['click', 'delete', 'rename'],
+  emits: ['click', 'delete', 'rename', 'share'],
   setup(props, { emit }) {
     const showMenu = ref(false)
+    const menuRef = ref(null)
+    const currentUserId = auth.getUserId()
+
+    // Check if user can manage document (is owner or has EDITOR role)
+    const canManageDocument = computed(() => {
+      // Debug: log the document to see what properties it has
+      console.log('Document:', props.document)
+      console.log('Current User ID:', currentUserId)
+      console.log('Document Owner ID:', props.document.ownerId)
+      console.log('Document User Role:', props.document.userRole)
+      
+      // Owner can always manage
+      if (currentUserId === props.document.ownerId) {
+        console.log('User is owner')
+        return true
+      }
+      
+      // If userRole is not provided by backend, show menu by default
+      // Backend will handle permission errors
+      if (props.document.userRole === undefined) {
+        console.log('No userRole property, showing menu by default')
+        return true
+      }
+      
+      // Check if user has EDITOR role
+      const hasEditorRole = props.document.userRole === 'EDITOR'
+      console.log('Has EDITOR role:', hasEditorRole)
+      return hasEditorRole
+    })
 
     const formatDate = (dateString) => {
       if (!dateString) return ''
       const date = new Date(dateString)
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }
+
+    const handleClickOutside = (event) => {
+      if (menuRef.value && !menuRef.value.contains(event.target)) {
+        showMenu.value = false
+      }
+    }
+
+    onMounted(() => {
+      document.addEventListener('click', handleClickOutside)
+    })
+
+    onBeforeUnmount(() => {
+      document.removeEventListener('click', handleClickOutside)
+    })
 
     const handleDelete = () => {
       showMenu.value = false
@@ -87,11 +140,19 @@ export default {
       emit('rename')
     }
 
+    const handleShare = () => {
+      showMenu.value = false
+      emit('share')
+    }
+
     return {
       showMenu,
+      menuRef,
+      canManageDocument,
       formatDate,
       handleDelete,
-      handleRename
+      handleRename,
+      handleShare
     }
   }
 }

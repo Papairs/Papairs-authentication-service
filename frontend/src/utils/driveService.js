@@ -141,6 +141,38 @@ class DriveService {
     })
     return response.data
   }
+
+  async shareDocument(pageId, userId, role = 'VIEWER') {
+    const response = await axios.post(`${API_BASE_URL}/pages/${pageId}/members`, {
+      userId,
+      role
+    }, {
+      headers: this.getHeaders()
+    })
+    return response.data
+  }
+
+  async getDocumentMembers(pageId) {
+    const response = await axios.get(`${API_BASE_URL}/pages/${pageId}/members`, {
+      headers: this.getHeaders()
+    })
+    return response.data
+  }
+
+  async updateDocumentMemberRole(pageId, userId, role) {
+    const response = await axios.patch(`${API_BASE_URL}/pages/${pageId}/members/${userId}`, {
+      role
+    }, {
+      headers: this.getHeaders()
+    })
+    return response.data
+  }
+
+  async removeDocumentMember(pageId, userId) {
+    await axios.delete(`${API_BASE_URL}/pages/${pageId}/members/${userId}`, {
+      headers: this.getHeaders()
+    })
+  }
 }
 
 export const driveService = new DriveService()

@@ -11,6 +11,7 @@ import CreateFolderModal from '@/components/CreateFolderModal.vue'
 import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
 import RenameFolderModal from '@/components/RenameFolderModal.vue'
 import RenameDocumentModal from '@/components/RenameDocumentModal.vue'
+import ShareDocumentModal from '@/components/ShareDocumentModal.vue'
 import { driveService } from '@/utils/driveService'
 
 export default {
@@ -23,7 +24,8 @@ export default {
     CreateFolderModal,
     CreateDocumentModal,
     RenameFolderModal,
-    RenameDocumentModal
+    RenameDocumentModal,
+    ShareDocumentModal
   },
   setup() {
     const router = useRouter()
@@ -41,8 +43,10 @@ export default {
     const showCreateDocModal = ref(false)
     const showRenameFolderModal = ref(false)
     const showRenameDocModal = ref(false)
+    const showShareDocModal = ref(false)
     const folderToRename = ref(null)
     const documentToRename = ref(null)
+    const documentToShare = ref(null)
     const showNotebookDropdown = ref(false)
     const searchQuery = ref('')
 
@@ -123,6 +127,11 @@ export default {
       showRenameDocModal.value = true
     }
 
+    const startShareDocument = (doc) => {
+      documentToShare.value = doc
+      showShareDocModal.value = true
+    }
+
     const onFolderCreated = () => {
       showCreateFolderModal.value = false
       loadContent(currentFolderId.value)
@@ -144,6 +153,12 @@ export default {
       showRenameDocModal.value = false
       documentToRename.value = null
       loadContent(currentFolderId.value)
+    }
+
+    const onDocumentShared = () => {
+      // Modal handles sharing internally, just keep it open
+      // User can close it manually when done
+      console.log('Member added successfully')
     }
 
     const handleNavigate = (destination) => {
@@ -190,10 +205,12 @@ export default {
       showCreateDocModal,
       showRenameFolderModal,
       showRenameDocModal,
+      showShareDocModal,
       showNotebookDropdown,
       searchQuery,
       folderToRename,
       documentToRename,
+      documentToShare,
       navigateToRoot,
       navigateToFolder,
       openDocument,
@@ -201,10 +218,12 @@ export default {
       deleteDocument,
       startRenameFolder,
       startRenameDocument,
+      startShareDocument,
       onFolderCreated,
       onDocumentCreated,
       onFolderRenamed,
       onDocumentRenamed,
+      onDocumentShared,
       handleNavigate,
       handleSearch
     }
@@ -299,7 +318,7 @@ export default {
 
         <!-- Empty State -->
         <div v-else-if="folders.length === 0 && documents.length === 0" class="text-center py-20">
-          <div class="text-6xl mb-4">📭</div>
+          <div class="text-6xl mb-4">Nothing to see here</div>
           <h3 class="text-xl font-medium text-content-primary dark:text-content-inverse mb-2">
             No items yet
           </h3>
@@ -341,6 +360,7 @@ export default {
                 @click="openDocument(doc.pageId)"
                 @delete="deleteDocument(doc.pageId)"
                 @rename="startRenameDocument(doc)"
+                @share="startShareDocument(doc)"
               />
             </div>
           </div>
@@ -378,6 +398,14 @@ export default {
       :document="documentToRename"
       @close="showRenameDocModal = false"
       @renamed="onDocumentRenamed"
+    />
+
+    <!-- Share Document Modal -->
+    <ShareDocumentModal 
+      v-if="showShareDocModal"
+      :document="documentToShare"
+      @close="showShareDocModal = false"
+      @shared="onDocumentShared"
     />
   </div>
 </template>
