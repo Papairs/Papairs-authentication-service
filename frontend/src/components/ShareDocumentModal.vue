@@ -189,6 +189,7 @@ export default {
         if (member) {
           member.role = newRole
         }
+        
       } catch (error) {
         console.error('Failed to update member role:', error)
         // Optionally show an error message
@@ -207,6 +208,7 @@ export default {
         await driveService.removeDocumentMember(props.document.pageId, memberId)
         // Remove from local state
         members.value = members.value.filter(m => m.userId !== memberId)
+        // Notify parent to refresh document list
       } catch (error) {
         console.error('Failed to remove member:', error)
         // Optionally show an error message

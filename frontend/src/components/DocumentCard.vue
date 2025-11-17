@@ -85,29 +85,13 @@ export default {
 
     // Check if user can manage document (is owner or has EDITOR role)
     const canManageDocument = computed(() => {
-      // Debug: log the document to see what properties it has
-      console.log('Document:', props.document)
-      console.log('Current User ID:', currentUserId)
-      console.log('Document Owner ID:', props.document.ownerId)
-      console.log('Document User Role:', props.document.userRole)
-      
       // Owner can always manage
       if (currentUserId === props.document.ownerId) {
-        console.log('User is owner')
         return true
       }
       
-      // If userRole is not provided by backend, show menu by default
-      // Backend will handle permission errors
-      if (props.document.userRole === undefined) {
-        console.log('No userRole property, showing menu by default')
-        return true
-      }
-      
-      // Check if user has EDITOR role
-      const hasEditorRole = props.document.userRole === 'EDITOR'
-      console.log('Has EDITOR role:', hasEditorRole)
-      return hasEditorRole
+      // Only EDITOR and OWNER roles can manage (not VIEWER)
+      return props.document.userRole === 'EDITOR' || props.document.userRole === 'OWNER'
     })
 
     const formatDate = (dateString) => {

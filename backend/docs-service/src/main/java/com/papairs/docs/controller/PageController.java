@@ -4,6 +4,7 @@ import com.papairs.docs.dto.request.CreatePageRequest;
 import com.papairs.docs.dto.request.MovePageRequest;
 import com.papairs.docs.dto.request.RenamePageRequest;
 import com.papairs.docs.dto.request.UpdatePageRequest;
+import com.papairs.docs.dto.response.PageResponse;
 import com.papairs.docs.model.Page;
 import com.papairs.docs.service.PageService;
 import com.papairs.docs.util.UserId;
@@ -27,11 +28,11 @@ public class PageController {
     /**
      * Get list of pages which the user has access to
      * @param httpRequest HTTP servlet request
-     * @return ResponseEntity with list of pages
+     * @return ResponseEntity with list of pages with user roles
      */
     @GetMapping("/pages")
-    public ResponseEntity<List<Page>> getUserPages(HttpServletRequest httpRequest) {
-        List<Page> pages = pageService.getAllAccessiblePages(UserId.extract(httpRequest));
+    public ResponseEntity<List<PageResponse>> getUserPages(HttpServletRequest httpRequest) {
+        List<PageResponse> pages = pageService.getAllAccessiblePagesWithRoles(UserId.extract(httpRequest));
         return ResponseEntity.ok(pages);
     }
 

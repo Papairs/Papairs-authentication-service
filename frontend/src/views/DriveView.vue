@@ -113,7 +113,11 @@ export default {
         await loadContent(currentFolderId.value)
       } catch (error) {
         console.error('Error deleting document:', error)
-        alert('Failed to delete document. Please try again.')
+        if (error.response?.status === 403) {
+          alert('You do not have permission to delete this document.')
+        } else {
+          alert('Failed to delete document. Please try again.')
+        }
       }
     }
 
@@ -160,7 +164,7 @@ export default {
       // User can close it manually when done
       console.log('Member added successfully')
     }
-
+    
     const handleNavigate = (destination) => {
       switch (destination) {
         case 'home':

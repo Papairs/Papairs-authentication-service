@@ -1,12 +1,15 @@
 package com.papairs.docs.service;
 
+import com.papairs.docs.dto.response.PageResponse;
 import com.papairs.docs.exception.ResourceNotFoundException;
 import com.papairs.docs.model.Page;
+import com.papairs.docs.model.enums.MemberRole;
 import com.papairs.docs.repository.PageRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PageService {
@@ -41,6 +44,23 @@ public class PageService {
      */
     public List<Page> getAllAccessiblePages(String userId) {
         return pageRepository.findAllAccessibleByUserId(userId);
+    }
+
+    /**
+     * Retrieves all pages with user roles in a single optimized query
+     * @param userId The ID of the user
+     * @return A {@link List} of {@link PageResponse} with user roles included
+     */
+    public List<PageResponse> getAllAccessiblePagesWithRoles(String userId) {
+        List<Object[]> results = pageRepository.findAllAccessibleByUserIdWithRole(userId);
+        
+        return results.stream()
+            .map(result -> {
+                Page page = (Page) result[0];
+                MemberRole role = (MemberRole) result[1];
+                return new PageResponse(page, userId, role);
+            })
+            .collect(Collectors.toList());
     }
 
     /**
