@@ -27,15 +27,16 @@ public class MessageFactory {
 
     /**
      * Creates an applied operation message for broadcasting.
-     * Converts operation to format suitable for client consumption.
+     * Now includes full HTML content for format preservation.
      */
-    public AppliedOp createAppliedOperation(Op operation, int version) {
+    public AppliedOp createAppliedOperation(Op operation, int version, String htmlContent) {
         AppliedOp applied = new AppliedOp();
         applied.type = operation.type;
         applied.version = version;
         applied.clientId = operation.clientId;
         applied.opId = operation.opId;
         applied.pos = operation.pos;
+        applied.htmlContent = htmlContent; // Include full HTML content
         
         // Set operation-specific fields
         switch (operation) {

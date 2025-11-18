@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import SockJS from 'sockjs-client'
 
 export function useWebSocket(url, options = {}) {
   // State
@@ -68,7 +69,8 @@ export function useWebSocket(url, options = {}) {
     connectionError.value = null
 
     try {
-      ws.value = new WebSocket(url)
+      // Use SockJS for better compatibility
+      ws.value = new SockJS(url.replace('ws://', 'http://').replace('/ws/doc', '/ws/doc'))
 
       ws.value.onopen = () => {
         console.log('[WebSocket] Connected')

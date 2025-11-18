@@ -2,7 +2,9 @@ package com.papairs.docs.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.papairs.docs.model.Message;
+import com.papairs.docs.model.Page;
 import com.papairs.docs.service.PageService;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -47,11 +49,19 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
      * Processes join requests and operational transforms.
      */
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
         try {
+            logger.info("Received WebSocket message: " + message.getPayload().substring(0, Math.min(200, message.getPayload().length())));
             var msg = objectMapper.readValue(message.getPayload(), Message.class);
             var docId = sanitizeDocumentId(msg.docId);
             var userId = sanitizeUserId(msg.userId);
+            
+            if (msg.op != null) {
+                logger.info("Operation type: " + msg.op.type + ", has htmlContent: " + (msg.op.htmlContent != null));
+                if (msg.op.htmlContent != null) {
+                    logger.info("HTML content length: " + msg.op.htmlContent.length());
+                }
+            }
             
             var document = getOrCreateDocumentSession(docId, userId);
 
@@ -84,6 +94,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
 
     /**
      * Handles operational transform for collaborative editing.
+     * Now handles HTML-based operations to preserve formatting.
      */
     private void handleOperationRequest(Object incomingOp, DocumentSession document, 
                                       WebSocketSession session, String userId) {
@@ -99,17 +110,26 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
             logger.info("User " + userId + " performed " + operation.type + 
                        " operation on document " + document.getDocumentId());
 
-            // Transform and apply operation
-            var transformed = operationHandler.transformOperation(operation, document);
-            var newContent = operationHandler.applyOperation(document.getContent(), transformed);
+            // For HTML operations, use the HTML content directly
+            String newContent;
+            if (operation instanceof com.papairs.docs.model.OT.HtmlUpdateOp && operation.htmlContent != null) {
+                // HTML-based operation - use the HTML content directly
+                newContent = operation.htmlContent;
+                logger.info("Processing HTML operation with content length: " + newContent.length());
+            } else {
+                // Legacy text-based operation - apply transformation
+                var transformed = operationHandler.transformOperation(operation, document);
+                newContent = operationHandler.applyOperation(document.getContent(), transformed);
+                operation = transformed; // Use transformed operation
+            }
             
             // Update document state
             document.setContent(newContent);
-            document.addOperation(operationHandler.cloneOperation(transformed));
+            document.addOperation(operationHandler.cloneOperation(operation));
             document.incrementVersion();
 
-            // Broadcast operation to all clients
-            var appliedOp = messageFactory.createAppliedOperation(transformed, document.getVersion());
+            // Broadcast operation with HTML content to all clients
+            var appliedOp = messageFactory.createAppliedOperation(operation, document.getVersion(), newContent);
             messageBroker.broadcastToDocument(document, appliedOp);
             
             // Schedule auto-save
@@ -118,6 +138,10 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         } catch (ClassCastException e) {
             logger.log(Level.WARNING, "Invalid operation format from user: " + userId, e);
             var errorMessage = messageFactory.createErrorMessage("Invalid operation format", document.getVersion());
+            messageBroker.sendToSession(session, errorMessage);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error processing operation from user: " + userId, e);
+            var errorMessage = messageFactory.createErrorMessage("Error processing operation", document.getVersion());
             messageBroker.sendToSession(session, errorMessage);
         }
     }
@@ -128,11 +152,19 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     private DocumentSession getOrCreateDocumentSession(String docId, String userId) {
         return documentSessions.computeIfAbsent(docId, k -> {
             try {
-                String initialContent = pageService.getPage(k, userId).getContent();
+                Page page = pageService.getPage(k, userId);
+                String initialContent = page.getContent();
+                
+                // Ensure we have valid HTML content for Tiptap
+                if (initialContent == null || initialContent.isEmpty()) {
+                    initialContent = "<p></p>"; // Default empty paragraph for Tiptap
+                }
+                
+                logger.info("Loaded existing content for document: " + k + " (length: " + initialContent.length() + ")");
                 return new DocumentSession(k, initialContent);
             } catch (Exception e) {
-                logger.info("Starting with empty content for new document: " + k);
-                return new DocumentSession(k);
+                logger.info("Starting with default content for new document: " + k);
+                return new DocumentSession(k, "<p></p>"); // Default empty paragraph for Tiptap
             }
         });
     }
@@ -156,7 +188,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
      * Auto-saves documents when last user disconnects.
      */
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) {
         documentSessions.values().forEach(document -> {
             String userId = document.getUserForSession(session);
             document.removeSession(session);

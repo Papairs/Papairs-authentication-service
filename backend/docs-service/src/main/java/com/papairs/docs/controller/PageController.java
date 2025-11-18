@@ -16,7 +16,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/docs")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"}, 
+             allowedHeaders = "*", 
+             methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class PageController {
     private final PageService pageService;
 
@@ -65,7 +67,11 @@ public class PageController {
             @PathVariable String pageId,
             HttpServletRequest request
     ) {
-        return ResponseEntity.ok(pageService.getPage(pageId, UserId.extract(request)));
+        System.out.println("[PageController] Getting page: " + pageId + " for user: " + UserId.extract(request));
+        Page page = pageService.getPage(pageId, UserId.extract(request));
+        System.out.println("[PageController] Retrieved page: " + page.getPageId() + " with content length: " + 
+                          (page.getContent() != null ? page.getContent().length() : 0));
+        return ResponseEntity.ok(page);
     }
 
     /**
@@ -81,7 +87,12 @@ public class PageController {
             @RequestBody UpdatePageRequest updatePageRequest,
             HttpServletRequest request
     ) {
+        System.out.println("[PageController] Updating page: " + pageId + " with content length: " + 
+                          (updatePageRequest.getContent() != null ? updatePageRequest.getContent().length() : 0));
+        
         Page updated = pageService.updatePage(pageId, UserId.extract(request), updatePageRequest.getContent());
+        
+        System.out.println("[PageController] Page updated successfully: " + updated.getPageId());
         return ResponseEntity.ok(updated);
     }
 

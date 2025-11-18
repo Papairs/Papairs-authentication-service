@@ -10,7 +10,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = InsertOp.class, name = "insert"),
-    @JsonSubTypes.Type(value = DeleteOp.class, name = "delete")
+    @JsonSubTypes.Type(value = DeleteOp.class, name = "delete"),
+    @JsonSubTypes.Type(value = HtmlUpdateOp.class, name = "html-update")
 })
 public abstract class Op {
     public String type;
@@ -18,4 +19,5 @@ public abstract class Op {
     public int baseVersion;
     public String clientId;
     public String opId;
+    public String htmlContent; // Full HTML content for HTML-based operations
 }

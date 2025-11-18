@@ -9,4 +9,5 @@ public class AppliedOp {
     public String text;
     public int length;
     public String content;
+    public String htmlContent; // Full HTML content for HTML-based operations
 }
