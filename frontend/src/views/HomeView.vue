@@ -1,18 +1,37 @@
 <script>
-  import axios from 'axios'
-  import auth from '@/utils/auth'
-  import { useTheme } from '@/composables/useTheme';
+import axios from 'axios'
+ import auth from '@/utils/auth'
+import { useTheme } from '@/composables/useTheme';
+import { ApiTestManager } from '@/controllers/ApiTestManager.js';
+import AuthSection from '@/components/controllerComponents/AuthSection.vue';
+import DocsSection from '@/components/controllerComponents/DocsSection.vue';
+import PageSection from '@/components/controllerComponents/PageSection.vue';
+import FolderSection from '@/components/controllerComponents/FolderSection.vue';
+import AISection from '@/components/controllerComponents/AISection.vue';
+  import { driveService } from '@/utils/driveService'
 
   export default {
     name: 'HomeView',
+    components: {
+    AuthSection,
+    DocsSection,
+    PageSection,
+    FolderSection,
+    AISection
+  },
     data() {
       return {
         authResult: null,
         docsResult: null,
+        driveResult: null,
         pageName: '',
         pageResult: null,
         pageError: null,
-        creatingPage: false
+        creatingPage: false,
+        testManager: new ApiTestManager(),
+      
+        // Active test section
+        activeSection: 'auth'
       }
     },
     setup() {
@@ -21,7 +40,7 @@
       return {
         isDark,
         toggleTheme,
-        initTheme
+        initTheme,
       }
     },
     mounted() {
@@ -42,6 +61,23 @@
           this.docsResult = JSON.stringify(response.data, null, 2);
         } catch (error) {
           this.docsResult = `Error: ${error.message}`;
+        }
+      },
+      async testDrive() {
+        try {
+          // Test fetching folders and documents
+          const folders = await driveService.getRootFolders();
+          const documents = await driveService.getAllDocuments();
+          
+          this.driveResult = JSON.stringify({
+            foldersCount: folders.length,
+            documentsCount: documents.length,
+            folders: folders.slice(0, 3), // Show first 3 folders
+            documents: documents.slice(0, 3) // Show first 3 documents
+          }, null, 2);
+        } catch (error) {
+          console.error('Drive test error:', error);
+          this.driveResult = `Error: ${error.response?.data?.message || error.message}`;
         }
       },
       async createPage() {
@@ -98,13 +134,14 @@
 </script>
 
 <template>
-  <div class="bg-surface-light dark:bg-surface-dark transition-colors">
+  <div class="bg-surface-light dark:bg-surface-dark transition-colors min-h-screen">
+    <!-- Navigation -->
     <nav class="bg-surface-light dark:bg-surface-dark-secondary shadow-lg">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
             <h1 class="text-xl font-bold text-content-primary dark:text-content-inverse">
-              Papairs
+              Papairs API Tester
             </h1>
           </div>
           <div class="flex items-center space-x-4">
@@ -120,7 +157,12 @@
             >
               Docs
             </router-link>
-            
+            <router-link 
+              to="/drive" 
+              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
+            >
+              Drive
+            </router-link>
             <button 
               @click="toggleTheme"
               class="p-2 rounded-md text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
@@ -139,119 +181,67 @@
         </div>
       </div>
     </nav>
-  </div>
-  <div class="text-center">
-    <h1 class="text-4xl font-bold text-content-primary dark:text-content-inverse mb-4 transition-colors">
-      Welcome to Papairs
-    </h1>
-    <p class="text-lg text-content-secondary mb-8 transition-colors">
-      A simple Vue.js frontend with Spring Boot backends
-    </p>
-    
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
 
-      <div class="bg-surface-light dark:bg-surface-dark-secondary p-6 rounded-lg shadow-md transition-colors">
-        <h2 class="text-2xl font-semibold text-content-primary dark:text-content-inverse mb-4 transition-colors">
-          Authentication Service
-        </h2>
-        <p class="text-content-secondary mb-4 transition-colors">
-          Handle user authentication and authorization
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-content-primary dark:text-content-inverse mb-4">
+          API Endpoint Testing Dashboard
+        </h1>
+        <p class="text-lg text-content-secondary mb-6">
+          Comprehensive testing interface for all backend endpoints
         </p>
-        <button 
-          @click="testAuth" 
-          class="bg-accent hover:bg-[#E66900] text-content-inverse font-bold py-2 px-4 rounded transition-colors"
-        >
-          Test Auth Service
-        </button>
-        <div 
-          v-if="authResult" 
-          class="mt-4 p-2 bg-surface-light-secondary dark:bg-surface-dark rounded transition-colors"
-        >
-          <pre class="text-content-primary dark:text-content-inverse text-sm overflow-x-auto">{{ authResult }}</pre>
-        </div>
       </div>
+
+      <!-- Section Tabs -->
+      <div class="mb-8 border-b border-border-light dark:border-border-dark">
+        <nav class="flex space-x-8">
+          <button 
+            v-for="section in ['auth', 'ai', 'docs', 'pages', 'folders']" 
+            :key="section"
+            @click="activeSection = section"
+            :class="[
+              'py-2 px-1 border-b-2 font-medium text-sm transition-colors',
+              activeSection === section 
+                ? 'border-accent text-accent' 
+                : 'border-transparent text-content-secondary hover:text-content-primary hover:border-gray-300'
+            ]"
+          >
+            {{ section.charAt(0).toUpperCase() + section.slice(1) }}
+          </button>
+        </nav>
+      </div>
+
+      <!-- Test Sections -->
+      <AuthSection 
+        v-if="activeSection === 'auth'" 
+        :test-manager="testManager"
+      />
       
-      <div class="bg-surface-light dark:bg-surface-dark-secondary p-6 rounded-lg shadow-md transition-colors">
-        <h2 class="text-2xl font-semibold text-content-primary dark:text-content-inverse mb-4 transition-colors">
-          Documentation Service
-        </h2>
-        <p class="text-content-secondary mb-4 transition-colors">
-          Manage and serve documentation
-        </p>
-        <button 
-          @click="testDocs" 
-          class="bg-accent hover:bg-[#E66900] text-content-inverse font-bold py-2 px-4 rounded transition-colors"
-        >
-          Test Docs Service
-        </button>
-        <div 
-          v-if="docsResult" 
-          class="mt-4 p-2 bg-surface-light-secondary dark:bg-surface-dark rounded transition-colors"
-        >
-          <pre class="text-content-primary dark:text-content-inverse text-sm overflow-x-auto">{{ docsResult }}</pre>
-        </div>
-      </div>
-
-      <div class="bg-surface-light dark:bg-surface-dark-secondary p-6 rounded-lg shadow-md transition-colors">
-        <h2 class="text-2xl font-semibold text-content-primary dark:text-content-inverse mb-4 transition-colors">
-          Create New Page
-        </h2>
-        <p class="text-content-secondary mb-4 transition-colors">
-          Create a new collaborative document page
-        </p>
-        
-        <div class="mb-4">
-          <label class="block text-content-primary dark:text-content-inverse text-sm font-bold mb-2">
-            Page Name
-          </label>
-          <input 
-            v-model="pageName"
-            type="text" 
-            name="page-name"
-            autocomplete="off"
-            placeholder="Enter page name..."
-            class="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded focus:outline-none focus:border-accent bg-surface-light-secondary dark:bg-surface-dark text-content-primary dark:text-content-inverse"
-            :disabled="creatingPage"
-          />
-        </div>
-        
-        <button 
-          @click="createPage" 
-          :disabled="!pageName.trim() || creatingPage"
-          class="w-full bg-accent hover:bg-[#E66900] disabled:bg-gray-400 disabled:cursor-not-allowed text-content-inverse font-bold py-2 px-4 rounded transition-colors mb-4"
-        >
-          {{ creatingPage ? 'Creating...' : 'Create Page' }}
-        </button>
-        
-        <div 
-          v-if="pageResult" 
-          class="mt-4 p-3 bg-surface-light-secondary dark:bg-surface-dark rounded transition-colors"
-        >
-          <div class="text-content-primary dark:text-content-inverse text-sm">
-            <div class="font-semibold mb-2">Page Created Successfully!</div>
-            <div><strong>ID:</strong> {{ pageResult.pageId }}</div>
-            <div><strong>Name:</strong> {{ pageResult.title }}</div>
-            <div class="mt-2">
-              <a 
-                :href="`/docs/${pageResult.pageId}`" 
-                class="text-accent hover:text-[#E66900] underline"
-                @click.prevent="$router.push(`/docs/${pageResult.pageId}`)"
-              >
-                Open Page →
-              </a>
-            </div>
-          </div>
-        </div>
-        
-        <div 
-          v-if="pageError" 
-          class="mt-4 p-3 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded transition-colors"
-        >
-          <div class="text-red-700 dark:text-red-300 text-sm">
-            <strong>Error:</strong> {{ pageError }}
-          </div>
-        </div>
-      </div>
+      <AISection 
+        v-if="activeSection === 'ai'" 
+        :test-manager="testManager"
+      />
+      
+      <DocsSection 
+        v-if="activeSection === 'docs'" 
+        :test-manager="testManager"
+      />
+      
+      <PageSection 
+        v-if="activeSection === 'pages'" 
+        :test-manager="testManager"
+      />
+      
+      <FolderSection 
+        v-if="activeSection === 'folders'" 
+        :test-manager="testManager"
+      />
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Only layout-specific styles remain here */
+</style>
