@@ -122,7 +122,7 @@ public class AuthController {
      * @param userId user ID to delete
      * @return ResponseEntity with no content
      */
-    @DeleteMapping("/internal/users/{userId}")
+    @DeleteMapping("/{userId}")
     public ResponseEntity<AuthResponse> deleteUser(@PathVariable String userId) {
         authService.deleteUser(userId);
 
