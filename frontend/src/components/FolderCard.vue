@@ -1,3 +1,44 @@
+<script>
+import { ref } from 'vue'
+
+export default {
+  name: 'FolderCard',
+  props: {
+    folder: {
+      type: Object,
+      required: true
+    }
+  },
+  emits: ['click', 'delete', 'rename'],
+  setup(props, { emit }) {
+    const showMenu = ref(false)
+
+    const formatDate = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    }
+
+    const handleDelete = () => {
+      showMenu.value = false
+      emit('delete')
+    }
+
+    const handleRename = () => {
+      showMenu.value = false
+      emit('rename')
+    }
+
+    return {
+      showMenu,
+      formatDate,
+      handleDelete,
+      handleRename
+    }
+  }
+}
+</script>
+
 <template>
   <div 
     class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg p-4 hover:shadow-lg hover:border-accent transition-all cursor-pointer"
@@ -51,43 +92,3 @@
   </div>
 </template>
 
-<script>
-import { ref } from 'vue'
-
-export default {
-  name: 'FolderCard',
-  props: {
-    folder: {
-      type: Object,
-      required: true
-    }
-  },
-  emits: ['click', 'delete', 'rename'],
-  setup(props, { emit }) {
-    const showMenu = ref(false)
-
-    const formatDate = (dateString) => {
-      if (!dateString) return ''
-      const date = new Date(dateString)
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    }
-
-    const handleDelete = () => {
-      showMenu.value = false
-      emit('delete')
-    }
-
-    const handleRename = () => {
-      showMenu.value = false
-      emit('rename')
-    }
-
-    return {
-      showMenu,
-      formatDate,
-      handleDelete,
-      handleRename
-    }
-  }
-}
-</script>
