@@ -62,7 +62,6 @@ export default {
     webSocket.onMessage((event) => {
       errorHandler.safe(() => {
         const message = JSON.parse(event.data)
-        console.log('[DocsView] Message received:', message.type, message)
         
         let success = false
         
@@ -84,8 +83,6 @@ export default {
             }
           }
         } else if (['user_joined', 'user_left'].includes(message.type)) {
-          // Handle user presence messages
-          console.log('[DocsView] User presence:', message.type, message.clientId)
           success = true
         } else {
           // Only apply operations from other users, not our own
@@ -106,7 +103,6 @@ export default {
               }
             }
           } else {
-            console.log('[DocsView] Ignoring own operation echo')
             success = true
           }
         }
@@ -122,21 +118,17 @@ export default {
       isConnected.value = false
     })
 
-    webSocket.onClose((event) => {
-      console.log('[DocsView] WebSocket closed:', event.code)
+    webSocket.onClose(() => {
       isConnected.value = false
     })
 
     // Handle content changes from Tiptap editor (for WebSocket collaboration)
     const handleContentChange = (html) => {
-      // Don't send operations while receiving updates from other users
       if (isReceivingUpdate.value) {
-        console.log('[DocsView] Skipping operation send - receiving update')
         return
       }
       
       errorHandler.safe(() => {
-        console.log('[DocsView] Content changed:', { html: html.substring(0, 100) + '...', length: html.length })
         const operation = document.handleHTMLInput(html)
         
         if (operation && isConnected.value) {
@@ -153,46 +145,27 @@ export default {
             userId: userId
           }
           
-          console.log('[DocsView] Sending operation to WebSocket:', {
-            type: operation.type,
-            pos: operation.pos,
-            length: operation.length || 'N/A',
-            text: operation.text || 'N/A',
-            version: operation.baseVersion,
-            htmlContent: operation.htmlContent ? operation.htmlContent.substring(0, 100) + '...' : 'N/A',
-            hasHtmlContent: !!operation.htmlContent
-          })
-          
           if (!webSocket.send(messageWithUser)) {
-            console.error('[DocsView] Failed to send operation to server')
             errorHandler.websocket('Failed to send operation to server')
           }
-        } else if (!isConnected.value) {
-          console.warn('[DocsView] Cannot send operation - WebSocket not connected')
-        } else {
-          console.log('[DocsView] No operation generated for content change')
         }
       })
     }
 
     // Handle autosave from Tiptap editor (different from collaborative changes)
     const handleAutosave = async (html) => {
-      console.log('[DocsView] Triggering autosave for document:', documentId.value)
       try {
-        // Use the document's built-in save method
         document.htmlContent.value = html
         await document.triggerAutosave()
       } catch (error) {
-        console.error('[DocsView] Autosave failed:', error)
+        errorHandler.document('Autosave failed', error)
       }
     }
 
     // Handle editor ready event
     const handleEditorReady = (editorInstance) => {
       editor.value = editorInstance
-      console.log('[DocsView] Tiptap editor is ready')
       
-      // Set initial content if available
       if (document.htmlContent.value) {
         editorInstance.commands.setContent(document.htmlContent.value, false)
       }
@@ -200,24 +173,14 @@ export default {
 
     // Lifecycle hooks
     onMounted(async () => {
-      console.log('[DocsView] Initializing document editor')
-      
-      // Load content first, then connect WebSocket
       if (documentId.value) {
         await document.loadContent(documentId.value)
       }
-      
-      // Connect to WebSocket for collaborative editing
       webSocket.connect()
     })
 
     onBeforeUnmount(async () => {
-      console.log('[DocsView] Cleaning up document editor')
-      
-      // Force save any unsaved changes
       await document.forceSave()
-      
-      // Cleanup
       webSocket.disconnect()
       document.cleanup()
     })

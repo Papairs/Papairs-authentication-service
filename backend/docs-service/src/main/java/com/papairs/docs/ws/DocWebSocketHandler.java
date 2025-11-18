@@ -26,19 +26,16 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     private final Map<String, DocumentSession> documentSessions = new ConcurrentHashMap<>();
     
     private final PageService pageService;
-    private final OperationHandler operationHandler;
     private final AutoSaveManager autoSaveManager;
     private final MessageFactory messageFactory;
     private final WebSocketMessageBroker messageBroker;
 
     public DocWebSocketHandler(
             PageService pageService,
-            OperationHandler operationHandler,
             AutoSaveManager autoSaveManager,
             MessageFactory messageFactory,
             WebSocketMessageBroker messageBroker) {
         this.pageService = pageService;
-        this.operationHandler = operationHandler;
         this.autoSaveManager = autoSaveManager;
         this.messageFactory = messageFactory;
         this.messageBroker = messageBroker;
@@ -51,18 +48,9 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
         try {
-            logger.info("Received WebSocket message: " + message.getPayload().substring(0, Math.min(200, message.getPayload().length())));
             var msg = objectMapper.readValue(message.getPayload(), Message.class);
             var docId = sanitizeDocumentId(msg.docId);
             var userId = sanitizeUserId(msg.userId);
-            
-            if (msg.op != null) {
-                logger.info("Operation type: " + msg.op.type + ", has htmlContent: " + (msg.op.htmlContent != null));
-                if (msg.op.htmlContent != null) {
-                    logger.info("HTML content length: " + msg.op.htmlContent.length());
-                }
-            }
-            
             var document = getOrCreateDocumentSession(docId, userId);
 
             switch (msg.action) {
@@ -93,8 +81,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
-     * Handles operational transform for collaborative editing.
-     * Now handles HTML-based operations to preserve formatting.
+     * Handles HTML-based collaborative editing operations
      */
     private void handleOperationRequest(Object incomingOp, DocumentSession document, 
                                       WebSocketSession session, String userId) {
@@ -104,32 +91,29 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         }
 
         try {
-            // Cast to operation (the objectMapper should have mapped this correctly)
             var operation = (com.papairs.docs.model.OT.Op) incomingOp;
             
-            logger.info("User " + userId + " performed " + operation.type + 
-                       " operation on document " + document.getDocumentId());
-
-            // For HTML operations, use the HTML content directly
-            String newContent;
-            if (operation instanceof com.papairs.docs.model.OT.HtmlUpdateOp && operation.htmlContent != null) {
-                // HTML-based operation - use the HTML content directly
-                newContent = operation.htmlContent;
-                logger.info("Processing HTML operation with content length: " + newContent.length());
-            } else {
-                // Legacy text-based operation - apply transformation
-                var transformed = operationHandler.transformOperation(operation, document);
-                newContent = operationHandler.applyOperation(document.getContent(), transformed);
-                operation = transformed; // Use transformed operation
+            if (operation.htmlContent == null) {
+                logger.warning("Received operation without HTML content from user: " + userId);
+                var errorMessage = messageFactory.createErrorMessage("Missing HTML content", document.getVersion());
+                messageBroker.sendToSession(session, errorMessage);
+                return;
             }
             
-            // Update document state
-            document.setContent(newContent);
-            document.addOperation(operationHandler.cloneOperation(operation));
+            logger.info("User " + userId + " performed HTML update on document " + 
+                       document.getDocumentId() + " (length: " + operation.htmlContent.length() + ")");
+
+            // Update document state with HTML content
+            document.setContent(operation.htmlContent);
+            document.addOperation(operation);
             document.incrementVersion();
 
             // Broadcast operation with HTML content to all clients
-            var appliedOp = messageFactory.createAppliedOperation(operation, document.getVersion(), newContent);
+            var appliedOp = messageFactory.createAppliedOperation(
+                operation, 
+                document.getVersion(), 
+                operation.htmlContent
+            );
             messageBroker.broadcastToDocument(document, appliedOp);
             
             // Schedule auto-save

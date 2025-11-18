@@ -73,7 +73,6 @@ export function useWebSocket(url, options = {}) {
       ws.value = new SockJS(url.replace('ws://', 'http://').replace('/ws/doc', '/ws/doc'))
 
       ws.value.onopen = () => {
-        console.log('[WebSocket] Connected')
         connecting.value = false
         connectionState.value = 'open'
         reconnectDelay = config.initialDelay
@@ -82,7 +81,6 @@ export function useWebSocket(url, options = {}) {
       }
 
       ws.value.onclose = (event) => {
-        console.warn('[WebSocket] Closed:', event.code)
         connectionState.value = 'closed'
         connecting.value = false
         if (event.code !== 1000) {
@@ -93,7 +91,6 @@ export function useWebSocket(url, options = {}) {
       }
 
       ws.value.onerror = (error) => {
-        console.error('[WebSocket] Error:', error)
         connectionError.value = 'Connection error occurred'
         callHandler('onError', error)
         try { 
