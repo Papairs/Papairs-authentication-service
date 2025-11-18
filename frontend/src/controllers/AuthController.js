@@ -6,7 +6,7 @@ import { BaseApiController } from './BaseApiController.js';
  */
 export class AuthController extends BaseApiController {
   constructor() {
-    super('http://localhost:8081/api/auth');
+    super('http://localhost:8080/api/auth');
   }
 
   /**
