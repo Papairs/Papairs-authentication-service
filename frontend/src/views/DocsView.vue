@@ -250,10 +250,9 @@ export default {
       </div>
       
       <!-- Document Content Area -->
-      <div class="flex flex-col flex-1 w-full justify-center items-center overflow-hidden">
-        <div class="flex flex-row h-[50px] w-[1200px] border-b border-border-light-subtle flex-shrink-0"></div>
-        <div class="flex flex-row flex-1 w-full justify-center">
-          <div class="flex-1 max-w-[1000px] bg-white border-x border-border-light-subtle overflow-hidden">
+      <div class="flex flex-col flex-1 w-full overflow-auto">
+        <div class="flex flex-row w-full justify-center min-h-full">
+          <div class="w-full max-w-[1000px] min-w-[1000px] bg-white border-x border-b border-border-light-subtle h-fit min-h-full">
             <TiptapEditor
               :model-value="htmlContent"
               @content-change="handleContentChange"

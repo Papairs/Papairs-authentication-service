@@ -1,7 +1,7 @@
 <template>
   <div class="tiptap-editor-container flex flex-col h-full">
     <!-- Formatting Toolbar -->
-    <div class="toolbar flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+    <div class="toolbar flex items-center gap-1 p-2 border-b border-gray-200 bg-white flex-shrink-0 sticky top-0 z-10">
       <!-- Text Formatting -->
       <button
         @click="editor.chain().focus().toggleBold().run()"
@@ -145,10 +145,10 @@
     </div>
 
     <!-- Editor Content -->
-    <div class="flex-1 overflow-hidden">
+    <div class="editor-content-wrapper flex-1">
       <editor-content 
         :editor="editor" 
-        class="h-full overflow-y-auto px-12 py-12 prose prose-lg max-w-none focus:outline-none"
+        class="px-12 py-12 prose prose-lg max-w-none focus:outline-none"
       />
     </div>
   </div>
@@ -466,5 +466,13 @@ export default {
   font-weight: bold;
   margin-bottom: 0.25rem;
   margin-top: 0.5rem;
+}
+
+.editor-content-wrapper {
+  min-height: 0;
+}
+
+.tiptap-editor-container {
+  min-height: 100%;
 }
 </style>
