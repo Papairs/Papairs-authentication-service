@@ -3,7 +3,6 @@ package com.papairs.docs.service;
 import com.papairs.docs.exception.ResourceNotFoundException;
 import com.papairs.docs.model.Page;
 import com.papairs.docs.repository.PageRepository;
-import com.papairs.docs.util.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +52,6 @@ public class PageService {
      */
     @Transactional
     public Page createPage(String title, String ownerId, String folderId) {
-        folderId = StringUtils.emptyToNull(folderId);
         permissionService.requireFolderAccess(folderId, ownerId);
 
         Page page = new Page();
@@ -121,8 +119,6 @@ public class PageService {
     @Transactional
     public Page movePage(String pageId, String targetFolderId, String userId) {
         permissionService.requirePageEdit(pageId, userId);
-
-        targetFolderId = StringUtils.emptyToNull(targetFolderId);
 
         if (targetFolderId != null) {
             permissionService.requireFolderAccess(targetFolderId, userId);
