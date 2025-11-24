@@ -109,18 +109,7 @@ export default {
             @click="toggleFlip(card.flashcardId)"
           >
             <!-- Card Header -->
-            <div class="flex justify-between items-start mb-4">
-              <span 
-                class="px-2 py-1 text-xs font-medium rounded"
-                :class="{
-                  'bg-green-100 text-green-800': card.difficultyLevel === 'EASY',
-                  'bg-yellow-100 text-yellow-800': card.difficultyLevel === 'MEDIUM',
-                  'bg-red-100 text-red-800': card.difficultyLevel === 'HARD'
-                }"
-              >
-                {{ card.difficultyLevel }}
-              </span>
-              
+            <div class="flex justify-end items-start mb-4">
               <button 
                 @click.stop="deleteFlashcard(card.flashcardId)"
                 class="text-content-secondary hover:text-red transition-colors"

@@ -28,9 +28,6 @@ public class Flashcard {
     @Column(nullable = false, length = 1000)
     private String answer;
 
-    @Column(name = "difficulty_level", length = 20)
-    private String difficultyLevel = "MEDIUM"; // EASY, MEDIUM, HARD
-
     @ElementCollection
     @CollectionTable(name = "flashcard_tags", joinColumns = @JoinColumn(name = "flashcard_id"))
     @Column(name = "tag")
@@ -99,14 +96,6 @@ public class Flashcard {
 
     public void setAnswer(String answer) {
         this.answer = answer;
-    }
-
-    public String getDifficultyLevel() {
-        return difficultyLevel;
-    }
-
-    public void setDifficultyLevel(String difficultyLevel) {
-        this.difficultyLevel = difficultyLevel;
     }
 
     public List<String> getTags() {
