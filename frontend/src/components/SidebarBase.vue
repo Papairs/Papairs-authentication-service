@@ -1,5 +1,6 @@
 <script>
-import { ref, computed, onMounted} from 'vue'
+import { ref, computed, onMounted, watch} from 'vue'
+import { useRoute } from 'vue-router'
 import User3Icon from '@/components/icons/User3Icon.vue'
 import SearchIcon from '@/components/icons/SearchIcon.vue'
 import HomeIcon from '@/components/icons/HomeIcon.vue'
@@ -20,10 +21,13 @@ export default {
     FolderTreeItem
   },
   setup() {
+    const route = useRoute()
     const loading = ref(false)
     const folderTree = ref([])
     const isDropdownOpen = ref(false)
     const assistedWritingEnabled = ref(false)
+
+    const isDocsView = computed(() => route.path.startsWith('/docs'))
 
     const userDisplayName = computed(() => {
       const user = auth.getUser()
@@ -53,20 +57,30 @@ export default {
     const loadFolderTree = async () => {
       loading.value = true
       try {
-        folderTree.value = await driveService.getUserFolderTree(auth.getUserId())
+        const userId = auth.getUserId()
+        console.log("Loading folder tree for user:", userId)
+        folderTree.value = await driveService.getUserFolderTree()
         
         console.log("************** FOLDER TREE ****************")
         console.log(folderTree.value)
       } catch (error) {
         console.error('Error loading folder tree:', error)
-        alert('Failed to load folder tree. Please try again.')
       } finally {
         loading.value = false
       }
     }
 
     onMounted(() => {
-      loadFolderTree()
+      if (isDocsView.value) {
+        loadFolderTree()
+      }
+    })
+
+    // Watch for route changes to docs view
+    watch(() => route.path, (newPath) => {
+      if (newPath.startsWith('/docs')) {
+        loadFolderTree()
+      }
     })
 
     return {
@@ -75,6 +89,7 @@ export default {
         userDisplayName,
         isDropdownOpen,
         assistedWritingEnabled,
+        isDocsView,
         toggleDropdown,
         toggleAssistedWriting,
         handleLogout
@@ -149,8 +164,8 @@ export default {
                 </div>
             </div>
             
-            <!-- Papairs Section -->
-            <div class="mt-6 mb-2">
+            <!-- Papairs Section - Only show on docs view -->
+            <div v-if="isDocsView" class="mt-6 mb-2">
                 <div class="flex justify-between items-center px-2">
                     <h2 class="text-xs font-semibold text-gray-600">Papairs</h2>
                     <button class="text-accent hover:text-orange-600">
@@ -159,8 +174,8 @@ export default {
                 </div>
             </div>
             
-            <!-- Folder Tree -->
-            <div class="folder-tree-container">
+            <!-- Folder Tree - Only show on docs view -->
+            <div v-if="isDocsView" class="folder-tree-container">
                 <div v-if="loading" class="text-sm text-gray-500 px-2">Loading...</div>
                 <div v-else-if="folderTree.length === 0" class="text-sm text-gray-500 px-2">No folders yet</div>
                 <div v-else>
