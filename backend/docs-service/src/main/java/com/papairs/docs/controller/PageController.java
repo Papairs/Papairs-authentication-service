@@ -16,7 +16,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/docs")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"}, 
+             allowedHeaders = "*", 
+             methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class PageController {
     private final PageService pageService;
 
@@ -65,11 +67,13 @@ public class PageController {
             @PathVariable String pageId,
             HttpServletRequest request
     ) {
-        return ResponseEntity.ok(pageService.getPage(pageId, UserId.extract(request)));
+        Page page = pageService.getPage(pageId, UserId.extract(request));
+        return ResponseEntity.ok(page);
     }
 
     /**
      * Update a page's content
+     * @deprecated Use the Websocket implementation for real-time updates {@link com.papairs.docs.ws.DocWebSocketHandler}
      * @param pageId page ID
      * @param updatePageRequest update page request
      * @param request HTTP servlet request
@@ -80,7 +84,7 @@ public class PageController {
             @PathVariable String pageId,
             @RequestBody UpdatePageRequest updatePageRequest,
             HttpServletRequest request
-    ) {
+    ) { 
         Page updated = pageService.updatePage(pageId, UserId.extract(request), updatePageRequest.getContent());
         return ResponseEntity.ok(updated);
     }

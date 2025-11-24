@@ -2,7 +2,9 @@ package com.papairs.docs.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.papairs.docs.model.Message;
+import com.papairs.docs.model.Page;
 import com.papairs.docs.service.PageService;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -24,19 +26,16 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     private final Map<String, DocumentSession> documentSessions = new ConcurrentHashMap<>();
     
     private final PageService pageService;
-    private final OperationHandler operationHandler;
     private final AutoSaveManager autoSaveManager;
     private final MessageFactory messageFactory;
     private final WebSocketMessageBroker messageBroker;
 
     public DocWebSocketHandler(
             PageService pageService,
-            OperationHandler operationHandler,
             AutoSaveManager autoSaveManager,
             MessageFactory messageFactory,
             WebSocketMessageBroker messageBroker) {
         this.pageService = pageService;
-        this.operationHandler = operationHandler;
         this.autoSaveManager = autoSaveManager;
         this.messageFactory = messageFactory;
         this.messageBroker = messageBroker;
@@ -47,12 +46,11 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
      * Processes join requests and operational transforms.
      */
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
         try {
             var msg = objectMapper.readValue(message.getPayload(), Message.class);
             var docId = sanitizeDocumentId(msg.docId);
             var userId = sanitizeUserId(msg.userId);
-            
             var document = getOrCreateDocumentSession(docId, userId);
 
             switch (msg.action) {
@@ -83,7 +81,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
-     * Handles operational transform for collaborative editing.
+     * Handles HTML-based collaborative editing operations
      */
     private void handleOperationRequest(Object incomingOp, DocumentSession document, 
                                       WebSocketSession session, String userId) {
@@ -93,23 +91,29 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         }
 
         try {
-            // Cast to operation (the objectMapper should have mapped this correctly)
             var operation = (com.papairs.docs.model.OT.Op) incomingOp;
             
-            logger.info("User " + userId + " performed " + operation.type + 
-                       " operation on document " + document.getDocumentId());
-
-            // Transform and apply operation
-            var transformed = operationHandler.transformOperation(operation, document);
-            var newContent = operationHandler.applyOperation(document.getContent(), transformed);
+            if (operation.htmlContent == null) {
+                logger.warning("Received operation without HTML content from user: " + userId);
+                var errorMessage = messageFactory.createErrorMessage("Missing HTML content", document.getVersion());
+                messageBroker.sendToSession(session, errorMessage);
+                return;
+            }
             
-            // Update document state
-            document.setContent(newContent);
-            document.addOperation(operationHandler.cloneOperation(transformed));
+            logger.info("User " + userId + " performed HTML update on document " + 
+                       document.getDocumentId() + " (length: " + operation.htmlContent.length() + ")");
+
+            // Update document state with HTML content
+            document.setContent(operation.htmlContent);
+            document.addOperation(operation);
             document.incrementVersion();
 
-            // Broadcast operation to all clients
-            var appliedOp = messageFactory.createAppliedOperation(transformed, document.getVersion());
+            // Broadcast operation with HTML content to all clients
+            var appliedOp = messageFactory.createAppliedOperation(
+                operation, 
+                document.getVersion(), 
+                operation.htmlContent
+            );
             messageBroker.broadcastToDocument(document, appliedOp);
             
             // Schedule auto-save
@@ -118,6 +122,10 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         } catch (ClassCastException e) {
             logger.log(Level.WARNING, "Invalid operation format from user: " + userId, e);
             var errorMessage = messageFactory.createErrorMessage("Invalid operation format", document.getVersion());
+            messageBroker.sendToSession(session, errorMessage);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error processing operation from user: " + userId, e);
+            var errorMessage = messageFactory.createErrorMessage("Error processing operation", document.getVersion());
             messageBroker.sendToSession(session, errorMessage);
         }
     }
@@ -128,11 +136,19 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     private DocumentSession getOrCreateDocumentSession(String docId, String userId) {
         return documentSessions.computeIfAbsent(docId, k -> {
             try {
-                String initialContent = pageService.getPage(k, userId).getContent();
+                Page page = pageService.getPage(k, userId);
+                String initialContent = page.getContent();
+                
+                // Ensure we have valid HTML content for Tiptap
+                if (initialContent == null || initialContent.isEmpty()) {
+                    initialContent = "<p></p>"; // Default empty paragraph for Tiptap
+                }
+                
+                logger.info("Loaded existing content for document: " + k + " (length: " + initialContent.length() + ")");
                 return new DocumentSession(k, initialContent);
             } catch (Exception e) {
-                logger.info("Starting with empty content for new document: " + k);
-                return new DocumentSession(k);
+                logger.info("Starting with default content for new document: " + k);
+                return new DocumentSession(k, "<p></p>"); // Default empty paragraph for Tiptap
             }
         });
     }
@@ -156,7 +172,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
      * Auto-saves documents when last user disconnects.
      */
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) {
         documentSessions.values().forEach(document -> {
             String userId = document.getUserForSession(session);
             document.removeSession(session);
