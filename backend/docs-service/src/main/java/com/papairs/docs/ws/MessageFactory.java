@@ -1,21 +1,17 @@
 package com.papairs.docs.ws;
 
 import com.papairs.docs.model.OT.AppliedOp;
-import com.papairs.docs.model.OT.DeleteOp;
-import com.papairs.docs.model.OT.InsertOp;
 import com.papairs.docs.model.OT.Op;
 import org.springframework.stereotype.Component;
 
 /**
- * Factory for creating WebSocket messages.
- * Centralizes message creation logic for consistent formatting.
+ * Factory for creating WebSocket messages
  */
 @Component
 public class MessageFactory {
 
     /**
-     * Creates a snapshot message for client initialization.
-     * Contains current document content and version.
+     * Creates a snapshot message for client initialization
      */
     public AppliedOp createSnapshot(DocumentSession document) {
         AppliedOp snapshot = new AppliedOp();
@@ -26,24 +22,15 @@ public class MessageFactory {
     }
 
     /**
-     * Creates an applied operation message for broadcasting.
-     * Converts operation to format suitable for client consumption.
+     * Creates an applied operation message with HTML content
      */
-    public AppliedOp createAppliedOperation(Op operation, int version) {
+    public AppliedOp createAppliedOperation(Op operation, int version, String htmlContent) {
         AppliedOp applied = new AppliedOp();
         applied.type = operation.type;
         applied.version = version;
         applied.clientId = operation.clientId;
         applied.opId = operation.opId;
-        applied.pos = operation.pos;
-        
-        // Set operation-specific fields
-        switch (operation) {
-            case InsertOp insert -> applied.text = insert.text;
-            case DeleteOp delete -> applied.length = delete.length;
-            default -> { /* No additional fields for base operation */ }
-        }
-        
+        applied.htmlContent = htmlContent;
         return applied;
     }
 
