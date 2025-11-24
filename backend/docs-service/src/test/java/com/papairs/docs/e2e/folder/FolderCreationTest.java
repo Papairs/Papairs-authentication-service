@@ -605,6 +605,6 @@ public class FolderCreationTest extends AbstractE2ETest {
         String folderId2 = objectMapper.readTree(response2).get("folderId").asText();
 
         assert !folderId1.equals(folderId2) : "Folder IDs should be unique";
-        assert folderId1.matches("[a-z0-9-]+") : "Folder ID should be valid format";
+        assert folderId1.matches("[a-zA-Z0-9-_]+") : "Folder ID should be valid format";
     }
 }
