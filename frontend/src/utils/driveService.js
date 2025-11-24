@@ -99,6 +99,13 @@ class DriveService {
     return response.data
   }
 
+  async getSharedDocuments() {
+    const response = await axios.get(`${API_BASE_URL}/pages/shared`, {
+      headers: this.getHeaders()
+    })
+    return response.data
+  }
+
   async getDocument(pageId) {
     const response = await axios.get(`${API_BASE_URL}/pages/${pageId}`, {
       headers: this.getHeaders()

@@ -3,7 +3,6 @@
 import { ref, onMounted} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
-import SidebarNav from '@/components/SidebarNav.vue'
 import SearchBar from '@/components/SearchBar.vue'
 import FolderCard from '@/components/FolderCard.vue'
 import DocumentCard from '@/components/DocumentCard.vue'
@@ -17,7 +16,6 @@ import { driveService } from '@/utils/driveService'
 export default {
   name: 'DriveView',
   components: {
-    SidebarNav,
     SearchBar,
     FolderCard,
     DocumentCard,
@@ -194,6 +192,11 @@ export default {
       initTheme()
       const folderId = route.params.folderId || null
       loadContent(folderId)
+      
+      // Listen for sidebar new document button
+      window.addEventListener('open-create-document-modal', () => {
+        showCreateDocModal.value = true
+      })
     })
 
     return {
@@ -236,17 +239,7 @@ export default {
 </script>
 
 <template>
-  <div class="flex h-screen bg-surface-light dark:bg-surface-dark transition-colors overflow-hidden">
-    <!-- Sidebar -->
-    <SidebarNav 
-      :user-name="'Gustaw Juul'"
-      :user-role="'Student User'"
-      :is-dark="isDark"
-      @navigate="handleNavigate"
-      @create-document="showCreateDocModal = true"
-      @toggle-theme="toggleTheme"
-    />
-
+  <div class="flex flex-col h-full bg-surface-light dark:bg-surface-dark transition-colors overflow-hidden">
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto">
       <!-- Top Bar -->
