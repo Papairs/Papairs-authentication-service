@@ -1,10 +1,12 @@
 <script>
+import { ref, onMounted} from 'vue'
 import User3Icon from '@/components/icons/User3Icon.vue'
 import SearchIcon from '@/components/icons/SearchIcon.vue'
 import HomeIcon from '@/components/icons/HomeIcon.vue'
-import ChatIcon from '@/components/icons/ChatIcon.vue'
 import AssistedIcon from '@/components/icons/AssistedIcon.vue'
 import PlusIcon from '@/components/icons/PlusIcon.vue'
+import { driveService } from '@/utils/driveService'
+import auth from '@/utils/auth'
 
 export default {
   name: 'SidebarBase',
@@ -12,11 +14,48 @@ export default {
     User3Icon,
     SearchIcon,
     HomeIcon,
-    ChatIcon,
     AssistedIcon,
     PlusIcon
+  }, setup() {
+    const loading = ref(false)
+    const folders = ref([])
+    const documents = ref([])
+
+    const loadContent = async (folderId = null) => {
+      loading.value = true
+      try {
+        // Load folders
+        const allFolders = folders.value = await driveService.getUserFolderTree(auth.getUserId())
+        
+        console.log("************** FOLDERS ****************");
+        console.log(allFolders);
+        // Load documents - filter by current folder
+        const allDocuments = await driveService.getAllDocuments()
+        documents.value = allDocuments.filter(doc => doc.folderId === folderId)
+        
+        console.log("************** DOCUMENTS ****************");
+        console.log(allDocuments);
+      } catch (error) {
+        console.error('Error loading content:', error)
+        alert('Failed to load content. Please try again.')
+      } finally {
+        loading.value = false
+      }
+    }
+
+    onMounted(() => {
+      loadContent()
+    })
+
+    return {
+        loading,
+        folders,
+        documents
+    }
   }
 }
+
+
 </script>
 
 <template>
@@ -48,14 +87,10 @@ export default {
                     <AssistedIcon :size="32" class="h-8 w-8 text-accent" />
                     Assisted writing
                 </div>
-                <div class="text-xl flex">
-                    <ChatIcon :size="32" class="h-8 w-8 text-accent" />
-                    Chat
-                </div>
             </div>
             
             <div class="mt-6">
-                <div class="flex">
+                <div class="flex justify-between">
                     <h2 class="text-[15px]">Papairs</h2>
                     <button>  <PlusIcon :size="16" class="h-3 w-3 text-accent" /></button>
                 </div>

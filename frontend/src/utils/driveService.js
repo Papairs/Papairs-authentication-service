@@ -49,6 +49,13 @@ class DriveService {
     return response.data
   }
 
+  async getUserFolderTree() {
+    const response = await axios.get(`${API_BASE_URL}/folders/trees`,{ 
+      headers: this.getHeaders() }
+    )
+    return response.data
+  }
+
   async createFolder(name, parentFolderId = null) {
     const response = await axios.post(`${API_BASE_URL}/folders`, {
       name,
