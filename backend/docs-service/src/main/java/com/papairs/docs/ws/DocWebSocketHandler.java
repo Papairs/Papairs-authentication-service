@@ -3,6 +3,7 @@ package com.papairs.docs.ws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.papairs.docs.model.Message;
 import com.papairs.docs.model.Page;
+import com.papairs.docs.security.HtmlSanitizer;
 import com.papairs.docs.service.PageService;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -29,16 +30,19 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     private final AutoSaveManager autoSaveManager;
     private final MessageFactory messageFactory;
     private final WebSocketMessageBroker messageBroker;
+    private final HtmlSanitizer htmlSanitizer;
 
     public DocWebSocketHandler(
             PageService pageService,
             AutoSaveManager autoSaveManager,
             MessageFactory messageFactory,
-            WebSocketMessageBroker messageBroker) {
+            WebSocketMessageBroker messageBroker,
+            HtmlSanitizer htmlSanitizer) {
         this.pageService = pageService;
         this.autoSaveManager = autoSaveManager;
         this.messageFactory = messageFactory;
         this.messageBroker = messageBroker;
+        this.htmlSanitizer = htmlSanitizer;
     }
 
     /**
@@ -100,19 +104,22 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
                 return;
             }
             
+            // Sanitize HTML content to prevent XSS attacks
+            String sanitizedHtml = htmlSanitizer.sanitize(operation.htmlContent);
+            
             logger.info("User " + userId + " performed HTML update on document " + 
-                       document.getDocumentId() + " (length: " + operation.htmlContent.length() + ")");
+                       document.getDocumentId() + " (length: " + sanitizedHtml.length() + ")");
 
-            // Update document state with HTML content
-            document.setContent(operation.htmlContent);
+            // Update document state with sanitized HTML content
+            document.setContent(sanitizedHtml);
             document.addOperation(operation);
             document.incrementVersion();
 
-            // Broadcast operation with HTML content to all clients
+            // Broadcast operation with sanitized HTML content to all clients
             var appliedOp = messageFactory.createAppliedOperation(
                 operation, 
                 document.getVersion(), 
-                operation.htmlContent
+                sanitizedHtml
             );
             messageBroker.broadcastToDocument(document, appliedOp);
             

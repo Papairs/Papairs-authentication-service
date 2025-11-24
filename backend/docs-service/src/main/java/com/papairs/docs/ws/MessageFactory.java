@@ -2,6 +2,7 @@ package com.papairs.docs.ws;
 
 import com.papairs.docs.model.OT.AppliedOp;
 import com.papairs.docs.model.OT.Op;
+import com.papairs.docs.security.HtmlSanitizer;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +11,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class MessageFactory {
 
+    private final HtmlSanitizer htmlSanitizer;
+
+    public MessageFactory(HtmlSanitizer htmlSanitizer) {
+        this.htmlSanitizer = htmlSanitizer;
+    }
+
     /**
      * Creates a snapshot message for client initialization
      */
@@ -17,7 +24,7 @@ public class MessageFactory {
         AppliedOp snapshot = new AppliedOp();
         snapshot.type = "snapshot";
         snapshot.version = document.getVersion();
-        snapshot.content = document.getContent();
+        snapshot.content = htmlSanitizer.sanitize(document.getContent());
         return snapshot;
     }
 

@@ -5,6 +5,7 @@ import com.papairs.docs.dto.request.MovePageRequest;
 import com.papairs.docs.dto.request.RenamePageRequest;
 import com.papairs.docs.dto.request.UpdatePageRequest;
 import com.papairs.docs.model.Page;
+import com.papairs.docs.security.HtmlSanitizer;
 import com.papairs.docs.service.PageService;
 import com.papairs.docs.util.UserId;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,9 +22,11 @@ import java.util.List;
              methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class PageController {
     private final PageService pageService;
+    private final HtmlSanitizer htmlSanitizer;
 
-    public PageController(PageService pageService) {
+    public PageController(PageService pageService, HtmlSanitizer htmlSanitizer) {
         this.pageService = pageService;
+        this.htmlSanitizer = htmlSanitizer;
     }
 
     /**
@@ -84,8 +87,10 @@ public class PageController {
             @PathVariable String pageId,
             @RequestBody UpdatePageRequest updatePageRequest,
             HttpServletRequest request
-    ) { 
-        Page updated = pageService.updatePage(pageId, UserId.extract(request), updatePageRequest.getContent());
+    ) {
+        // Sanitize HTML content to prevent XSS attacks
+        String sanitizedContent = htmlSanitizer.sanitize(updatePageRequest.getContent());
+        Page updated = pageService.updatePage(pageId, UserId.extract(request), sanitizedContent);
         return ResponseEntity.ok(updated);
     }
 
