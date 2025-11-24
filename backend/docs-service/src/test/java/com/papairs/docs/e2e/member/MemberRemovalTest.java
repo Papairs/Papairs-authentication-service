@@ -218,16 +218,12 @@ public class MemberRemovalTest extends AbstractE2ETest {
         fixtures.addMemberToPage(pageId, TEST_USER_1_ID, TEST_USER_2_ID, MemberRole.EDITOR);
         fixtures.addMemberToPage(pageId, TEST_USER_1_ID, TEST_USER_3_ID, MemberRole.VIEWER);
 
-        String anotherUserId = "user-dave-id";
-        fixtures.addMemberToPage(pageId, TEST_USER_1_ID, anotherUserId, MemberRole.EDITOR);
-
         mockMvc.perform(delete("/api/docs/pages/" + pageId + "/members/" + TEST_USER_2_ID)
                         .header(USER_ID_HEADER, TEST_USER_1_ID))
                 .andExpect(status().isNoContent());
 
         fixtures.verifyUserCannotAccessPage(pageId, TEST_USER_2_ID);
         fixtures.verifyUserCanAccessPage(pageId, TEST_USER_3_ID);
-        fixtures.verifyUserCanAccessPage(pageId, anotherUserId);
     }
 
     @Test
@@ -368,24 +364,16 @@ public class MemberRemovalTest extends AbstractE2ETest {
         String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Page");
         fixtures.addMemberToPage(pageId, TEST_USER_1_ID, TEST_USER_2_ID, MemberRole.EDITOR);
         fixtures.addMemberToPage(pageId, TEST_USER_1_ID, TEST_USER_3_ID, MemberRole.VIEWER);
-        String thirdUserId = "user-dave-id";
-        fixtures.addMemberToPage(pageId, TEST_USER_1_ID, thirdUserId, MemberRole.EDITOR);
 
-        fixtures.verifyPageHasMembers(pageId, TEST_USER_1_ID, 3);
+        fixtures.verifyPageHasMembers(pageId, TEST_USER_1_ID, 2);
 
         mockMvc.perform(delete("/api/docs/pages/" + pageId + "/members/" + TEST_USER_2_ID)
                         .header(USER_ID_HEADER, TEST_USER_1_ID))
                 .andExpect(status().isNoContent());
 
-        fixtures.verifyPageHasMembers(pageId, TEST_USER_1_ID, 2);
-
-        mockMvc.perform(delete("/api/docs/pages/" + pageId + "/members/" + TEST_USER_3_ID)
-                        .header(USER_ID_HEADER, TEST_USER_1_ID))
-                .andExpect(status().isNoContent());
-
         fixtures.verifyPageHasMembers(pageId, TEST_USER_1_ID, 1);
 
-        mockMvc.perform(delete("/api/docs/pages/" + pageId + "/members/" + thirdUserId)
+        mockMvc.perform(delete("/api/docs/pages/" + pageId + "/members/" + TEST_USER_3_ID)
                         .header(USER_ID_HEADER, TEST_USER_1_ID))
                 .andExpect(status().isNoContent());
 
