@@ -2,6 +2,7 @@ package com.papairs.docs.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import com.papairs.docs.model.Page;
 import java.util.List;
 
 public class FolderTree {
@@ -11,6 +12,7 @@ public class FolderTree {
     private long pageCount;
     private long childCount;
     private List<FolderTree> children = new ArrayList<>();
+    private List<Page> documents;
 
     public String getFolderId() {
         return folderId;
@@ -58,5 +60,14 @@ public class FolderTree {
 
     public void setChildren(List<FolderTree> children) {
         this.children = children;
+    }
+
+
+    public List<Page> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<Page> documents) {
+        this.documents = documents;
     }
 }

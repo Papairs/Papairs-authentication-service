@@ -19,6 +19,8 @@ public interface PageRepository extends JpaRepository<Page, String> {
      */
     List<Page> findByOwnerId(String ownerId);
 
+    List<Page> findByFolderIdIn(List<String> folderIds);
+
     /**
      * Finds all pages located within a specific folder
      * @param folderId The ID of the folder

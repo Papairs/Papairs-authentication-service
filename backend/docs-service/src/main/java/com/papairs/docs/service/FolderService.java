@@ -6,9 +6,11 @@ import com.papairs.docs.exception.ResourceNotFoundException;
 import com.papairs.docs.model.Folder;
 import com.papairs.docs.model.FolderTree;
 import com.papairs.docs.repository.FolderRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import com.papairs.docs.model.Page;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -174,7 +176,7 @@ public class FolderService {
         Map<String, Long> pageCountMap = contentService.getPageCountsForFolders(allFolderIds);
 
         // Build and return the tree structure recursively in memory.
-        return buildFolderTree(rootFolder, childrenMap, pageCountMap);
+        return buildFolderTree(rootFolder, childrenMap, pageCountMap, null);
     }
 
     /**
@@ -186,32 +188,36 @@ public class FolderService {
      * @return FolderTree structure
      */
     private FolderTree buildFolderTree(
-            Folder folder,
-            Map<String, List<Folder>> childrenMap,
-            Map<String, Long> pageCountMap
-    ) {
-        FolderTree tree = new FolderTree();
+        Folder folder,
+        Map<String, List<Folder>> childrenMap,
+        Map<String, Long> pageCountMap,
+        Map<String, List<Page>> pagesByFolderId
+) {
+    FolderTree tree = new FolderTree();
 
-        tree.setFolderId(folder.getFolderId());
-        tree.setName(folder.getName());
-        tree.setCreatedAt(folder.getCreatedAt());
+    tree.setFolderId(folder.getFolderId());
+    tree.setName(folder.getName());
+    tree.setCreatedAt(folder.getCreatedAt());
 
-        // Get page count from pre-fetched map
-        long pageCount = pageCountMap.getOrDefault(folder.getFolderId(), 0L);
-        tree.setPageCount(pageCount);
+    long pageCount = pageCountMap.getOrDefault(folder.getFolderId(), 0L);
+    tree.setPageCount(pageCount);
 
-        // Get children from pre-fetched map
-        List<Folder> children = childrenMap.getOrDefault(folder.getFolderId(), new ArrayList<>());
-        List<FolderTree> childTrees = new ArrayList<>();
+    // Add documents
+    List<Page> documents = pagesByFolderId.getOrDefault(folder.getFolderId(), Collections.emptyList());
+    tree.setDocuments(documents);
 
-        for (Folder child : children) {
-            childTrees.add(buildFolderTree(child, childrenMap, pageCountMap));
-        }
+    // Build children
+    List<Folder> children = childrenMap.getOrDefault(folder.getFolderId(), new ArrayList<>());
+    List<FolderTree> childTrees = new ArrayList<>();
 
-        tree.setChildren(childTrees);
-        tree.setChildCount(childTrees.size());
+    for (Folder child : children) {
+        childTrees.add(buildFolderTree(child, childrenMap, pageCountMap, pagesByFolderId));
+    }
 
-        return tree;
+    tree.setChildren(childTrees);
+    tree.setChildCount(childTrees.size());
+
+    return tree;
     }
 
     /**
@@ -219,27 +225,39 @@ public class FolderService {
      * @param userId The ID of the user.
      * @return A {@link List} of {@link FolderTree} objects, one for each root folder.
      */
-    public List<FolderTree> getUserFolderTrees(String userId) {
+
+     public List<FolderTree> getUserFolderTrees(String userId) {
         List<Folder> allFolders = folderRepository.findByOwnerId(userId);
         if (CollectionUtils.isEmpty(allFolders)) {
             return Collections.emptyList();
         }
-
+    
         List<Folder> rootFolders = allFolders.stream()
             .filter(f -> f.getParentFolderId() == null)
             .collect(Collectors.toList());
-
+    
         Map<String, List<Folder>> childrenMap = allFolders.stream()
             .filter(f -> f.getParentFolderId() != null)
             .collect(Collectors.groupingBy(Folder::getParentFolderId));
-
-        List<String> folderIds = allFolders.stream().map(Folder::getFolderId).collect(Collectors.toList());
+    
+        List<String> folderIds = allFolders.stream()
+            .map(Folder::getFolderId)
+            .collect(Collectors.toList());
+    
         Map<String, Long> pageCountMap = contentService.getPageCountsForFolders(folderIds);
+    
+        Map<String, List<Page>> pagesByFolderId =
+            contentService.getPagesForFolders(folderIds);
+    
+        System.out.println("Pages by Folder ID: " + pagesByFolderId);
+
 
         return rootFolders.stream()
-            .map(root -> buildFolderTree(root, childrenMap, pageCountMap))
+            .map(root -> buildFolderTree(root, childrenMap, pageCountMap, pagesByFolderId))
             .collect(Collectors.toList());
+        
     }
+    
 
     /**
      * Move a folder to a new parent folder
