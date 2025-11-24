@@ -231,6 +231,7 @@ logs/
 application-*.yml
 application-*.properties
 !application.properties
+!application-test.properties
 
 # Build artifacts
 build/
