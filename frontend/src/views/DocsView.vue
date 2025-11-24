@@ -1,6 +1,5 @@
 <script>
-import SidebarBase from '@/components/SidebarBase.vue'
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useDocument } from '@/composables/useDocument'
 import { createErrorHandler } from '@/utils/errorHandler'
@@ -8,7 +7,7 @@ import auth from '@/utils/auth'
 
 export default {
   name: 'DocsView',
-  components: { SidebarBase },
+  components: { },
   props: {
     id: {
       type: String,
@@ -30,19 +29,30 @@ export default {
     // UI refs
     const textarea = ref(null)
 
-    // WebSocket event handlers
-    webSocket.onOpen(() => {
+    // Function to join a document
+    const joinDocument = (docId) => {
       errorHandler.safe(() => {
         const userId = auth.getUserId() || 'anonymous'
-        webSocket.send({ action: 'join', docId: documentId.value, userId: userId })
-        console.log('[Application] Joined document session:', documentId.value, 'as user:', userId)
+        webSocket.send({ action: 'join', docId: docId, userId: userId })
+        console.log('[Application] Joined document session:', docId, 'as user:', userId)
       })
+    }
+
+    // WebSocket event handlers
+    webSocket.onOpen(() => {
+      joinDocument(documentId.value)
     })
 
     webSocket.onMessage((event) => {
       errorHandler.safe(() => {
         const message = JSON.parse(event.data)
-        console.log('[Application] Message received:', message.type)
+        console.log('[Application] Message received:', message.type, 'for doc:', message.docId || 'unknown')
+        
+        // Only process messages for the current document
+        if (message.docId && message.docId !== documentId.value) {
+          console.log('[Application] Ignoring message for different document')
+          return
+        }
         
         const success = message.type === 'snapshot' 
           ? document.handleSnapshot(message)
@@ -62,6 +72,19 @@ export default {
 
     webSocket.onClose((event) => {
       console.log('[Application] WebSocket closed:', event.code)
+    })
+
+    // Watch for document ID changes
+    watch(() => props.id, (newId, oldId) => {
+      if (newId !== oldId) {
+        console.log('[Application] Switching document from', oldId, 'to', newId)
+        // Reset document state
+        document.resetDocument()
+        // Join new document if connected
+        if (webSocket.connectionState.value === 'connected') {
+          joinDocument(newId)
+        }
+      }
     })
 
     // Text input handling
@@ -128,24 +151,21 @@ export default {
 
 
 <template>
-  <div class="flex flex-row h-screen w-screen bg-surface-light overflow-hidden">
-    <SidebarBase />
-    <div class="flex flex-col h-full w-full overflow-hidden">
-      <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0"></div>
-      <div class="flex flex-col flex-1 w-full justify-center items-center overflow-hidden">
-        <div class="flex flex-row h-[50px] w-[1200px] border-b border-border-light-subtle flex-shrink-0"></div>
-        <div class="flex flex-row flex-1">
-          <div class="flex-1 w-[1000px] bg-white border-x border-border-light-subtle px-12 overflow-hidden">
-            <textarea
-              ref="textarea"
-              :value="text"
-              @input="onInput"
-              name="document-content"
-              id="document-editor"
-              placeholder="Start writing your document..."
-              class="w-full h-full resize-none border-none focus:outline-none bg-transparent text-gray-800 text-base font-normal placeholder-gray-400 py-12"
-            ></textarea>
-          </div>
+  <div class="flex flex-col h-full w-full bg-surface-light overflow-hidden">
+    <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0"></div>
+    <div class="flex flex-col flex-1 w-full justify-center items-center overflow-hidden">
+      <div class="flex flex-row h-[50px] w-[1200px] border-b border-border-light-subtle flex-shrink-0"></div>
+      <div class="flex flex-row flex-1">
+        <div class="flex-1 w-[1000px] bg-white border-x border-border-light-subtle px-12 overflow-hidden">
+          <textarea
+            ref="textarea"
+            :value="text"
+            @input="onInput"
+            name="document-content"
+            id="document-editor"
+            placeholder="Start writing your document..."
+            class="w-full h-full resize-none border-none focus:outline-none bg-transparent text-gray-800 text-base font-normal placeholder-gray-400 py-12"
+          ></textarea>
         </div>
       </div>
     </div>
