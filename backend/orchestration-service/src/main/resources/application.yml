@@ -4,9 +4,16 @@ server:
 spring:
   application:
     name: orchestration-service
-
-cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "${CORS_ALLOWED_ORIGIN:http://localhost:3000}" 
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
 
 services:
   auth-service:
