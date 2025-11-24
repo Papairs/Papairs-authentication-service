@@ -1,14 +1,14 @@
 import axios from 'axios'
 import auth from './auth'
 
-const API_BASE_URL = 'http://localhost:8082/api/docs'
+const API_BASE_URL = 'http://localhost:8080/api/docs'
 
 class DriveService {
   // Helper to get headers with user ID
   getHeaders() {
     return {
       'Content-Type': 'application/json',
-      ...auth.getUserIdHeader()
+      ...auth.getAuthHeader()
     }
   }
 

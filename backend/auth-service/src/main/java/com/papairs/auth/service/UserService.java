@@ -99,4 +99,13 @@ public class UserService {
     public void changePassword(String userId, String newPassword) {
         userRepository.updatePasswordHash(userId, passwordEncoder.encode(newPassword));
     }
+
+    /**
+     * Delete user by ID
+     * @param userId user ID
+     */
+    @Transactional
+    public void deleteUser(String userId) {
+        userRepository.deleteById(userId);
+    }
 }

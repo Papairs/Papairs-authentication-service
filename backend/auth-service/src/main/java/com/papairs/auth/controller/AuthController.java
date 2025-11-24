@@ -118,6 +118,18 @@ public class AuthController {
     }
 
     /**
+     * Delete user by userId (Internal use only)
+     * @param userId user ID to delete
+     * @return ResponseEntity with no content
+     */
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<AuthResponse> deleteUser(@PathVariable String userId) {
+        authService.deleteUser(userId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * Extract Bearer token from Authorization header
      * @param authHeader Authorization header value
      * @return extracted token
