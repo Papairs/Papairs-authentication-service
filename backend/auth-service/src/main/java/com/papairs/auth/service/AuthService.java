@@ -4,6 +4,8 @@ import com.papairs.auth.dto.request.ChangePasswordRequest;
 import com.papairs.auth.dto.request.LoginRequest;
 import com.papairs.auth.dto.request.RegisterRequest;
 import com.papairs.auth.dto.response.LoginResponse;
+import com.papairs.auth.dto.response.SessionCreationResult;
+import com.papairs.auth.dto.response.UserResponse;
 import com.papairs.auth.exception.AuthenticationException;
 import com.papairs.auth.exception.InvalidTokenException;
 import com.papairs.auth.exception.UserAlreadyExistsException;
@@ -64,11 +66,15 @@ public class AuthService {
             throw new AuthenticationException("Invalid credentials");
         }
 
-        Session session = sessionService.createSession(user.getId());
-
+        SessionCreationResult sessionResult = sessionService.createSession(user.getId());
         userService.updateLastLogin(user.getId());
 
-        return new LoginResponse(session, user);
+        return new LoginResponse(
+                sessionResult.token(),
+                sessionResult.sessionId(),
+                sessionResult.expiresAt(),
+                UserResponse.from(user)
+        );
     }
 
     /**
