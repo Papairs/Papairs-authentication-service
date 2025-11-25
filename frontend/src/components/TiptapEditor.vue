@@ -4,7 +4,7 @@
     <div class="toolbar flex items-center gap-1 p-2 border-b border-gray-200 bg-white flex-shrink-0 sticky top-0 z-10">
       <!-- Text Formatting -->
       <button
-        @click="editor.chain().focus().toggleBold().run()"
+        @click="editor?.chain().focus().toggleBold().run()"
         :class="{ 'is-active': editor?.isActive('bold') }"
         class="toolbar-button"
         title="Bold"
@@ -15,7 +15,7 @@
       </button>
 
       <button
-        @click="editor.chain().focus().toggleItalic().run()"
+        @click="editor?.chain().focus().toggleItalic().run()"
         :class="{ 'is-active': editor?.isActive('italic') }"
         class="toolbar-button"
         title="Italic"
@@ -26,7 +26,7 @@
       </button>
 
       <button
-        @click="editor.chain().focus().toggleUnderline().run()"
+        @click="editor?.chain().focus().toggleUnderline().run()"
         :class="{ 'is-active': editor?.isActive('underline') }"
         class="toolbar-button"
         title="Underline"
@@ -37,7 +37,7 @@
       </button>
 
       <button
-        @click="editor.chain().focus().toggleCode().run()"
+        @click="editor?.chain().focus().toggleCode().run()"
         :class="{ 'is-active': editor?.isActive('code') }"
         class="toolbar-button"
         title="Inline Code"
@@ -70,7 +70,7 @@
 
       <!-- Lists -->
       <button
-        @click="editor.chain().focus().toggleBulletList().run()"
+        @click="editor?.chain().focus().toggleBulletList().run()"
         :class="{ 'is-active': editor?.isActive('bulletList') }"
         class="toolbar-button"
         title="Bullet List"
@@ -81,7 +81,7 @@
       </button>
 
       <button
-        @click="editor.chain().focus().toggleOrderedList().run()"
+        @click="editor?.chain().focus().toggleOrderedList().run()"
         :class="{ 'is-active': editor?.isActive('orderedList') }"
         class="toolbar-button"
         title="Numbered List"
@@ -96,7 +96,7 @@
 
       <!-- Code Block -->
       <button
-        @click="editor.chain().focus().toggleCodeBlock().run()"
+        @click="editor?.chain().focus().toggleCodeBlock().run()"
         :class="{ 'is-active': editor?.isActive('codeBlock') }"
         class="toolbar-button"
         title="Code Block"
@@ -111,7 +111,7 @@
 
       <!-- Undo/Redo -->
       <button
-        @click="editor.chain().focus().undo().run()"
+        @click="editor?.chain().focus().undo().run()"
         :disabled="!editor?.can().undo()"
         class="toolbar-button"
         title="Undo"
@@ -122,7 +122,7 @@
       </button>
 
       <button
-        @click="editor.chain().focus().redo().run()"
+        @click="editor?.chain().focus().redo().run()"
         :disabled="!editor?.can().redo()"
         class="toolbar-button"
         title="Redo"
@@ -159,6 +159,7 @@ import { Editor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import { onBeforeUnmount, ref, watch, nextTick } from 'vue'
+import './TiptapEditor.css'
 
 export default {
   name: 'TiptapEditor',
@@ -257,6 +258,8 @@ export default {
 
     // Handle heading selection
     const setHeading = (event) => {
+      if (!editor.value) return
+      
       const level = event.target.value
       if (level) {
         editor.value.chain().focus().toggleHeading({ level: parseInt(level) }).run()
@@ -328,151 +331,3 @@ export default {
   },
 }
 </script>
-
-<style scoped>
-.toolbar-button {
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  transition: background-color 150ms ease-in-out;
-  border: none;
-  background-color: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.toolbar-button:hover {
-  background-color: #e5e7eb;
-}
-
-.toolbar-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.toolbar-button.is-active {
-  background-color: #dbeafe;
-  color: #1d4ed8;
-}
-
-.toolbar-select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-  background-color: white;
-}
-
-.toolbar-select:hover {
-  border-color: #9ca3af;
-}
-
-.toolbar-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-}
-
-/* Tiptap styles */
-:deep(.ProseMirror) {
-  outline: none;
-  min-height: 100%;
-  padding: 0;
-}
-
-:deep(.ProseMirror p.is-editor-empty:first-child::before) {
-  content: attr(data-placeholder);
-  float: left;
-  color: #adb5bd;
-  pointer-events: none;
-  height: 0;
-}
-
-:deep(.ProseMirror .is-empty::before) {
-  content: attr(data-placeholder);
-  float: left;
-  color: #adb5bd;
-  pointer-events: none;
-  height: 0;
-}
-
-:deep(pre) {
-  background-color: #f3f4f6;
-  border-radius: 0.25rem;
-  padding: 1rem;
-  overflow-x: auto;
-}
-
-:deep(code) {
-  background-color: #f3f4f6;
-  padding: 0.125rem 0.25rem;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-}
-
-:deep(blockquote) {
-  border-left: 4px solid #d1d5db;
-  padding-left: 1rem;
-  font-style: italic;
-}
-
-:deep(ul) {
-  list-style-type: disc;
-  margin-left: 1.5rem;
-}
-
-:deep(ol) {
-  list-style-type: decimal;
-  margin-left: 1.5rem;
-}
-
-:deep(h1) {
-  font-size: 1.875rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  margin-top: 1.5rem;
-}
-
-:deep(h2) {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 0.75rem;
-  margin-top: 1.25rem;
-}
-
-:deep(h3) {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  margin-top: 1rem;
-}
-
-:deep(h4) {
-  font-size: 1.125rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  margin-top: 0.75rem;
-}
-
-:deep(h5) {
-  font-size: 1rem;
-  font-weight: bold;
-  margin-bottom: 0.25rem;
-  margin-top: 0.5rem;
-}
-
-:deep(h6) {
-  font-size: 0.875rem;
-  font-weight: bold;
-  margin-bottom: 0.25rem;
-  margin-top: 0.5rem;
-}
-
-.editor-content-wrapper {
-  min-height: 0;
-}
-
-.tiptap-editor-container {
-  min-height: 100%;
-}
-</style>
