@@ -18,7 +18,6 @@ services:
     environment:
       - NODE_ENV=development
       - VITE_ORCHESTRATION_SERVICE_URL=http://localhost:8080
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000
       - TZ=Europe/Copenhagen
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
@@ -42,9 +41,11 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      - ./backend/orchestration-service/target/orchestration-service-1.0.0.jar:/app/app.jar
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
+      - CORS_ALLOWED_ORIGIN=http://localhost:3000
       - SERVER_PORT=8080
       - SERVICES_AUTH_SERVICE_URL=http://auth-service:8081
       - SERVICES_DOCS_SERVICE_URL=http://docs-service:8082
@@ -53,8 +54,10 @@ services:
       - SERVICES_COMPENSATION_TIMEOUT_SECONDS=3
       - TZ=Europe/Copenhagen
     depends_on:
-      - auth-service
-      - docs-service
+      auth-service:
+        condition: service_healthy
+      docs-service:
+        condition: service_healthy
     networks:
       - papairs-network
     restart: unless-stopped
@@ -75,13 +78,13 @@ services:
     ports:
       - "8081:8081"
     volumes:
+      - ./backend/auth-service/target/auth-service-1.0.0.jar:/app/app.jar
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - ./backend/auth-service/.env
     environment:
       - SERVER_PORT=8081
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000
       - SESSION_DURATION_HOURS=48
       - TZ=Europe/Copenhagen
     networks:
@@ -106,11 +109,11 @@ services:
     env_file:
       - ./backend/docs-service/.env
     volumes:
+      - ./backend/docs-service/target/docs-service-1.0.0.jar:/app/app.jar
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
       - SERVER_PORT=8082
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000
       - TZ=Europe/Copenhagen
     networks:
       - papairs-network

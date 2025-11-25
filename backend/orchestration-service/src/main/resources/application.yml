@@ -5,18 +5,15 @@ spring:
   application:
     name: orchestration-service
 
-cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
-
 services:
   auth-service:
     url: ${SERVICES_AUTH_SERVICE_URL:http://auth-service:8081}
-    timeout-seconds: ${SERVICES_AUTH_SERVICE_TIMEOUT_SECONDS:5}
+    timeout-seconds: ${SERVICES_AUTH_SERVICE_TIMEOUT_SECONDS:10}
   docs-service:
     url: ${SERVICES_DOCS_SERVICE_URL:http://docs-service:8082}
-    timeout-seconds: ${SERVICES_DOCS_SERVICE_TIMEOUT_SECONDS:5}
+    timeout-seconds: ${SERVICES_DOCS_SERVICE_TIMEOUT_SECONDS:10}
   compensation:
-    timeout-seconds: ${SERVICES_COMPENSATION_TIMEOUT_SECONDS:3}
+    timeout-seconds: ${SERVICES_COMPENSATION_TIMEOUT_SECONDS:5}
 
 management:
   endpoints:
