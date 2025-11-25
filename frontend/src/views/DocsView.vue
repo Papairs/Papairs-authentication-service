@@ -1,7 +1,7 @@
 <script>
 import SidebarBase from '@/components/SidebarBase.vue'
 import TiptapEditor from '@/components/TiptapEditor.vue'
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useTiptapDocument } from '@/composables/useTiptapDocument'
 import { createErrorHandler } from '@/utils/errorHandler'
@@ -28,20 +28,13 @@ export default {
     const documentId = computed(() => props.id)
     
     // Initialize document and WebSocket
-    const document = useTiptapDocument(clientId, documentId.value)
+    const document = useTiptapDocument(clientId)
     const webSocket = useWebSocket('http://localhost:8082/ws/doc')
     
     // UI refs
     const editor = ref(null)
     const isConnected = ref(false)
     const isReceivingUpdate = ref(false)
-    
-    // Load initial content when document ID changes
-    watch(documentId, async (newId) => {
-      if (newId) {
-        await document.loadContent(newId)
-      }
-    }, { immediate: true })
 
     // WebSocket event handlers
     webSocket.onOpen(() => {
@@ -152,16 +145,6 @@ export default {
       })
     }
 
-    // Handle autosave from Tiptap editor (different from collaborative changes)
-    const handleAutosave = async (html) => {
-      try {
-        document.htmlContent.value = html
-        await document.triggerAutosave()
-      } catch (error) {
-        errorHandler.document('Autosave failed', error)
-      }
-    }
-
     // Handle editor ready event
     const handleEditorReady = (editorInstance) => {
       editor.value = editorInstance
@@ -172,15 +155,11 @@ export default {
     }
 
     // Lifecycle hooks
-    onMounted(async () => {
-      if (documentId.value) {
-        await document.loadContent(documentId.value)
-      }
+    onMounted(() => {
       webSocket.connect()
     })
 
-    onBeforeUnmount(async () => {
-      await document.forceSave()
+    onBeforeUnmount(() => {
       webSocket.disconnect()
       document.cleanup()
     })
@@ -190,10 +169,7 @@ export default {
       htmlContent: document.htmlContent,
       version: document.version,
       hasPendingOperations: document.hasPendingOperations,
-      hasUnsavedChanges: document.hasUnsavedChanges,
-      isSaving: document.isSaving,
       isLoading: document.isLoading,
-      lastSaveTime: document.lastSaveTime,
       
       // WebSocket state
       connectionState: webSocket.connectionState,
@@ -205,7 +181,6 @@ export default {
       
       // Event handlers
       handleContentChange,
-      handleAutosave,
       handleEditorReady
     }
   }
@@ -256,10 +231,8 @@ export default {
             <TiptapEditor
               :model-value="htmlContent"
               @content-change="handleContentChange"
-              @autosave="handleAutosave"
               @ready="handleEditorReady"
               placeholder="Start writing your document..."
-              :autosave-delay="5000"
             />
           </div>
         </div>
