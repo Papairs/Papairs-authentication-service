@@ -41,7 +41,6 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./backend/orchestration-service/target/orchestration-service-1.0.0.jar:/app/app.jar
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
@@ -54,10 +53,8 @@ services:
       - SERVICES_COMPENSATION_TIMEOUT_SECONDS=3
       - TZ=Europe/Copenhagen
     depends_on:
-      auth-service:
-        condition: service_healthy
-      docs-service:
-        condition: service_healthy
+      - auth-service
+      - docs-service
     networks:
       - papairs-network
     restart: unless-stopped
@@ -78,7 +75,6 @@ services:
     ports:
       - "8081:8081"
     volumes:
-      - ./backend/auth-service/target/auth-service-1.0.0.jar:/app/app.jar
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     env_file:
@@ -109,7 +105,6 @@ services:
     env_file:
       - ./backend/docs-service/.env
     volumes:
-      - ./backend/docs-service/target/docs-service-1.0.0.jar:/app/app.jar
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
