@@ -110,13 +110,11 @@ public class SessionService {
 
     /**
      * Delete all user sessions
-     * TODO: Consider security implications
      * @param userId user ID
-     * @return number of sessions deleted
      */
     @Transactional
-    public int deleteAllUserSessions(String userId) {
-        return sessionRepository.deleteByUserId(userId);
+    public void deleteAllUserSessions(String userId) {
+        sessionRepository.deleteByUserId(userId);
     }
 
     /**
