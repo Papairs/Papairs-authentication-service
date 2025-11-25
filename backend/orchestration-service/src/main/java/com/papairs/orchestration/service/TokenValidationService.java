@@ -28,7 +28,7 @@ public class TokenValidationService {
      */
     public Mono<String> validateTokenAndGetUserId(String token) {
         return authServiceClient.validateToken(token)
-                .map(response -> response.user().id())
+                .map(userResponse -> userResponse.id())
                 .onErrorMap(TimeoutException.class, ex ->
                         new ServiceUnavailableException(
                                 "auth-service",

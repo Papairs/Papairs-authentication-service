@@ -1,8 +1,10 @@
 package com.papairs.orchestration.dto.response;
 
+import java.time.LocalDateTime;
+
 public record AuthResponse(
-        boolean success,
-        String message,
-        String sessionToken,
+        String token,
+        String sessionId,
+        LocalDateTime expiresAt,
         UserResponse user
 ) {}
