@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
 @Entity
 public class Page {
     @Id
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue(generator = "nanoid")
     @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
+            name = "nanoid",
+            strategy = "com.papairs.docs.config.NanoIDGenerator"
     )
     @Column(name = "page_id", updatable = false, nullable = false, length = 36)
     private String pageId;

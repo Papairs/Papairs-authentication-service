@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -12,10 +13,10 @@ import java.time.LocalDateTime;
 @Entity
 public class Folder {
     @Id
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue(generator = "nanoid")
     @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
+            name = "nanoid",
+            strategy = "com.papairs.docs.config.NanoIDGenerator"
     )
     @Column(name = "folder_id", updatable = false, nullable = false, length = 36)
     private String folderId;
@@ -32,6 +33,11 @@ public class Folder {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     public String getFolderId() {
         return folderId;

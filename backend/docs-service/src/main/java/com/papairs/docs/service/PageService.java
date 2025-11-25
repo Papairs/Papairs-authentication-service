@@ -99,12 +99,12 @@ public class PageService {
         page.setTitle(title);
         page.setFolderId(folderId);
         page.setOwnerId(ownerId);
-        page.setContent("");
         return pageRepository.save(page);
     }
 
     /**
      * Updates the content of a specific page
+     * @deprecated Use the Websocket implementation for real-time updates {@link com.papairs.docs.ws.DocWebSocketHandler}
      * @param pageId  The ID of the page to update
      * @param userId  The ID of the user performing the update. Requires edit permission
      * @param content The new content for the page
@@ -112,6 +112,8 @@ public class PageService {
      */
     @Transactional
     public Page updatePage(String pageId, String userId, String content) {
+        permissionService.requirePageEdit(pageId, userId);
+
         Page page = getPage(pageId, userId);
 
         page.setContent(content);
@@ -130,8 +132,7 @@ public class PageService {
     public Page renamePage(String pageId, String userId, String newTitle) {
         permissionService.requirePageEdit(pageId, userId);
 
-        Page page = pageRepository.findById(pageId)
-            .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
+        Page page = getPage(pageId, userId);
 
         page.setTitle(newTitle);
         return pageRepository.save(page);

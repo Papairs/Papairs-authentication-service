@@ -19,7 +19,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
     private final AuthService authService;
@@ -115,6 +114,18 @@ public class AuthController {
         return ResponseEntity.ok(
                 AuthResponse.success("Password changed successfully")
         );
+    }
+
+    /**
+     * Delete user by userId (Internal use only)
+     * @param userId user ID to delete
+     * @return ResponseEntity with no content
+     */
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<AuthResponse> deleteUser(@PathVariable String userId) {
+        authService.deleteUser(userId);
+
+        return ResponseEntity.noContent().build();
     }
 
     /**

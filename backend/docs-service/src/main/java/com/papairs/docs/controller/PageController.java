@@ -6,6 +6,7 @@ import com.papairs.docs.dto.request.RenamePageRequest;
 import com.papairs.docs.dto.request.UpdatePageRequest;
 import com.papairs.docs.dto.response.PageResponse;
 import com.papairs.docs.model.Page;
+import com.papairs.docs.security.HtmlSanitizer;
 import com.papairs.docs.service.PageService;
 import com.papairs.docs.util.UserId;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,12 +18,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/docs")
-@CrossOrigin(origins = "http://localhost:3000")
 public class PageController {
     private final PageService pageService;
+    private final HtmlSanitizer htmlSanitizer;
 
-    public PageController(PageService pageService) {
+    public PageController(PageService pageService, HtmlSanitizer htmlSanitizer) {
         this.pageService = pageService;
+        this.htmlSanitizer = htmlSanitizer;
     }
 
     /**
@@ -77,11 +79,13 @@ public class PageController {
             @PathVariable String pageId,
             HttpServletRequest request
     ) {
-        return ResponseEntity.ok(pageService.getPage(pageId, UserId.extract(request)));
+        Page page = pageService.getPage(pageId, UserId.extract(request));
+        return ResponseEntity.ok(page);
     }
 
     /**
      * Update a page's content
+     * @deprecated Use the Websocket implementation for real-time updates {@link com.papairs.docs.ws.DocWebSocketHandler}
      * @param pageId page ID
      * @param updatePageRequest update page request
      * @param request HTTP servlet request
@@ -93,7 +97,9 @@ public class PageController {
             @RequestBody UpdatePageRequest updatePageRequest,
             HttpServletRequest request
     ) {
-        Page updated = pageService.updatePage(pageId, UserId.extract(request), updatePageRequest.getContent());
+        // Sanitize HTML content to prevent XSS attacks
+        String sanitizedContent = htmlSanitizer.sanitize(updatePageRequest.getContent());
+        Page updated = pageService.updatePage(pageId, UserId.extract(request), sanitizedContent);
         return ResponseEntity.ok(updated);
     }
 
