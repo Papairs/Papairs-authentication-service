@@ -37,6 +37,17 @@ public class PageController {
     }
 
     /**
+     * Get list of pages shared with the user (where user is not the owner)
+     * @param httpRequest HTTP servlet request
+     * @return ResponseEntity with list of shared pages
+     */
+    @GetMapping("/pages/shared")
+    public ResponseEntity<List<PageResponse>> getSharedPages(HttpServletRequest httpRequest) {
+        List<PageResponse> pages = pageService.getSharedPagesWithRoles(UserId.extract(httpRequest));
+        return ResponseEntity.ok(pages);
+    }
+
+    /**
      * Create a new page
      * @param createPageRequest create page request
      * @param request HTTP servlet request

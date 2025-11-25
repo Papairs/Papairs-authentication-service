@@ -64,6 +64,27 @@ public class PageService {
     }
 
     /**
+     * Retrieves all pages shared with the user (where user is not the owner)
+     * @param userId The ID of the user
+     * @return A {@link List} of {@link PageResponse} with user roles included, excluding owned pages
+     */
+    public List<PageResponse> getSharedPagesWithRoles(String userId) {
+        List<Object[]> results = pageRepository.findAllAccessibleByUserIdWithRole(userId);
+        
+        return results.stream()
+            .filter(result -> {
+                Page page = (Page) result[0];
+                return !page.getOwnerId().equals(userId); // Exclude pages owned by user
+            })
+            .map(result -> {
+                Page page = (Page) result[0];
+                MemberRole role = (MemberRole) result[1];
+                return new PageResponse(page, userId, role);
+            })
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Creates a new page within a specified folder for a given owner
      * @param title The title of the new page
      * @param ownerId  The ID of the user who will own the page

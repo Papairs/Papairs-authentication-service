@@ -66,6 +66,7 @@ export default {
 
         // Load documents - filter by current folder
         const allDocuments = await driveService.getAllDocuments()
+        console.log(allDocuments);
         documents.value = allDocuments.filter(doc => doc.folderId === folderId)
       } catch (error) {
         console.error('Error loading content:', error)
@@ -262,7 +263,7 @@ export default {
             <div class="relative">
               <button 
                 @click="showNotebookDropdown = !showNotebookDropdown"
-                class="flex items-center space-x-2 text-2xl font-semibold text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark px-2 py-1 rounded"
+                class="flex items-center space-x-2 text-2xl font-semibold text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark py-1 rounded"
               >
                 <span>{{ currentFolder ? currentFolder.name : 'My Notebooks' }}</span>
                 <svg class="w-5 h-5 transition-transform" :class="{ 'rotate-180': showNotebookDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
