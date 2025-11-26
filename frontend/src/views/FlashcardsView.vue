@@ -128,6 +128,35 @@ export default {
       return flippedCards.value.has(flashcardId)
     }
 
+    function startStudyMode() {
+      // Navigate to study mode with current filter
+      router.push({
+        path: '/study',
+        query: selectedPageId.value !== 'all' ? { pageId: selectedPageId.value } : {}
+      })
+    }
+
+    async function resetAllFlashcards() {
+      if (!confirm('Are you sure you want to reset ALL flashcards to unlearned? This will allow you to study them all again.')) {
+        return
+      }
+
+      try {
+        const headers = await auth.getAuthHeaders(router)
+        await axios.put(
+          'http://localhost:8082/api/docs/flashcards/reset',
+          null,
+          { headers }
+        )
+        
+        alert('All flashcards have been reset to unlearned!')
+        await loadFlashcards()
+      } catch (error) {
+        console.error('Failed to reset flashcards:', error)
+        alert('Failed to reset flashcards. Please try again.')
+      }
+    }
+
     onMounted(() => {
       loadFlashcards()
     })
@@ -141,7 +170,9 @@ export default {
       selectedPageId,
       pages,
       filteredFlashcards,
-      getPageTitle
+      getPageTitle,
+      startStudyMode,
+      resetAllFlashcards
     }
   }
 }
@@ -155,7 +186,7 @@ export default {
       <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-6 justify-between">
         <h1 class="text-2xl font-bold text-content-primary">My Flashcards</h1>
         
-        <!-- Filter by Document -->
+        <!-- Filter by Document and Study Button -->
         <div v-if="!loading && flashcards.length > 0" class="flex items-center gap-3">
           <label for="page-filter" class="text-sm text-content-secondary font-medium">
             Filter by Document:
@@ -174,6 +205,23 @@ export default {
               {{ getPageTitle(page.pageId) }} ({{ page.count }})
             </option>
           </select>
+          
+          <button
+            @click="startStudyMode"
+            class="px-4 py-2 bg-accent text-white rounded-md text-sm font-medium hover:bg-accent-dark transition-colors flex items-center gap-2"
+          >
+            <span>📚</span>
+            Study Mode
+          </button>
+          
+          <button
+            @click="resetAllFlashcards"
+            class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+            title="Reset all flashcards to unlearned"
+          >
+            <span>🔄</span>
+            Reset All
+          </button>
         </div>
       </div>
 

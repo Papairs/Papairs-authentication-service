@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/docs/flashcards")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class FlashcardController {
 
     private final FlashcardRepository flashcardRepository;
@@ -56,6 +56,50 @@ public class FlashcardController {
         
         List<Flashcard> flashcards = flashcardRepository.findByPageIdAndOwnerId(pageId, userId);
         return ResponseEntity.ok(ApiResponse.success("Page flashcards retrieved successfully", flashcards));
+    }
+
+    /**
+     * Update learned status of a flashcard
+     */
+    @PutMapping("/{flashcardId}/learned")
+    public ResponseEntity<ApiResponse> updateLearnedStatus(
+            @RequestHeader("UserId") String userId,
+            @PathVariable String flashcardId,
+            @RequestBody Boolean learned) {
+        
+        Flashcard flashcard = flashcardRepository.findById(flashcardId)
+                .orElseThrow(() -> new RuntimeException("Flashcard not found"));
+        
+        if (!flashcard.getOwnerId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("You don't have permission to update this flashcard"));
+        }
+        
+        flashcard.setLearned(learned);
+        Flashcard updated = flashcardRepository.save(flashcard);
+        
+        return ResponseEntity.ok(ApiResponse.success("Flashcard learned status updated", updated));
+    }
+
+    /**
+     * Reset all flashcards to unlearned for the current user
+     */
+    @PutMapping("/reset")
+    public ResponseEntity<ApiResponse> resetAllFlashcards(
+            @RequestHeader("UserId") String userId) {
+        
+        List<Flashcard> flashcards = flashcardRepository.findByOwnerId(userId);
+        
+        for (Flashcard flashcard : flashcards) {
+            flashcard.setLearned(false);
+        }
+        
+        flashcardRepository.saveAll(flashcards);
+        
+        return ResponseEntity.ok(ApiResponse.success(
+            "All " + flashcards.size() + " flashcards reset to unlearned", 
+            flashcards.size()
+        ));
     }
 
     /**

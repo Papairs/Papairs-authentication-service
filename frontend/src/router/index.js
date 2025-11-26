@@ -5,6 +5,7 @@ import LoginView from '../views/LoginView.vue'
 import DriveView from '../views/DriveView.vue'
 import AutocompleteView from '../views/AutocompleteView.vue'
 import FlashcardsView from '../views/FlashcardsView.vue'
+import StudyModeView from '../views/StudyModeView.vue'
 
 const routes = [
   {
@@ -48,6 +49,11 @@ const routes = [
     path: '/flashcards',
     name: 'Flashcards',
     component: FlashcardsView
+  },
+  {
+    path: '/study',
+    name: 'StudyMode',
+    component: StudyModeView
   }
 ]
 

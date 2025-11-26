@@ -45,6 +45,9 @@ public class Flashcard {
     @Column(name = "next_review_date")
     private LocalDateTime nextReviewDate;
 
+    @Column(name = "learned", nullable = false)
+    private Boolean learned = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -152,5 +155,13 @@ public class Flashcard {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Boolean getLearned() {
+        return learned;
+    }
+
+    public void setLearned(Boolean learned) {
+        this.learned = learned;
     }
 }
