@@ -1,7 +1,9 @@
 <script>
 import SidebarBase from '@/components/SidebarBase.vue'
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import TiptapEditor from '@/components/TiptapEditor.vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useWebSocket } from '@/composables/useWebSocket'
+import { useTiptapDocument } from '@/composables/useTiptapDocument'
 import { useTiptapDocument } from '@/composables/useTiptapDocument'
 import { createErrorHandler } from '@/utils/errorHandler'
 import { useRouter } from 'vue-router'
@@ -10,7 +12,10 @@ import axios from 'axios'
 
 export default {
   name: 'DocsView',
-  components: { SidebarBase },
+  components: { 
+    SidebarBase,
+    TiptapEditor
+  },
   props: {
     id: {
       type: String,
@@ -18,7 +23,7 @@ export default {
     }
   },
   setup(props) {
-    // Initialize error handler and client ID
+    // General / shared stuff
     const errorHandler = createErrorHandler()
     const clientId = crypto.randomUUID()
     const router = useRouter()
@@ -39,12 +44,38 @@ export default {
     const pageFlashcards = ref([])
     const isLoadingFlashcards = ref(false)
 
+    // Derived length of content (plain text) for enabling the Generate button
+    const contentLength = computed(() => {
+      if (editor.value) {
+        return editor.value.getText().trim().length
+      }
+      const html = document.htmlContent.value || ''
+      return html.replace(/<[^>]+>/g, '').trim().length
+    })
+
+    // Load initial content when document ID changes
+    watch(
+      documentId,
+      async (newId) => {
+        if (newId) {
+          await document.loadContent(newId)
+        }
+      },
+      { immediate: true }
+    )
+
     // WebSocket event handlers
     webSocket.onOpen(() => {
       errorHandler.safe(() => {
-        const userId = auth.getUserId() || 'anonymous'
-        webSocket.send({ action: 'join', docId: documentId.value, userId: userId })
-        console.log('[Application] Joined document session:', documentId.value, 'as user:', userId)
+        let userId = auth.getUserId()
+        if (!userId) {
+          userId = 'temp-user-' + crypto.randomUUID().slice(0, 8)
+          console.log('[DocsView] No authenticated user, using temporary ID:', userId)
+        }
+
+        webSocket.send({ action: 'join', docId: documentId.value, userId })
+        isConnected.value = true
+        console.log('[DocsView] Joined document session:', documentId.value, 'as user:', userId)
       })
     })
 
@@ -60,6 +91,29 @@ export default {
         if (success) {
           updateTextarea()
         } else {
+          // Only apply operations from other clients
+          if (message.clientId !== clientId) {
+            success = document.handleServerOperation(message)
+
+            if (success && editor.value) {
+              const currentContent = editor.value.getHTML()
+              const newContent = document.htmlContent.value
+              if (currentContent !== newContent) {
+                isReceivingUpdate.value = true
+                setTimeout(() => {
+                  editor.value.commands.setContent(newContent, false)
+                  setTimeout(() => {
+                    isReceivingUpdate.value = false
+                  }, 100)
+                }, 50)
+              }
+            }
+          } else {
+            success = true
+          }
+        }
+
+        if (!success && !['user_joined', 'user_left'].includes(message.type)) {
           errorHandler.document('Failed to process server message')
         }
       })
@@ -67,14 +121,17 @@ export default {
 
     webSocket.onError((error) => {
       errorHandler.websocket('Connection error', error)
+      isConnected.value = false
     })
 
-    webSocket.onClose((event) => {
-      console.log('[Application] WebSocket closed:', event.code)
+    webSocket.onClose(() => {
+      isConnected.value = false
     })
 
-    // Text input handling
-    function onInput(event) {
+    // Handle content changes from Tiptap (collab ops)
+    const handleContentChange = (html) => {
+      if (isReceivingUpdate.value) return
+
       errorHandler.safe(() => {
         const operation = document.handleTextInput(event.target.value)
 
@@ -119,7 +176,7 @@ export default {
       try {
         // Call AI service to generate flashcards
         const aiResponse = await axios.post('http://localhost:3001/generate-flashcards', {
-          content: content,
+          content,
           numberOfCards: numberOfCards.value
         })
 
@@ -133,17 +190,21 @@ export default {
         const headers = await auth.getAuthHeaders(router)
 
         for (const card of flashcards) {
-          await axios.post('http://localhost:8082/api/docs/flashcards', {
-            pageId: documentId.value,
-            question: card.question,
-            answer: card.answer,
-            tags: []
-          }, {
-            headers: {
-              ...headers,
-              'Content-Type': 'application/json'
+          await axios.post(
+            'http://localhost:8082/api/docs/flashcards',
+            {
+              pageId: documentId.value,
+              question: card.question,
+              answer: card.answer,
+              tags: []
+            },
+            {
+              headers: {
+                ...headers,
+                'Content-Type': 'application/json'
+              }
             }
-          })
+          )
         }
 
         showSuccess.value = true
@@ -166,7 +227,7 @@ export default {
     }
 
     // Load flashcards for this page
-    async function loadPageFlashcards() {
+    const loadPageFlashcards = async () => {
       isLoadingFlashcards.value = true
       try {
         const headers = await auth.getAuthHeaders(router)
@@ -184,7 +245,7 @@ export default {
     }
 
     // Toggle flashcards panel
-    async function toggleFlashcardsPanel() {
+    const toggleFlashcardsPanel = async () => {
       showFlashcards.value = !showFlashcards.value
       if (showFlashcards.value && pageFlashcards.value.length === 0) {
         await loadPageFlashcards()
@@ -192,7 +253,7 @@ export default {
     }
 
     // Delete a flashcard
-    async function deleteFlashcard(flashcardId) {
+    const deleteFlashcard = async (flashcardId) => {
       if (!confirm('Are you sure you want to delete this flashcard?')) {
         return
       }
@@ -207,15 +268,18 @@ export default {
       }
     }
 
-    // Lifecycle hooks
-    onMounted(() => {
-      console.log('[Application] Initializing document editor')
+    // Lifecycle
+    onMounted(async () => {
+      if (documentId.value) {
+        await document.loadContent(documentId.value)
+      }
       webSocket.connect()
     })
 
-    onBeforeUnmount(() => {
-      console.log('[Application] Cleaning up document editor')
+    onBeforeUnmount(async () => {
+      await document.forceSave()
       webSocket.disconnect()
+      document.cleanup()
     })
 
     return {
@@ -227,6 +291,7 @@ export default {
       showFlashcards,
       pageFlashcards,
       isLoadingFlashcards,
+      
       // Document state
       text: document.text,
       version: document.version,
@@ -286,7 +351,7 @@ export default {
           <!-- Generate Flashcards Button -->
           <button
             @click="generateFlashcards"
-            :disabled="isGenerating || !text || text.length < 50"
+            :disabled="isGenerating || contentLength < 50"
             class="px-4 py-2 bg-accent text-white rounded-md font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
           >
             <span v-if="!isGenerating">🎴 Generate Flashcards</span>
@@ -315,8 +380,8 @@ export default {
               name="document-content"
               id="document-editor"
               placeholder="Start writing your document..."
-              class="w-full h-full resize-none border-none focus:outline-none bg-transparent text-gray-800 text-base font-normal placeholder-gray-400 py-12"
-            ></textarea>
+              :autosave-delay="5000"
+            />
           </div>
 
           <!-- Flashcards Side Panel -->
@@ -374,13 +439,17 @@ export default {
                   <!-- Question -->
                   <div class="mb-3">
                     <p class="text-xs text-content-secondary font-medium mb-1">Question:</p>
-                    <p class="text-sm text-content-primary">{{ card.question }}</p>
+                    <p class="text-sm text-content-primary whitespace-pre-wrap">
+                      {{ card.question }}
+                    </p>
                   </div>
 
                   <!-- Answer -->
                   <div>
                     <p class="text-xs text-content-secondary font-medium mb-1">Answer:</p>
-                    <p class="text-sm text-content-primary">{{ card.answer }}</p>
+                    <p class="text-sm text-content-primary whitespace-pre-wrap">
+                      {{ card.answer }}
+                    </p>
                   </div>
 
                   <!-- Tags -->
