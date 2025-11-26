@@ -1,8 +1,7 @@
 import axios from 'axios'
 import auth from './auth'
 
-// Use docs-service directly to bypass authentication gateway during development
-const API_BASE_URL = 'http://localhost:8082/api/docs'
+const API_BASE_URL = 'http://localhost:8080/api/docs'
 
 class DriveService {
   // Helper to get headers with user ID
