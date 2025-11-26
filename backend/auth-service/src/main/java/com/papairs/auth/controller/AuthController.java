@@ -24,14 +24,6 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @GetMapping("/health")
-    public ApiResponse health() {
-        return new ApiResponse("success", "Auth service is running", 
-                              Map.of("timestamp", LocalDateTime.now(),
-                                     "service", "auth-service",
-                                     "status", "healthy"));
-    }
-
     /**
      * Login user
      * @param request login request
