@@ -48,9 +48,7 @@ export default {
         const message = JSON.parse(event.data)
         console.log('[Application] Message received:', message.type)
         const success = message.type === 'snapshot' ? document.handleSnapshot(message) : document.handleServerOperation(message)
-        if (success) {
-          updateTextarea()
-        } else {
+        if (!success) {
           errorHandler.document('Failed to process server message')
         }
       })
@@ -66,7 +64,10 @@ export default {
 
     function onInput(event) {
       errorHandler.safe(() => {
-        const operation = document.handleTextInput(event.target.value)
+        const textValue = event.target.value
+        // Convert plain text to simple HTML paragraph
+        const htmlValue = '<p>' + textValue.replace(/\n/g, '</p><p>') + '</p>'
+        const operation = document.handleHTMLInput(htmlValue)
         if (operation) {
           const userId = auth.getUserId() || 'anonymous'
           const messageWithUser = { action: 'op', docId: documentId.value, op: operation, userId: userId }
@@ -74,14 +75,7 @@ export default {
             errorHandler.websocket('Failed to send operation to server')
           }
         }
-        updateTextarea()
       })
-    }
-
-    function updateTextarea() {
-      if (textarea.value && textarea.value.value !== document.text.value) {
-        textarea.value.value = document.text.value
-      }
     }
 
     async function generateFlashcards() {

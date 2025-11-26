@@ -1,15 +1,30 @@
 import axios from 'axios'
 import auth from './auth'
 
-const API_BASE_URL = 'http://localhost:8080/api/docs'
+// Use docs-service directly to bypass authentication gateway during development
+const API_BASE_URL = 'http://localhost:8082/api/docs'
 
 class DriveService {
   // Helper to get headers with user ID
   getHeaders() {
-    return {
+    const userId = auth.getUserId()
+    const headers = {
       'Content-Type': 'application/json',
       ...auth.getAuthHeader()
     }
+    
+    // Add UserId header if available, otherwise use a temporary ID
+    if (userId) {
+      headers['UserId'] = userId
+    } else {
+      // Generate temporary user ID for unauthenticated access
+      if (!this.tempUserId) {
+        this.tempUserId = 'temp-' + Math.random().toString(36).substring(7)
+      }
+      headers['UserId'] = this.tempUserId
+    }
+    
+    return headers
   }
 
   // ===== Folder APIs =====
