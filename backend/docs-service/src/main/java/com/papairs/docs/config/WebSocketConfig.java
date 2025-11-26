@@ -20,6 +20,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry
             .addHandler(handler, "/ws/doc")
-            .setAllowedOriginPatterns("*");
+            .setAllowedOriginPatterns("*") // Allow all origins for development
+            .withSockJS() // Add SockJS fallback support
+            .setStreamBytesLimit(512 * 1024) // Increase message size limit
+            .setHttpMessageCacheSize(1000)
+            .setHeartbeatTime(25000);
     }
 }

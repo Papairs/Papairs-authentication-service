@@ -49,7 +49,7 @@ import AISection from '@/components/controllerComponents/AISection.vue';
     methods: {
       async testAuth() {
         try {
-          const response = await axios.get('http://localhost:8081/api/auth/health');
+          const response = await axios.get('http://localhost:8080/api/auth/health');
           this.authResult = JSON.stringify(response.data, null, 2);
         } catch (error) {
           this.authResult = `Error: ${error.message}`;
@@ -57,7 +57,7 @@ import AISection from '@/components/controllerComponents/AISection.vue';
       },
       async testDocs() {
         try {
-          const response = await axios.get('http://localhost:8082/api/docs/health');
+          const response = await axios.get('http://localhost:8080/api/docs/health');
           this.docsResult = JSON.stringify(response.data, null, 2);
         } catch (error) {
           this.docsResult = `Error: ${error.message}`;
@@ -107,7 +107,7 @@ import AISection from '@/components/controllerComponents/AISection.vue';
         this.creatingPage = true
         
         try {
-          const response = await axios.post('http://localhost:8082/api/docs/pages', {
+          const response = await axios.post('http://localhost:8080/api/docs/pages', {
             title: this.pageName.trim(),
             folderId: null // Optional - no folder for now
           }, {

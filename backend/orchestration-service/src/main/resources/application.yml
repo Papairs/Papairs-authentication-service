@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: orchestration-service
+
+services:
+  auth-service:
+    url: ${SERVICES_AUTH_SERVICE_URL:http://auth-service:8081}
+    timeout-seconds: ${SERVICES_AUTH_SERVICE_TIMEOUT_SECONDS:10}
+  docs-service:
+    url: ${SERVICES_DOCS_SERVICE_URL:http://docs-service:8082}
+    timeout-seconds: ${SERVICES_DOCS_SERVICE_TIMEOUT_SECONDS:10}
+  compensation:
+    timeout-seconds: ${SERVICES_COMPENSATION_TIMEOUT_SECONDS:5}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  retry:
+    instances:
+      authService:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        retryExceptions:
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException$ServiceUnavailable
+          - org.springframework.web.reactive.function.client.WebClientResponseException$GatewayTimeout
+          - org.springframework.web.reactive.function.client.WebClientResponseException$InternalServerError
+        ignoreExceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException$BadRequest
+          - org.springframework.web.reactive.function.client.WebClientResponseException$Unauthorized
+          - org.springframework.web.reactive.function.client.WebClientResponseException$Forbidden
+          - org.springframework.web.reactive.function.client.WebClientResponseException$Conflict
+      docsService:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        retryExceptions:
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException$ServiceUnavailable
+          - org.springframework.web.reactive.function.client.WebClientResponseException$GatewayTimeout
+          - org.springframework.web.reactive.function.client.WebClientResponseException$InternalServerError
+        ignoreExceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException$BadRequest
+          - org.springframework.web.reactive.function.client.WebClientResponseException$Conflict
+
+logging:
+  level:
+    com.papairs.orchestration: INFO
+    org.springframework.web.reactive: INFO

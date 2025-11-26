@@ -143,4 +143,14 @@ public class AuthService {
 
         sessionService.deleteAllUserSessions(user.getId());
     }
+
+    /**
+     * Delete user and all associated sessions
+     * @param userId user ID
+     */
+    @Transactional
+    public void deleteUser(String userId) {
+        userService.deleteUser(userId);
+        sessionService.deleteAllUserSessions(userId);
+    }
 }
