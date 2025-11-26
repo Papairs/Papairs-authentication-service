@@ -5,7 +5,6 @@ import com.papairs.orchestration.client.DocsServiceClient;
 import com.papairs.orchestration.config.CircuitBreakerNames;
 import com.papairs.orchestration.dto.request.CreateDocsUserRequest;
 import com.papairs.orchestration.dto.request.RegisterAccountRequest;
-import com.papairs.orchestration.dto.response.AuthResponse;
 import com.papairs.orchestration.dto.response.RegisterResponse;
 import com.papairs.orchestration.dto.response.UserResponse;
 import com.papairs.orchestration.exception.ServiceUnavailableException;
