@@ -79,4 +79,11 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Modifying
     @Query("UPDATE User u SET u.passwordHash = :passwordHash WHERE u.id = :userId")
     void updatePasswordHash(@Param("userId") String userId, @Param("passwordHash") String passwordHash);
+
+    /**
+     * Check if active user exists by ID
+     * @param userId user ID
+     * @return true if exists, false otherwise
+     */
+    boolean existsByIdAndIsActiveTrue(String userId);
 }

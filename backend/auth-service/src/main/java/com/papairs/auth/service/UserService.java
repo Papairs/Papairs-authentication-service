@@ -63,6 +63,16 @@ public class UserService {
     }
 
     /**
+     * Check if user exists and is active (no entity load)
+     * @param userId user ID
+     * @return true if exists and active, else false
+     */
+    @Transactional(readOnly = true)
+    public boolean existsAndIsActive(String userId) {
+        return userRepository.existsByIdAndIsActiveTrue(userId);
+    }
+
+    /**
      * Check if user account is active
      * @param user User entity
      * @return true if active, else false
