@@ -173,7 +173,7 @@ export default {
       
       if (document.htmlContent.value) {
         editorInstance.commands.setContent(document.htmlContent.value, false)
-      })
+      }
     }
 
     async function generateFlashcards() {
@@ -269,6 +269,7 @@ export default {
     return {
       // Document state
       htmlContent: document.htmlContent,
+      text: document.text,
       version: document.version,
       hasPendingOperations: document.hasPendingOperations,
       hasUnsavedChanges: document.hasUnsavedChanges,
@@ -287,11 +288,18 @@ export default {
       // Event handlers
       handleContentChange,
       handleAutosave,
-      handleEditorReady
-      textarea, isGenerating, showSuccess, numberOfCards, showFlashcards, pageFlashcards, isLoadingFlashcards,
-      text: document.text, version: document.version, hasPendingOperations: document.hasPendingOperations,
-      connectionState: webSocket.connectionState, connectionError: webSocket.connectionError,
-      documentId, onInput, generateFlashcards, toggleFlashcardsPanel, deleteFlashcard
+      handleEditorReady,
+      
+      // Flashcard functionality
+      isGenerating,
+      showSuccess,
+      numberOfCards,
+      showFlashcards,
+      pageFlashcards,
+      isLoadingFlashcards,
+      generateFlashcards,
+      toggleFlashcardsPanel,
+      deleteFlashcard
     }
   }
 }
@@ -302,7 +310,7 @@ export default {
     <SidebarBase />
     <div class="flex flex-col h-full w-full overflow-hidden">
       <!-- Top Header -->
-      <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-4">
+      <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-4 justify-between">
         <div class="flex items-center gap-4">
           <h1 class="text-lg font-semibold text-gray-800">Document {{ documentId }}</h1>
           
@@ -330,6 +338,48 @@ export default {
             <div class="animate-pulse w-2 h-2 bg-orange-500 rounded-full"></div>
             <span>Syncing...</span>
           </div>
+        </div>
+        
+        <!-- Flashcard Controls -->
+        <div class="flex items-center gap-3">
+          <!-- Number of cards input -->
+          <div class="flex items-center gap-2">
+            <label for="cardCount" class="text-sm text-gray-600">Cards:</label>
+            <input 
+              id="cardCount"
+              v-model.number="numberOfCards" 
+              type="number" 
+              min="1" 
+              max="20" 
+              class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-accent"
+            />
+          </div>
+          
+          <!-- Generate button -->
+          <button
+            @click="generateFlashcards"
+            :disabled="isGenerating"
+            class="px-4 py-1.5 text-sm font-medium text-white bg-accent hover:bg-accent-dark rounded transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <span v-if="isGenerating" class="animate-spin w-3 h-3 border border-white border-t-transparent rounded-full"></span>
+            <span>{{ isGenerating ? 'Generating...' : 'Generate Flashcards' }}</span>
+          </button>
+          
+          <!-- Success message -->
+          <transition name="fade">
+            <span v-if="showSuccess" class="text-sm text-green-600 font-medium animate-fade-in">
+              ✓ Flashcards saved!
+            </span>
+          </transition>
+          
+          <!-- Toggle flashcards panel button -->
+          <button
+            @click="toggleFlashcardsPanel"
+            class="px-4 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center gap-2"
+          >
+            <span>📚</span>
+            <span>{{ showFlashcards ? 'Hide' : 'Show' }} Flashcards</span>
+          </button>
         </div>
       </div>
       
@@ -392,4 +442,6 @@ export default {
 .slide-enter-active, .slide-leave-active { transition: transform 0.3s ease-out; }
 .slide-enter-from { transform: translateX(100%); }
 .slide-leave-to { transform: translateX(100%); }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
