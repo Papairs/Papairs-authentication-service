@@ -77,7 +77,7 @@ public class UserService {
      * @param user User entity
      * @return true if active, else false
      */
-    public boolean isUserActive(User user) {
+    public boolean isActive(User user) {
         return user.getIsActive();
     }
 

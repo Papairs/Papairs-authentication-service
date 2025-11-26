@@ -58,7 +58,7 @@ public class AuthService {
         User user = userService.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
-        if (!userService.isUserActive(user)) {
+        if (!userService.isActive(user)) {
             throw new UserDeactivatedException("Account is deactivated");
         }
 
@@ -100,7 +100,7 @@ public class AuthService {
      * @return User entity if valid, else throw exception
      */
     @Transactional
-    public User validateSession(String token) {
+    public User validateTokenForUser(String token) {
         Session session = sessionService.findByToken(token)
                 .orElseThrow(() -> new InvalidTokenException("Invalid session token"));
 
@@ -112,7 +112,7 @@ public class AuthService {
         User user = userService.findById(session.getUserId())
                 .orElseThrow(() -> new AuthenticationException("User not found for session"));
 
-        if (!userService.isUserActive(user)) {
+        if (!userService.isActive(user)) {
             sessionService.delete(session);
             throw new UserDeactivatedException("User account is deactivated");
         }
@@ -123,15 +123,41 @@ public class AuthService {
     }
 
     /**
+     * Validate session token and return userId only
+     * OPTIMIZED for high-frequency validation endpoint
+     * Does NOT load full User entity for performance
+     * @param token session token
+     * @return userId if valid, else throw exception
+     */
+    @Transactional
+    public String validateTokenForUserId(String token) {
+        Session session = sessionService.findByToken(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid session token"));
+
+        if (sessionService.isExpired(session)) {
+            sessionService.delete(session);
+            throw new InvalidTokenException("Session expired");
+        }
+
+        if (!userService.existsAndIsActive(session.getUserId())) {
+            sessionService.delete(session);
+            throw new UserDeactivatedException("User account is deactivated");
+        }
+
+        sessionService.updateLastActive(session);
+
+        return session.getUserId();
+    }
+
+    /**
      * Change user password
      * TODO: Write custom annotation to validate newPassword and confirmPassword match to accumulate all validation errors in ChangePasswordRequest
      * @param token session token
      * @param request change password request
      */
-
     @Transactional
     public void changePassword(String token, ChangePasswordRequest request) {
-        User user = validateSession(token);
+        User user = validateTokenForUser(token);
 
         if (!request.isNewPasswordDifferent()) {
             throw new AuthenticationException("New password must be different from old password");
