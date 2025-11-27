@@ -2,7 +2,6 @@ package com.papairs.docs.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import com.papairs.docs.model.Page;
 import java.util.List;
 
 public class FolderTree {
