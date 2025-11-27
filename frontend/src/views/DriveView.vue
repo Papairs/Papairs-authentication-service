@@ -66,7 +66,6 @@ export default {
 
         // Load documents - filter by current folder
         const allDocuments = await driveService.getAllDocuments()
-        console.log(allDocuments);
         documents.value = allDocuments.filter(doc => doc.folderId === folderId)
       } catch (error) {
         console.error('Error loading content:', error)

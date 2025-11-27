@@ -65,12 +65,7 @@ export default {
     const loadFolderTree = async () => {
       loading.value = true
       try {
-        const userId = auth.getUserId()
-        console.log("Loading folder tree for user:", userId)
         folderTree.value = await driveService.getUserFolderTree()
-        
-        console.log("************** FOLDER TREE ****************")
-        console.log(folderTree.value)
       } catch (error) {
         console.error('Error loading folder tree:', error)
       } finally {
