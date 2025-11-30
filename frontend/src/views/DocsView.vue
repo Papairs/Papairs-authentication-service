@@ -2,10 +2,9 @@
 import SidebarBase from '@/components/SidebarBase.vue'
 import TiptapEditor from '@/components/TiptapEditor.vue'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useWebSocket } from '@/composables/useWebSocket'
 import { useTiptapDocument } from '@/composables/useTiptapDocument'
 import { createErrorHandler } from '@/utils/errorHandler'
-import auth from '@/utils/auth'
+import { createDocumentWebSocketService } from '@/services/documentWebSocketService'
 
 export default {
   name: 'DocsView',
@@ -20,102 +19,87 @@ export default {
     }
   },
   setup(props) {
-    // Initialize error handler and client ID
+    // Initialize error handler
     const errorHandler = createErrorHandler()
-    const clientId = crypto.randomUUID()
     
     // Use document ID from props or default to 'demo'
     const documentId = computed(() => props.id)
     
-    // Initialize document and WebSocket
-    const document = useTiptapDocument(clientId)
-    const webSocket = useWebSocket('http://localhost:8082/ws/doc')
+    // Initialize WebSocket service
+    const wsService = createDocumentWebSocketService()
+    wsService.init()
+    
+    // Initialize document manager
+    const document = useTiptapDocument(wsService.getClientId())
     
     // UI refs
     const editor = ref(null)
     const isConnected = ref(false)
     const isReceivingUpdate = ref(false)
 
-    // WebSocket event handlers
-    webSocket.onOpen(() => {
+    // Helper function to update editor content
+    const updateEditorContent = (newContent) => {
+      if (!editor.value) return
+      
+      const currentContent = editor.value.getHTML()
+      if (currentContent !== newContent) {
+        isReceivingUpdate.value = true
+        setTimeout(() => {
+          editor.value.commands.setContent(newContent, false)
+          setTimeout(() => {
+            isReceivingUpdate.value = false
+          }, 100)
+        }, 50)
+      }
+    }
+
+    // Setup WebSocket event handlers
+    wsService.on('onConnected', () => {
       errorHandler.safe(() => {
-        // Get user ID from auth or generate a temporary one
-        let userId = auth.getUserId()
-        if (!userId) {
-          userId = 'temp-user-' + crypto.randomUUID().slice(0, 8)
-          console.log('[DocsView] No authenticated user, using temporary ID:', userId)
-        }
-        
-        webSocket.send({ action: 'join', docId: documentId.value, userId: userId })
+        wsService.joinDocument(documentId.value)
         isConnected.value = true
-        console.log('[DocsView] Joined document session:', documentId.value, 'as user:', userId)
       })
     })
 
-    webSocket.onMessage((event) => {
+    wsService.on('onDisconnected', () => {
+      isConnected.value = false
+    })
+
+    wsService.on('onSnapshot', (message) => {
       errorHandler.safe(() => {
-        const message = JSON.parse(event.data)
-        
-        let success = false
-        
-        if (message.type === 'snapshot') {
-          success = document.handleSnapshot(message)
-          // Update Tiptap editor with snapshot content (only if different)
-          if (success && editor.value) {
-            const currentContent = editor.value.getHTML()
-            const newContent = document.htmlContent.value
-            if (currentContent !== newContent) {
-              // Temporarily disable updates to prevent doubling
-              isReceivingUpdate.value = true
-              setTimeout(() => {
-                editor.value.commands.setContent(newContent, false)
-                setTimeout(() => {
-                  isReceivingUpdate.value = false
-                }, 100)
-              }, 50)
-            }
-          }
-        } else if (['user_joined', 'user_left'].includes(message.type)) {
-          success = true
+        const success = document.handleSnapshot(message)
+        if (success) {
+          updateEditorContent(document.htmlContent.value)
         } else {
-          // Only apply operations from other users, not our own
-          if (message.clientId !== clientId) {
-            success = document.handleServerOperation(message)
-            // Apply collaborative changes to Tiptap editor
-            if (success && editor.value) {
-              const currentContent = editor.value.getHTML()
-              const newContent = document.htmlContent.value
-              if (currentContent !== newContent) {
-                isReceivingUpdate.value = true
-                setTimeout(() => {
-                  editor.value.commands.setContent(newContent, false)
-                  setTimeout(() => {
-                    isReceivingUpdate.value = false
-                  }, 100)
-                }, 50)
-              }
-            }
-          } else {
-            success = true
-          }
-        }
-        
-        if (!success && !['user_joined', 'user_left'].includes(message.type)) {
-          errorHandler.document('Failed to process server message')
+          errorHandler.document('Failed to process snapshot')
         }
       })
     })
 
-    webSocket.onError((error) => {
-      errorHandler.websocket('Connection error', error)
-      isConnected.value = false
+    wsService.on('onOperation', (message) => {
+      errorHandler.safe(() => {
+        const success = document.handleServerOperation(message)
+        if (success) {
+          updateEditorContent(document.htmlContent.value)
+        } else {
+          errorHandler.document('Failed to process operation')
+        }
+      })
     })
 
-    webSocket.onClose(() => {
-      isConnected.value = false
+    wsService.on('onUserJoined', (message) => {
+      console.log('[DocsView] User joined:', message.userId)
     })
 
-    // Handle content changes from Tiptap editor (for WebSocket collaboration)
+    wsService.on('onUserLeft', (message) => {
+      console.log('[DocsView] User left:', message.userId)
+    })
+
+    wsService.on('onError', (error) => {
+      errorHandler.websocket('WebSocket error', error)
+    })
+
+    // Handle content changes from Tiptap editor
     const handleContentChange = (html) => {
       if (isReceivingUpdate.value) {
         return
@@ -125,20 +109,7 @@ export default {
         const operation = document.handleHTMLInput(html)
         
         if (operation && isConnected.value) {
-          // Send operation to server for collaborative editing
-          let userId = auth.getUserId()
-          if (!userId) {
-            userId = 'temp-user-' + crypto.randomUUID().slice(0, 8)
-          }
-          
-          const messageWithUser = { 
-            action: 'op', 
-            docId: documentId.value, 
-            op: operation,
-            userId: userId
-          }
-          
-          if (!webSocket.send(messageWithUser)) {
+          if (!wsService.sendOperation(documentId.value, operation)) {
             errorHandler.websocket('Failed to send operation to server')
           }
         }
@@ -156,11 +127,11 @@ export default {
 
     // Lifecycle hooks
     onMounted(() => {
-      webSocket.connect()
+      wsService.connect()
     })
 
     onBeforeUnmount(() => {
-      webSocket.disconnect()
+      wsService.disconnect()
       document.cleanup()
     })
 
@@ -172,8 +143,8 @@ export default {
       isLoading: document.isLoading,
       
       // WebSocket state
-      connectionState: webSocket.connectionState,
-      connectionError: webSocket.connectionError,
+      connectionState: wsService.connectionState,
+      connectionError: wsService.connectionError,
       isConnected,
       
       // Document info
@@ -225,17 +196,13 @@ export default {
       </div>
       
       <!-- Document Content Area -->
-      <div class="flex flex-col flex-1 w-full overflow-auto">
-        <div class="flex flex-row w-full justify-center min-h-full">
-          <div class="w-full max-w-[1000px] min-w-[1000px] border-x border-b border-border-light-subtle h-fit min-h-full">
-            <TiptapEditor
-              :model-value="htmlContent"
-              @content-change="handleContentChange"
-              @ready="handleEditorReady"
-              placeholder="Start writing your document..."
-            />
-          </div>
-        </div>
+      <div class="flex flex-col flex-1 h-full w-full overflow-auto">
+        <TiptapEditor
+          :model-value="htmlContent"
+          @content-change="handleContentChange"
+          @ready="handleEditorReady"
+          placeholder="Start writing your document..."
+        />
       </div>
     </div>
   </div>
