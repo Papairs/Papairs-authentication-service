@@ -6,7 +6,8 @@
     "serve": "vue-cli-service serve --port 3000 --host 0.0.0.0 --hot",
     "serve:poll": "vue-cli-service serve --port 3000 --host 0.0.0.0 --hot --watch-options-poll 1000",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "heroku-postbuild": "npm run build"
   },
   "dependencies": {
     "@tiptap/extension-code-block-lowlight": "^2.1.13",
