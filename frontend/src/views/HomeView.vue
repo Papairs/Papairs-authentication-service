@@ -152,6 +152,12 @@ import AISection from '@/components/controllerComponents/AISection.vue';
               Home
             </router-link>
             <router-link 
+              to="/ai" 
+              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
+            >
+              AI
+            </router-link>
+            <router-link 
               to="/docs" 
               class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
             >
