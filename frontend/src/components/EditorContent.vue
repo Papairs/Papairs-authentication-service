@@ -34,11 +34,8 @@ export default {
     const textColorPicker = ref(null)
     const colorValue = ref(props.currentTextColor)
 
-    const openColorPicker = () => {
-      textColorPicker.value?.click()
-    }
+    const openColorPicker = () => textColorPicker.value?.click()
 
-    // Watch for prop changes
     watch(() => props.currentTextColor, (newColor) => {
       colorValue.value = newColor
     })

@@ -25,42 +25,20 @@ export class DocumentWebSocketService {
    * Initialize WebSocket connection
    */
   init() {
-    if (this.webSocket) {
-      console.warn('[DocumentWebSocketService] Already initialized')
-      return
-    }
+    if (this.webSocket) return
 
     this.webSocket = useWebSocket(this.url)
-
-    // Setup event handlers
-    this.webSocket.onOpen(() => {
-      console.log('[DocumentWebSocketService] Connected')
-      this.callbacks.onConnected?.()
-    })
-
-    this.webSocket.onClose(() => {
-      console.log('[DocumentWebSocketService] Disconnected')
-      this.callbacks.onDisconnected?.()
-    })
-
-    this.webSocket.onError((error) => {
-      console.error('[DocumentWebSocketService] Error:', error)
-      this.callbacks.onError?.(error)
-    })
-
-    this.webSocket.onMessage((event) => {
-      this._handleMessage(event)
-    })
+    this.webSocket.onOpen(() => this.callbacks.onConnected?.())
+    this.webSocket.onClose(() => this.callbacks.onDisconnected?.())
+    this.webSocket.onError((error) => this.callbacks.onError?.(error))
+    this.webSocket.onMessage((event) => this._handleMessage(event))
   }
 
   /**
    * Connect to WebSocket server
    */
   connect() {
-    if (!this.webSocket) {
-      console.error('[DocumentWebSocketService] Not initialized. Call init() first.')
-      return
-    }
+    if (!this.webSocket) return
     this.webSocket.connect()
   }
 
@@ -68,49 +46,32 @@ export class DocumentWebSocketService {
    * Disconnect from WebSocket server
    */
   disconnect() {
-    if (this.webSocket) {
-      this.webSocket.disconnect()
-    }
+    this.webSocket?.disconnect()
   }
 
   /**
    * Join a document session
    * @param {string} docId - Document ID
-   * @param {string} [userId] - Optional user ID (will use auth or generate temp)
+   * @param {string} userId - User ID (required)
    */
-  joinDocument(docId, userId = null) {
-    const user = userId || this._getUserId()
-    const message = {
-      action: 'join',
-      docId,
-      userId: user
+  joinDocument(docId, userId) {
+    if (!userId) {
+      throw new Error('User ID is required')
     }
-    
-    if (this.webSocket.send(message)) {
-      console.log('[DocumentWebSocketService] Joined document:', docId, 'as user:', user)
-      return true
-    }
-    
-    console.error('[DocumentWebSocketService] Failed to join document')
-    return false
+    return this.webSocket.send({ action: 'join', docId, userId })
   }
 
   /**
    * Send an operation to the server
    * @param {string} docId - Document ID
    * @param {object} operation - Operation to send
-   * @param {string} [userId] - Optional user ID
+   * @param {string} userId - User ID (required)
    */
-  sendOperation(docId, operation, userId = null) {
-    const user = userId || this._getUserId()
-    const message = {
-      action: 'op',
-      docId,
-      op: operation,
-      userId: user
+  sendOperation(docId, operation, userId) {
+    if (!userId) {
+      throw new Error('User ID is required')
     }
-    
-    return this.webSocket.send(message)
+    return this.webSocket.send({ action: 'op', docId, op: operation, userId })
   }
 
   /**
@@ -121,41 +82,28 @@ export class DocumentWebSocketService {
     try {
       const message = JSON.parse(event.data)
       
-      switch (message.type) {
-        case 'snapshot':
-          this.callbacks.onSnapshot?.(message)
-          break
-          
-        case 'user_joined':
-          this.callbacks.onUserJoined?.(message)
-          break
-          
-        case 'user_left':
-          this.callbacks.onUserLeft?.(message)
-          break
-          
-        default:
-          // Handle operations from other clients
-          if (message.clientId !== this.clientId) {
-            this.callbacks.onOperation?.(message)
-          }
-          break
+      if (message.type === 'snapshot') {
+        this.callbacks.onSnapshot?.(message)
+      } else if (message.type === 'user_joined') {
+        this.callbacks.onUserJoined?.(message)
+      } else if (message.type === 'user_left') {
+        this.callbacks.onUserLeft?.(message)
+      } else if (message.clientId !== this.clientId) {
+        this.callbacks.onOperation?.(message)
       }
     } catch (error) {
-      console.error('[DocumentWebSocketService] Failed to parse message:', error)
       this.callbacks.onError?.(error)
     }
   }
 
   /**
-   * Get user ID from auth or generate temporary one
-   * @private
+   * Get user ID from auth (authenticated users only)
+   * @throws {Error} If user is not authenticated
    */
-  _getUserId() {
-    let userId = auth.getUserId()
+  getUserId() {
+    const userId = auth.getUserId()
     if (!userId) {
-      userId = 'temp-user-' + crypto.randomUUID().slice(0, 8)
-      console.log('[DocumentWebSocketService] No authenticated user, using temporary ID:', userId)
+      throw new Error('You do not have permission to be here. Please log in.')
     }
     return userId
   }
@@ -166,8 +114,6 @@ export class DocumentWebSocketService {
   on(event, callback) {
     if (Object.prototype.hasOwnProperty.call(this.callbacks, event)) {
       this.callbacks[event] = callback
-    } else {
-      console.warn(`[DocumentWebSocketService] Unknown event: ${event}`)
     }
   }
 

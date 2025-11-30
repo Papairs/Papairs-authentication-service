@@ -15,7 +15,7 @@ export default {
   props: {
     id: {
       type: String,
-      default: 'demo'
+      required: true
     }
   },
   setup(props) {
@@ -36,28 +36,34 @@ export default {
     const editor = ref(null)
     const isConnected = ref(false)
     const isReceivingUpdate = ref(false)
+    const hasError = ref(false)
+    const errorMessage = ref('')
 
-    // Helper function to update editor content
     const updateEditorContent = (newContent) => {
-      if (!editor.value) return
+      if (!editor.value || editor.value.getHTML() === newContent) return
       
-      const currentContent = editor.value.getHTML()
-      if (currentContent !== newContent) {
-        isReceivingUpdate.value = true
-        setTimeout(() => {
-          editor.value.commands.setContent(newContent, false)
-          setTimeout(() => {
-            isReceivingUpdate.value = false
-          }, 100)
-        }, 50)
-      }
+      isReceivingUpdate.value = true
+      setTimeout(() => {
+        editor.value.commands.setContent(newContent, false)
+        setTimeout(() => { isReceivingUpdate.value = false }, 100)
+      }, 50)
+    }
+
+    // Validate document ID
+    if (!props.id) {
+      hasError.value = true
+      errorMessage.value = 'No document ID provided'
     }
 
     // Setup WebSocket event handlers
     wsService.on('onConnected', () => {
       errorHandler.safe(() => {
-        wsService.joinDocument(documentId.value)
+        const userId = wsService.getUserId()
+        wsService.joinDocument(documentId.value, userId)
         isConnected.value = true
+      }, () => {
+        hasError.value = true
+        errorMessage.value = 'There was an error finding your page'
       })
     })
 
@@ -67,59 +73,48 @@ export default {
 
     wsService.on('onSnapshot', (message) => {
       errorHandler.safe(() => {
-        const success = document.handleSnapshot(message)
-        if (success) {
+        if (message.type === 'error') {
+          hasError.value = true
+          errorMessage.value = 'There was an error finding your page'
+          return
+        }
+        if (document.handleSnapshot(message)) {
           updateEditorContent(document.htmlContent.value)
-        } else {
-          errorHandler.document('Failed to process snapshot')
         }
       })
     })
 
     wsService.on('onOperation', (message) => {
       errorHandler.safe(() => {
-        const success = document.handleServerOperation(message)
-        if (success) {
+        if (document.handleServerOperation(message)) {
           updateEditorContent(document.htmlContent.value)
-        } else {
-          errorHandler.document('Failed to process operation')
         }
       })
     })
 
-    wsService.on('onUserJoined', (message) => {
-      console.log('[DocsView] User joined:', message.userId)
-    })
-
-    wsService.on('onUserLeft', (message) => {
-      console.log('[DocsView] User left:', message.userId)
-    })
+    wsService.on('onUserJoined', () => {})
+    wsService.on('onUserLeft', () => {})
 
     wsService.on('onError', (error) => {
       errorHandler.websocket('WebSocket error', error)
+      hasError.value = true
+      errorMessage.value = 'There was an error finding your page'
     })
 
-    // Handle content changes from Tiptap editor
     const handleContentChange = (html) => {
-      if (isReceivingUpdate.value) {
-        return
-      }
+      if (isReceivingUpdate.value) return
       
       errorHandler.safe(() => {
         const operation = document.handleHTMLInput(html)
-        
         if (operation && isConnected.value) {
-          if (!wsService.sendOperation(documentId.value, operation)) {
-            errorHandler.websocket('Failed to send operation to server')
-          }
+          const userId = wsService.getUserId()
+          wsService.sendOperation(documentId.value, operation, userId)
         }
       })
     }
 
-    // Handle editor ready event
     const handleEditorReady = (editorInstance) => {
       editor.value = editorInstance
-      
       if (document.htmlContent.value) {
         editorInstance.commands.setContent(document.htmlContent.value, false)
       }
@@ -127,7 +122,9 @@ export default {
 
     // Lifecycle hooks
     onMounted(() => {
-      wsService.connect()
+      if (!hasError.value) {
+        wsService.connect()
+      }
     })
 
     onBeforeUnmount(() => {
@@ -146,6 +143,10 @@ export default {
       connectionState: wsService.connectionState,
       connectionError: wsService.connectionError,
       isConnected,
+      
+      // Error state
+      hasError,
+      errorMessage,
       
       // Document info
       documentId,
@@ -196,8 +197,24 @@ export default {
       </div>
       
       <!-- Document Content Area -->
-      <div class="flex flex-col flex-1 h-full w-full overflow-auto">
+      <div class="flex flex-col flex-1 h-full w-full overflow-auto relative">
+        <!-- Error Overlay -->
+        <div 
+          v-if="hasError"
+          class="absolute inset-0 bg-white z-50 flex items-center justify-center"
+        >
+          <div class="text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2">{{ errorMessage }}</h2>
+            <p class="text-gray-600">The document you're looking for doesn't exist or you don't have access to it.</p>
+          </div>
+        </div>
+        
+        <!-- Editor -->
         <TiptapEditor
+          v-if="!hasError"
           :model-value="htmlContent"
           @content-change="handleContentChange"
           @ready="handleEditorReady"

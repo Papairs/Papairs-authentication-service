@@ -176,6 +176,25 @@ export default {
         onSelectionUpdate: ({ editor }) => {
           // Update current font size based on selection
           const fontSize = editor.getAttributes('textStyle').fontSize
+          
+          // Check if we're in a heading
+          for (let level = 1; level <= 6; level++) {
+            if (editor.isActive('heading', { level })) {
+              // Map heading levels to approximate font sizes
+              const headingSizes = {
+                1: '36pt',
+                2: '30pt',
+                3: '24pt',
+                4: '18pt',
+                5: '14pt',
+                6: '12pt'
+              }
+              currentFontSize.value = headingSizes[level]
+              return
+            }
+          }
+          
+          // If not in heading, use textStyle fontSize or default
           currentFontSize.value = fontSize || DEFAULT_FONT_SIZE
         },
         editorProps: {
@@ -262,30 +281,21 @@ export default {
       editor.value.chain().focus().setColor(color).run()
     }
 
-    // Watch for external content changes (e.g., from WebSocket)
     watch(() => props.modelValue, (newValue) => {
-      if (editor.value && isInitialized.value && newValue !== lastContent.value) {
-        const currentContent = editor.value.getHTML()
-        if (newValue !== currentContent) {
-          // Temporarily disable change detection
-          isInitialized.value = false
-          editor.value.commands.setContent(newValue, false)
-          lastContent.value = newValue
-          nextTick(() => {
-            isInitialized.value = true
-          })
-        }
-      }
+      if (!editor.value || !isInitialized.value || newValue === lastContent.value) return
+      if (newValue === editor.value.getHTML()) return
+      
+      isInitialized.value = false
+      editor.value.commands.setContent(newValue, false)
+      lastContent.value = newValue
+      nextTick(() => { isInitialized.value = true })
     })
 
     // Initialize editor on mount
     initEditor()
 
-    // Cleanup on unmount
     onBeforeUnmount(() => {
-      if (editor.value) {
-        editor.value.destroy()
-      }
+      editor.value?.destroy()
     })
 
     // Computed properties for toolbar
