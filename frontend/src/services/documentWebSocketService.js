@@ -6,7 +6,7 @@ import auth from '@/utils/auth'
  * Manages WebSocket connection for real-time document collaboration
  */
 export class DocumentWebSocketService {
-  constructor(url = 'http://localhost:8082/ws/doc') {
+  constructor(url = 'http://localhost:8080/ws/doc') {
     this.url = url
     this.webSocket = null
     this.clientId = crypto.randomUUID()
