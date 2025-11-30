@@ -2,7 +2,7 @@ package com.papairs.docs.controller;
 
 import com.papairs.docs.model.ApiResponse;
 import com.papairs.docs.model.Flashcard;
-import com.papairs.docs.repository.FlashcardRepository;
+import com.papairs.docs.service.FlashcardService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,10 +13,10 @@ import java.util.List;
 @RequestMapping("/api/docs/flashcards")
 public class FlashcardController {
 
-    private final FlashcardRepository flashcardRepository;
+    private final FlashcardService flashcardService;
 
-    public FlashcardController(FlashcardRepository flashcardRepository) {
-        this.flashcardRepository = flashcardRepository;
+    public FlashcardController(FlashcardService flashcardService) {
+        this.flashcardService = flashcardService;
     }
 
     /**
@@ -27,8 +27,7 @@ public class FlashcardController {
             @RequestHeader("X-User-Id") String userId,
             @RequestBody Flashcard flashcard) {
         
-        flashcard.setOwnerId(userId);
-        Flashcard saved = flashcardRepository.save(flashcard);
+        Flashcard saved = flashcardService.createFlashcard(flashcard, userId);
         
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Flashcard created successfully", saved));
@@ -41,7 +40,7 @@ public class FlashcardController {
     public ResponseEntity<ApiResponse> getUserFlashcards(
             @RequestHeader("X-User-Id") String userId) {
         
-        List<Flashcard> flashcards = flashcardRepository.findByOwnerId(userId);
+        List<Flashcard> flashcards = flashcardService.getUserFlashcards(userId);
         return ResponseEntity.ok(ApiResponse.success("Flashcards retrieved successfully", flashcards));
     }
 
@@ -53,7 +52,7 @@ public class FlashcardController {
             @RequestHeader("X-User-Id") String userId,
             @PathVariable String pageId) {
         
-        List<Flashcard> flashcards = flashcardRepository.findByPageIdAndOwnerId(pageId, userId);
+        List<Flashcard> flashcards = flashcardService.getPageFlashcards(pageId, userId);
         return ResponseEntity.ok(ApiResponse.success("Page flashcards retrieved successfully", flashcards));
     }
 
@@ -66,16 +65,7 @@ public class FlashcardController {
             @PathVariable String flashcardId,
             @RequestBody Boolean learned) {
         
-        Flashcard flashcard = flashcardRepository.findById(flashcardId)
-                .orElseThrow(() -> new RuntimeException("Flashcard not found"));
-        
-        if (!flashcard.getOwnerId().equals(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.error("You don't have permission to update this flashcard"));
-        }
-        
-        flashcard.setLearned(learned);
-        Flashcard updated = flashcardRepository.save(flashcard);
+        Flashcard updated = flashcardService.updateLearnedStatus(flashcardId, userId, learned);
         
         return ResponseEntity.ok(ApiResponse.success("Flashcard learned status updated", updated));
     }
@@ -87,17 +77,11 @@ public class FlashcardController {
     public ResponseEntity<ApiResponse> resetAllFlashcards(
             @RequestHeader("X-User-Id") String userId) {
         
-        List<Flashcard> flashcards = flashcardRepository.findByOwnerId(userId);
-        
-        for (Flashcard flashcard : flashcards) {
-            flashcard.setLearned(false);
-        }
-        
-        flashcardRepository.saveAll(flashcards);
+        int count = flashcardService.resetAllFlashcards(userId);
         
         return ResponseEntity.ok(ApiResponse.success(
-            "All " + flashcards.size() + " flashcards reset to unlearned", 
-            flashcards.size()
+            "All " + count + " flashcards reset to unlearned", 
+            count
         ));
     }
 
@@ -109,15 +93,7 @@ public class FlashcardController {
             @RequestHeader("X-User-Id") String userId,
             @PathVariable String flashcardId) {
         
-        Flashcard flashcard = flashcardRepository.findById(flashcardId)
-                .orElseThrow(() -> new RuntimeException("Flashcard not found"));
-        
-        if (!flashcard.getOwnerId().equals(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.error("You don't have permission to delete this flashcard"));
-        }
-        
-        flashcardRepository.delete(flashcard);
+        flashcardService.deleteFlashcard(flashcardId, userId);
         return ResponseEntity.ok(ApiResponse.success("Flashcard deleted successfully", null));
     }
 }
