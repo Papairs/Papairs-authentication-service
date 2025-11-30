@@ -1,8 +1,8 @@
 package com.papairs.docs.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.papairs.docs.dto.response.PageContentResponse;
 import com.papairs.docs.model.Message;
-import com.papairs.docs.model.Page;
 import com.papairs.docs.security.HtmlSanitizer;
 import com.papairs.docs.service.PageService;
 import org.springframework.lang.NonNull;
@@ -143,8 +143,8 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     private DocumentSession getOrCreateDocumentSession(String docId, String userId) {
         return documentSessions.computeIfAbsent(docId, k -> {
             try {
-                Page page = pageService.getPage(k, userId);
-                String initialContent = page.getContent();
+                PageContentResponse page = pageService.getPage(k, userId);
+                String initialContent = page.content();
                 
                 // Ensure we have valid HTML content for Tiptap
                 if (initialContent == null || initialContent.isEmpty()) {
