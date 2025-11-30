@@ -11,8 +11,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDateTime;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -68,10 +66,10 @@ public class AuthController {
      * @return {@link UserResponse} indicating if token is valid or not
      */
     @PostMapping("/validate")
-    public ResponseEntity<UserResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ValidationResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
         String token = extractBearerToken(authHeader);
-        User user = authService.validateSession(token);
-        return ResponseEntity.ok(UserResponse.from(user));
+        String userId = authService.validateTokenForUserId(token);
+        return ResponseEntity.ok(new ValidationResponse(userId));
     }
 
     /**
