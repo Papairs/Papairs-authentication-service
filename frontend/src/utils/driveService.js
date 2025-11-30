@@ -12,15 +12,15 @@ class DriveService {
       ...auth.getAuthHeader()
     }
     
-    // Add UserId header if available, otherwise use a temporary ID
+    // Add X-User-Id header if available, otherwise use a temporary ID
     if (userId) {
-      headers['UserId'] = userId
+      headers['X-User-Id'] = userId
     } else {
       // Generate temporary user ID for unauthenticated access
       if (!this.tempUserId) {
         this.tempUserId = 'temp-' + Math.random().toString(36).substring(7)
       }
-      headers['UserId'] = this.tempUserId
+      headers['X-User-Id'] = this.tempUserId
     }
     
     return headers

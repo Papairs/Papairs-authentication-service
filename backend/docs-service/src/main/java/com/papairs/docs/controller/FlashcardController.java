@@ -24,7 +24,7 @@ public class FlashcardController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse> createFlashcard(
-            @RequestHeader("UserId") String userId,
+            @RequestHeader("X-User-Id") String userId,
             @RequestBody Flashcard flashcard) {
         
         flashcard.setOwnerId(userId);
@@ -39,7 +39,7 @@ public class FlashcardController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse> getUserFlashcards(
-            @RequestHeader("UserId") String userId) {
+            @RequestHeader("X-User-Id") String userId) {
         
         List<Flashcard> flashcards = flashcardRepository.findByOwnerId(userId);
         return ResponseEntity.ok(ApiResponse.success("Flashcards retrieved successfully", flashcards));
@@ -50,7 +50,7 @@ public class FlashcardController {
      */
     @GetMapping("/page/{pageId}")
     public ResponseEntity<ApiResponse> getPageFlashcards(
-            @RequestHeader("UserId") String userId,
+            @RequestHeader("X-User-Id") String userId,
             @PathVariable String pageId) {
         
         List<Flashcard> flashcards = flashcardRepository.findByPageIdAndOwnerId(pageId, userId);
@@ -62,7 +62,7 @@ public class FlashcardController {
      */
     @PutMapping("/{flashcardId}/learned")
     public ResponseEntity<ApiResponse> updateLearnedStatus(
-            @RequestHeader("UserId") String userId,
+            @RequestHeader("X-User-Id") String userId,
             @PathVariable String flashcardId,
             @RequestBody Boolean learned) {
         
@@ -85,7 +85,7 @@ public class FlashcardController {
      */
     @PutMapping("/reset")
     public ResponseEntity<ApiResponse> resetAllFlashcards(
-            @RequestHeader("UserId") String userId) {
+            @RequestHeader("X-User-Id") String userId) {
         
         List<Flashcard> flashcards = flashcardRepository.findByOwnerId(userId);
         
@@ -106,7 +106,7 @@ public class FlashcardController {
      */
     @DeleteMapping("/{flashcardId}")
     public ResponseEntity<ApiResponse> deleteFlashcard(
-            @RequestHeader("UserId") String userId,
+            @RequestHeader("X-User-Id") String userId,
             @PathVariable String flashcardId) {
         
         Flashcard flashcard = flashcardRepository.findById(flashcardId)
