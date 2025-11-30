@@ -25,14 +25,14 @@ export class AuthController extends BaseApiController {
     const result = await this.post(`${this.servicePath}/login`, credentials);
     
     // Store auth data on successful login
-    if (result.success && result.data.sessionToken) {
-      localStorage.setItem('papairs_token', result.data.sessionToken);
+    if (result.success && result.data.token) {
+      localStorage.setItem('papairs_token', result.data.token);
       if (result.data.user) {
         localStorage.setItem('papairs_user', JSON.stringify({
           id: result.data.user.id,
           email: result.data.user.email,
           emailVerified: result.data.user.emailVerified || false,
-          isActive: result.data.user.isActive || true
+          active: result.data.user.active || true
         }));
       }
     }
