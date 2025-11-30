@@ -1,5 +1,7 @@
 package com.papairs.docs.service;
 
+import com.papairs.docs.exception.ResourceNotFoundException;
+import com.papairs.docs.exception.UnauthorizedAccessException;
 import com.papairs.docs.model.DocumentSession;
 import com.papairs.docs.model.OT.Op;
 import com.papairs.docs.security.HtmlSanitizer;
@@ -22,17 +24,25 @@ public class CollaborationService {
     private final PageService pageService;
     private final AutoSaveManager autoSaveManager;
     private final HtmlSanitizer htmlSanitizer;
+    private final PermissionService permissionService;
 
-    public CollaborationService(PageService pageService, AutoSaveManager autoSaveManager, HtmlSanitizer htmlSanitizer) {
+    public CollaborationService(PageService pageService, AutoSaveManager autoSaveManager, HtmlSanitizer htmlSanitizer, PermissionService permissionService) {
         this.pageService = pageService;
         this.autoSaveManager = autoSaveManager;
         this.htmlSanitizer = htmlSanitizer;
+        this.permissionService = permissionService;
     }
 
     /**
      * Join a user to a document session
+     * Validates that the page exists and the user has access
+     * @throws ResourceNotFoundException if page doesn't exist
+     * @throws UnauthorizedAccessException if user doesn't have access
      */
     public DocumentSession joinDocument(String docId, String userId, WebSocketSession session) {
+        // Validate page exists and user has access
+        permissionService.requirePageAccess(docId, userId);
+        
         DocumentSession document = getOrCreateSession(docId, userId);
         document.addSession(session, userId);
         logger.info("User " + userId + " joined document " + docId);

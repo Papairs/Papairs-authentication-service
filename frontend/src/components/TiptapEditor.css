@@ -141,10 +141,6 @@
   margin-top: 0.5rem;
 }
 
-.editor-content-wrapper {
-  min-height: 0;
-}
-
 .tiptap-editor-container {
   min-height: 100%;
 }

@@ -25,18 +25,18 @@
       @toggle-code-block="toggleCodeBlock"
       @undo="undo"
       @redo="redo"
+      class=""
     />
 
     <!-- Editor Content with centered max-width wrapper -->
     <div class="flex-1 flex justify-center w-full overflow-auto">
-      <div class="w-full max-w-[1200px]">
-        <EditorContentArea
-          :editor="editor"
-          :currentTextColor="currentTextColor"
-          @text-color-change="handleTextColorChange"
-          ref="editorContentArea"
-        />
-      </div>
+      <EditorContentArea
+        :editor="editor"
+        :currentTextColor="currentTextColor"
+        @text-color-change="handleTextColorChange"
+        ref="editorContentArea"
+        class="w-full max-w-[800px] min-h-full h-fit"
+      />
     </div>
   </div>
   <div v-else class="flex items-center justify-center h-full">

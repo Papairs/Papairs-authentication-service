@@ -58,6 +58,8 @@ export default {
     // Setup WebSocket event handlers
     wsService.on('onConnected', () => {
       errorHandler.safe(() => {
+        if (hasError.value) return // Don't try to join if already errored
+        
         const userId = wsService.getUserId()
         wsService.joinDocument(documentId.value, userId)
         isConnected.value = true
@@ -69,6 +71,10 @@ export default {
 
     wsService.on('onDisconnected', () => {
       isConnected.value = false
+      // If disconnected due to error, don't reconnect
+      if (hasError.value) {
+        wsService.disconnect()
+      }
     })
 
     wsService.on('onSnapshot', (message) => {
@@ -76,6 +82,7 @@ export default {
         if (message.type === 'error') {
           hasError.value = true
           errorMessage.value = 'There was an error finding your page'
+          wsService.disconnect()
           return
         }
         if (document.handleSnapshot(message)) {

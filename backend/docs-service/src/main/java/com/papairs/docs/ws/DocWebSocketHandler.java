@@ -68,9 +68,19 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
      * Handles client joining a document session.
      */
     private void handleJoinRequest(WebSocketSession session, String docId, String userId) {
-        DocumentSession document = collaborationService.joinDocument(docId, userId, session);
-        sendSnapshot(session, document);
-        broadcastToOthers(document, createUserMessage("user_joined", userId, document.getVersion()), session);
+        try {
+            DocumentSession document = collaborationService.joinDocument(docId, userId, session);
+            sendSnapshot(session, document);
+            broadcastToOthers(document, createUserMessage("user_joined", userId, document.getVersion()), session);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "User " + userId + " denied access to document " + docId + ": " + e.getMessage());
+            sendError(session, "Document not found or access denied", 0);
+            try {
+                session.close(CloseStatus.POLICY_VIOLATION);
+            } catch (Exception closeEx) {
+                logger.log(Level.WARNING, "Failed to close session", closeEx);
+            }
+        }
     }
 
     /**

@@ -82,7 +82,9 @@ export class DocumentWebSocketService {
     try {
       const message = JSON.parse(event.data)
       
-      if (message.type === 'snapshot') {
+      if (message.type === 'error') {
+        this.callbacks.onSnapshot?.(message) // Pass error through snapshot handler
+      } else if (message.type === 'snapshot') {
         this.callbacks.onSnapshot?.(message)
       } else if (message.type === 'user_joined') {
         this.callbacks.onUserJoined?.(message)
