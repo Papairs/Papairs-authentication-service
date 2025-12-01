@@ -148,6 +148,62 @@ app.post('/autocomplete', async (req, res) => {
   }
 });
 
+// Generate flashcards from document content
+app.post('/generate-flashcards', async (req, res) => {
+  const { content, numberOfCards = 5 } = req.body;
+
+  if (!content || typeof content !== 'string' || content.trim().length < 50) {
+    return res.status(400).json({ error: 'Content must be at least 50 characters' });
+  }
+
+  const startTime = Date.now();
+
+  try {
+    const systemPrompt = `You are an expert at creating educational flashcards. Generate ${numberOfCards} high-quality flashcards from the provided content. Each flashcard should have a clear question and a concise answer. Return ONLY a JSON array with this exact format:
+[
+  {"question": "Question text here?", "answer": "Answer text here"},
+  {"question": "Another question?", "answer": "Another answer"}
+]
+Do not include any other text, explanations, or markdown formatting.`;
+
+    const completion = await openai.chat.completions.create({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: content }
+      ],
+      model: 'gpt-4o-mini',
+      max_tokens: 1000,
+      temperature: 0.7
+    });
+    
+    let responseText = completion.choices[0].message.content.trim();
+    
+    // Remove markdown code blocks if present
+    responseText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    
+    // Parse the JSON response
+    const flashcards = JSON.parse(responseText);
+    
+    if (!Array.isArray(flashcards)) {
+      throw new Error('Response is not an array');
+    }
+
+    const duration = Date.now() - startTime;
+    console.log(`Generated ${flashcards.length} flashcards in ${duration}ms`);
+    
+    res.json({ flashcards });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`Error generating flashcards after ${duration}ms:`, error.message);
+    
+    if (error.message.includes('timeout')) {
+      res.status(504).json({ error: 'AI service timeout - please try again' });
+    } else {
+      res.status(500).json({ error: 'Failed to generate flashcards', details: error.message });
+    }
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 

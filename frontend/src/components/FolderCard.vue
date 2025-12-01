@@ -1,3 +1,4 @@
+
 <template>
   <div 
     class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg hover:shadow-md transition-all cursor-pointer overflow-visible"

@@ -6,10 +6,24 @@ const API_BASE_URL = 'http://localhost:8080/api/docs'
 class DriveService {
   // Helper to get headers with user ID
   getHeaders() {
-    return {
+    const userId = auth.getUserId()
+    const headers = {
       'Content-Type': 'application/json',
       ...auth.getAuthHeader()
     }
+    
+    // Add X-User-Id header if available, otherwise use a temporary ID
+    if (userId) {
+      headers['X-User-Id'] = userId
+    } else {
+      // Generate temporary user ID for unauthenticated access
+      if (!this.tempUserId) {
+        this.tempUserId = 'temp-' + Math.random().toString(36).substring(7)
+      }
+      headers['X-User-Id'] = this.tempUserId
+    }
+    
+    return headers
   }
 
   // ===== Folder APIs =====
