@@ -4,6 +4,7 @@ import preview from '../../Images/7 Semester Recording Oct 13 2025.gif'
 import LoginHeader from '../components/LoginHeader.vue'
 import RegisterForm from '../components/RegisterForm.vue'
 import ImagePanel from '../components/ImagePanel.vue'
+import { API_BASE_URL } from '@/config'
 
 export default {
   name: 'RegisterView',
@@ -28,14 +29,10 @@ export default {
   methods: {
     async handleRegister(registerData) {
       try {
-        const resp = await axios.post('http://localhost:8080/api/auth/register', {
+        const resp = await axios.post(`${API_BASE_URL}/api/auth/register`, {
           email: registerData.email,
           password: registerData.password
         })
-        
-        console.log('Registration response:', resp)
-        console.log('Response status:', resp.status)
-        console.log('Response data:', resp.data)
         
         if (resp.status === 201 || (resp.status === 200 && resp.data)) {
           this.$refs.registerForm.error = null
