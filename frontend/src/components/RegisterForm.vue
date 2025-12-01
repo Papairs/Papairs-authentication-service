@@ -31,16 +31,18 @@ export default {
       return this.formData.password.length >= 8
     },
     passwordsMatch() {
-      return this.formData.password === this.formData.confirmPassword
+      return this.formData.password && this.formData.confirmPassword && 
+             this.formData.password === this.formData.confirmPassword
     },
     isPasswordValid() {
       return this.hasLowercase && this.hasUppercase && this.hasNumber && this.hasSpecial && this.hasMinLength
     },
     isFormValid() {
       return this.formData.email && 
+             this.formData.email.length > 0 &&
              this.isPasswordValid && 
              this.passwordsMatch && 
-             this.formData.confirmPassword
+             this.formData.confirmPassword.length > 0
     }
   },
   methods: {
@@ -139,7 +141,7 @@ input[type="checkbox"] {
           <button 
             :disabled="loading || !isFormValid" 
             type="submit"
-            class="bg-content-black text-content-inverse rounded-md py-3 px-6 w-40 text-center font-semibold hover:opacity-90 disabled:opacity-60"
+            class="bg-content-black text-content-inverse rounded-md py-3 px-6 w-40 text-center font-semibold hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-opacity"
           >
             <span v-if="!loading">Register</span>
             <span v-else>Registering...</span>

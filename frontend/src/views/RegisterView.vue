@@ -28,23 +28,41 @@ export default {
   methods: {
     async handleRegister(registerData) {
       try {
-        const resp = await axios.post('http://localhost:8081/api/auth/register', {
+        const resp = await axios.post('http://localhost:8080/api/auth/register', {
           email: registerData.email,
           password: registerData.password
         })
         
-        if (resp.data?.success) {
+        console.log('Registration response:', resp)
+        console.log('Response status:', resp.status)
+        console.log('Response data:', resp.data)
+        
+        if (resp.status === 201 || (resp.status === 200 && resp.data)) {
+          this.$refs.registerForm.error = null
           this.$refs.registerForm.success = 'Account created successfully! You can now login.'
+          this.$refs.registerForm.loading = false
           // Redirect to login after 2 seconds
           setTimeout(() => {
             this.$router.push({ name: 'Login' })
           }, 2000)
         } else {
+          console.log('Unexpected response structure')
           this.$refs.registerForm.error = 'Registration failed. Please try again.'
+          this.$refs.registerForm.loading = false
         }
       } catch (err) {
-        this.$refs.registerForm.error = err.response?.data?.message || err.message || 'Registration failed'
-      } finally {
+        console.error('Registration error:', err)
+        
+        // Handle specific error codes
+        if (err.response?.status === 409) {
+          this.$refs.registerForm.error = 'This email is already registered. Please use a different email or try logging in.'
+        } else if (err.response?.data?.message) {
+          this.$refs.registerForm.error = err.response.data.message
+        } else if (err.message) {
+          this.$refs.registerForm.error = err.message
+        } else {
+          this.$refs.registerForm.error = 'Registration failed. Please try again.'
+        }
         this.$refs.registerForm.loading = false
       }
     },
@@ -65,20 +83,17 @@ input[type="checkbox"] {
 
 <template>
   <div class="min-h-screen bg-surface-light dark:bg-surface-dark" :style="gridBg">
-    <!-- Header with height 100px -->
     <LoginHeader />
     
     <!-- Main content area with specified padding -->
     <div class="px-32 py-16">
       <div class="flex min-h-[calc(100vh-364px)]">
-        <!-- Register Form Component - width 500px + 10px padding -->
         <RegisterForm 
           ref="registerForm"
           @register="handleRegister"
           @back-to-login="handleBackToLogin"
         />
         
-        <!-- Image Panel Component - fills remaining space with 16:9 ratio -->
         <ImagePanel 
           :image-src="previewImg"
           image-alt="Papairs preview"
