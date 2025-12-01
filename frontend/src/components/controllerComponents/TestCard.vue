@@ -1,71 +1,3 @@
-<template>
-  <div class="test-card">
-    <h3 class="test-title">{{ title }}</h3>
-    <p class="test-description">{{ description }}</p>
-    
-    <!-- Form Fields -->
-    <div v-if="formFields && formFields.length > 0" class="form-section">
-      <div
-        v-for="field in formFields"
-        :key="field.key"
-        class="form-group"
-      >
-        <label>{{ field.label }}:</label>
-        <input
-          v-if="field.type !== 'textarea'"
-          :type="field.type || 'text'"
-          :value="field.value"
-          @input="updateField(field.key, $event.target.value)"
-          class="form-input"
-          :placeholder="field.placeholder"
-        />
-        <textarea
-          v-else
-          :value="field.value"
-          @input="updateField(field.key, $event.target.value)"
-          class="form-input h-20"
-          :placeholder="field.placeholder"
-        ></textarea>
-      </div>
-    </div>
-
-    <!-- Test Button -->
-    <button
-      @click="executeTest"
-      :disabled="isLoading"
-      :class="[
-        'test-button',
-        buttonColor === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''
-      ]"
-    >
-      {{ isLoading ? loadingText : buttonText }}
-    </button>
-
-    <!-- Warning Message -->
-    <p v-if="warning" class="text-red-600 dark:text-red-400 text-sm mb-2">
-      ⚠️ {{ warning }}
-    </p>
-
-    <!-- Test Result -->
-    <div
-      v-if="result"
-      class="test-result"
-      :class="result.status"
-    >
-      <div class="flex justify-between items-start mb-2">
-        <span class="font-medium">Result:</span>
-        <button
-          @click="clearResult"
-          class="text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded"
-        >
-          Clear
-        </button>
-      </div>
-      <pre>{{ JSON.stringify(result, null, 2) }}</pre>
-    </div>
-  </div>
-</template>
-
 <script>
 export default {
   name: 'TestCard',
@@ -265,3 +197,72 @@ export default {
   margin: 0;
 }
 </style>
+
+<template>
+  <div class="test-card">
+    <h3 class="test-title">{{ title }}</h3>
+    <p class="test-description">{{ description }}</p>
+    
+    <!-- Form Fields -->
+    <div v-if="formFields && formFields.length > 0" class="form-section">
+      <div
+        v-for="field in formFields"
+        :key="field.key"
+        class="form-group"
+      >
+        <label>{{ field.label }}:</label>
+        <input
+          v-if="field.type !== 'textarea'"
+          :type="field.type || 'text'"
+          :value="field.value"
+          @input="updateField(field.key, $event.target.value)"
+          class="form-input"
+          :placeholder="field.placeholder"
+        />
+        <textarea
+          v-else
+          :value="field.value"
+          @input="updateField(field.key, $event.target.value)"
+          class="form-input h-20"
+          :placeholder="field.placeholder"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Test Button -->
+    <button
+      @click="executeTest"
+      :disabled="isLoading"
+      :class="[
+        'test-button',
+        buttonColor === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''
+      ]"
+    >
+      {{ isLoading ? loadingText : buttonText }}
+    </button>
+
+    <!-- Warning Message -->
+    <p v-if="warning" class="text-red-600 dark:text-red-400 text-sm mb-2">
+      ⚠️ {{ warning }}
+    </p>
+
+    <!-- Test Result -->
+    <div
+      v-if="result"
+      class="test-result"
+      :class="result.status"
+    >
+      <div class="flex justify-between items-start mb-2">
+        <span class="font-medium">Result:</span>
+        <button
+          @click="clearResult"
+          class="text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded"
+        >
+          Clear
+        </button>
+      </div>
+      <pre>{{ JSON.stringify(result, null, 2) }}</pre>
+    </div>
+  </div>
+</template>
+

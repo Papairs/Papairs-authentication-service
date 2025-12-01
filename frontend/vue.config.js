@@ -15,6 +15,7 @@ module.exports = defineConfig({
         errors: true,
         warnings: false,
       },
+      webSocketURL: 'ws://localhost:3000/ws',
     },
     // Use watchFiles instead of watchOptions for newer webpack-dev-server
     watchFiles: {

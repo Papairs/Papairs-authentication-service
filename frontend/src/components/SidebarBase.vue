@@ -10,6 +10,7 @@ import PlusIcon from '@/components/icons/PlusIcon.vue'
 import FolderTreeItem from '@/components/FolderTreeItem.vue'
 import { driveService } from '@/utils/driveService'
 import auth from '@/utils/auth'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'SidebarBase',
@@ -22,6 +23,7 @@ export default {
     FolderTreeItem
   },
   setup() {
+    const router = useRouter()
     const route = useRoute()
     const { isDark, toggleTheme } = useTheme()
     const loading = ref(false)
@@ -31,6 +33,10 @@ export default {
 
     const isDocsView = computed(() => route.path.startsWith('/docs'))
     const isDriveView = computed(() => route.path.startsWith('/drive') || route.path === '/')
+
+    function navigateTo(route) {
+      router.push(route)
+    }
 
     const userDisplayName = computed(() => {
       const user = auth.getUser()
@@ -99,7 +105,8 @@ export default {
         toggleAssistedWriting,
         toggleTheme,
         handleLogout,
-        openNewDocumentModal
+        openNewDocumentModal,
+        navigateTo
     }
   }
 }
@@ -163,6 +170,15 @@ export default {
                 <HomeIcon :size="24" class="w-6 h-6 text-gray-600" />
                 <span class="text-base text-surface-dark dark:text-surface-light">Home</span>
             </a>
+            
+            <!-- Flashcards -->
+            <button
+                @click="navigateTo('/flashcards')"
+                class="flex gap-3 items-center px-2 py-2 hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary rounded cursor-pointer"
+            >
+                <span class="text-xl">🎴</span>
+                <span class="text-base text-surface-dark dark:text-surface-light">Flashcards</span>
+            </button>
             
             <!-- Drive View Specific Items -->
             <div v-if="isDriveView">
@@ -277,5 +293,4 @@ export default {
             </div>
         </div>
     </div>
-
 </template>

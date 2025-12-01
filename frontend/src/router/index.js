@@ -6,6 +6,8 @@ import RegisterView from '../views/RegisterView.vue'
 import DriveView from '../views/DriveView.vue'
 import SharedView from '../views/SharedView.vue'
 import AutocompleteView from '../views/AutocompleteView.vue'
+import FlashcardsView from '../views/FlashcardsView.vue'
+import StudyModeView from '../views/StudyModeView.vue'
 
 const routes = [
   {
@@ -54,6 +56,16 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: RegisterView
+  },
+  {
+    path: '/flashcards',
+    name: 'Flashcards',
+    component: FlashcardsView
+  },
+  {
+    path: '/study',
+    name: 'StudyMode',
+    component: StudyModeView
   }
 ]
 
