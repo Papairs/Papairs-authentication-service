@@ -171,6 +171,15 @@ export default {
                 <span class="text-base text-surface-dark dark:text-surface-light">Home</span>
             </a>
             
+            <!-- Flashcards -->
+            <button
+                @click="navigateTo('/flashcards')"
+                class="flex gap-3 items-center px-2 py-2 hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary rounded cursor-pointer"
+            >
+                <span class="text-xl">🎴</span>
+                <span class="text-base text-surface-dark dark:text-surface-light">Flashcards</span>
+            </button>
+            
             <!-- Drive View Specific Items -->
             <div v-if="isDriveView">
                 <!-- My papairs Section -->
@@ -283,32 +292,5 @@ export default {
                 <p class="text-xs text-accent font-medium">Papairs v1.0</p>
             </div>
         </div>
-
-        <!-- Navigation Links -->
-        <nav class="flex flex-col p-2 space-y-1">
-            <button
-                @click="navigateTo('/drive')"
-                class="flex items-center gap-3 px-3 py-2 text-content-primary hover:bg-surface-light rounded-md transition-colors text-left"
-            >
-                <span>📁</span>
-                <span>Drive</span>
-            </button>
-            
-            <button
-                @click="navigateTo('/docs')"
-                class="flex items-center gap-3 px-3 py-2 text-content-primary hover:bg-surface-light rounded-md transition-colors text-left"
-            >
-                <span>📝</span>
-                <span>Documents</span>
-            </button>
-            
-            <button
-                @click="navigateTo('/flashcards')"
-                class="flex items-center gap-3 px-3 py-2 text-content-primary hover:bg-surface-light rounded-md transition-colors text-left"
-            >
-                <span>🎴</span>
-                <span>Flashcards</span>
-            </button>
-        </nav>
     </div>
 </template>

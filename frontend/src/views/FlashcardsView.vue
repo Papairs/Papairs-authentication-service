@@ -1,5 +1,4 @@
 <script>
-import SidebarBase from '@/components/SidebarBase.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import auth from '@/utils/auth'
@@ -7,7 +6,6 @@ import axios from 'axios'
 
 export default {
   name: 'FlashcardsView',
-  components: { SidebarBase },
   setup() {
     const router = useRouter()
     const flashcards = ref([])
@@ -179,12 +177,10 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-row h-screen w-screen bg-surface-light overflow-hidden">
-    <SidebarBase />
-    <div class="flex flex-col h-full w-full overflow-hidden">
-      <!-- Header -->
-      <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-6 justify-between">
-        <h1 class="text-2xl font-bold text-content-primary">My Flashcards</h1>
+  <div class="flex flex-col h-full w-full overflow-hidden bg-surface-light dark:bg-surface-dark">
+    <!-- Header -->
+    <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-6 justify-between">
+        <h1 class="text-2xl font-bold text-content-primary dark:text-content-inverse">My Flashcards</h1>
         
         <!-- Filter by Document and Study Button -->
         <div v-if="!loading && flashcards.length > 0" class="flex items-center gap-3">
@@ -194,7 +190,7 @@ export default {
           <select
             id="page-filter"
             v-model="selectedPageId"
-            class="px-4 py-2 border border-border-light-subtle rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-white"
+            class="px-4 py-2 border border-border-light-subtle dark:border-border-dark-subtle rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-white dark:bg-surface-dark-secondary text-content-primary dark:text-content-inverse"
           >
             <option value="all">All Documents ({{ flashcards.length }})</option>
             <option
@@ -246,12 +242,12 @@ export default {
           <div
             v-for="card in filteredFlashcards()"
             :key="card.flashcardId"
-            class="bg-white border border-border-light-subtle rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
+            class="bg-white dark:bg-surface-dark-secondary border border-border-light-subtle dark:border-border-dark-subtle rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
             @click="toggleFlip(card.flashcardId)"
           >
             <!-- Card Header -->
             <div class="flex justify-between items-start mb-4">
-              <span class="text-xs px-2 py-1 bg-surface-light text-content-secondary rounded border border-border-light-subtle truncate max-w-[200px]" :title="getPageTitle(card.pageId)">
+              <span class="text-xs px-2 py-1 bg-surface-light dark:bg-surface-dark text-content-secondary rounded border border-border-light-subtle dark:border-border-dark-subtle truncate max-w-[200px]" :title="getPageTitle(card.pageId)">
                 📄 {{ getPageTitle(card.pageId) }}
               </span>
               <button 
@@ -267,17 +263,17 @@ export default {
             <div class="min-h-[120px] flex flex-col justify-center">
               <div v-if="!isFlipped(card.flashcardId)">
                 <h3 class="text-sm text-content-secondary mb-2">Question:</h3>
-                <p class="text-content-primary font-medium">{{ card.question }}</p>
+                <p class="text-content-primary dark:text-content-inverse font-medium">{{ card.question }}</p>
               </div>
               
               <div v-else>
                 <h3 class="text-sm text-content-secondary mb-2">Answer:</h3>
-                <p class="text-content-primary">{{ card.answer }}</p>
+                <p class="text-content-primary dark:text-content-inverse">{{ card.answer }}</p>
               </div>
             </div>
 
             <!-- Card Footer -->
-            <div class="mt-4 pt-4 border-t border-border-light-subtle text-center">
+            <div class="mt-4 pt-4 border-t border-border-light-subtle dark:border-border-dark-subtle text-center">
               <span class="text-sm text-content-secondary">
                 {{ isFlipped(card.flashcardId) ? 'Click to see question' : 'Click to see answer' }}
               </span>
@@ -286,5 +282,4 @@ export default {
         </div>
       </div>
     </div>
-  </div>
 </template>

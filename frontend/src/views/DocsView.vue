@@ -46,7 +46,7 @@ export default {
     const showFlashcards = ref(false)
     const pageFlashcards = ref([])
     const isLoadingFlashcards = ref(false)
-    
+
     // Function to join a document
     const joinDocument = () => {
       errorHandler.safe(() => {
@@ -143,7 +143,7 @@ export default {
       if (newId !== oldId) {
         console.log('[Application] Switching document from', oldId, 'to', newId)
         // Reset document state
-        document.resetDocument()
+        document.reset()
         // Join new document if connected
         if (webSocket.connectionState.value === 'connected') {
           joinDocument()
