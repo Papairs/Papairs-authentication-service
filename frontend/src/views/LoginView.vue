@@ -43,7 +43,7 @@ export default {
           auth.setAuthData(token, user)
           
           console.log('Login successful, stored user ID:', user.id)
-          setTimeout(() => this.$router.push({ name: 'Home' }), 700)
+          setTimeout(() => this.$router.push({ name: 'drive' }), 700)
         } else {
           this.$refs.loginForm.error = 'Login succeeded but no token or user data returned.'
         }
