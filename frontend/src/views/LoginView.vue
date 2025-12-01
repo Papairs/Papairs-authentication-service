@@ -5,6 +5,7 @@ import LoginHeader from '../components/LoginHeader.vue'
 import LoginForm from '../components/LoginForm.vue'
 import ImagePanel from '../components/ImagePanel.vue'
 import auth from '@/utils/auth'
+import { API_BASE_URL } from "@/config";
 
 export default {
   name: 'LoginView',
@@ -29,7 +30,7 @@ export default {
   methods: {
     async handleLogin(loginData) {
       try {
-        const resp = await axios.post('http://localhost:8080/api/auth/login', {
+        const resp = await axios.post(`${API_BASE_URL}/api/auth/login`, {
           email: loginData.email,
           password: loginData.password
         })
