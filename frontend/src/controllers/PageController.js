@@ -1,4 +1,5 @@
 import { BaseApiController } from './BaseApiController.js';
+import { API_BASE_URL } from "@/config";
 
 /**
  * Page Management Controller
@@ -6,7 +7,7 @@ import { BaseApiController } from './BaseApiController.js';
  */
 export class PageController extends BaseApiController {
   constructor() {
-    super('http://localhost:8080');
+    super(API_BASE_URL );
     this.servicePath = '/api/docs';
   }
 

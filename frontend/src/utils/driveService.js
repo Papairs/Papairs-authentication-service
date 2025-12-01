@@ -1,7 +1,6 @@
 import axios from 'axios'
 import auth from './auth'
-
-const API_BASE_URL = 'http://localhost:8080/api/docs'
+import { API_BASE_URL } from "@/config";
 
 class DriveService {
   // Helper to get headers with user ID
@@ -29,49 +28,49 @@ class DriveService {
   // ===== Folder APIs =====
   
   async getRootFolders() {
-    const response = await axios.get(`${API_BASE_URL}/folders/roots`, {
+    const response = await axios.get(`${API_BASE_URL}/api/docs/folders/roots`, {
       headers: this.getHeaders()
     })
     return response.data
   }
 
   async getAllFolders() {
-    const response = await axios.get(`${API_BASE_URL}/folders`, {
+    const response = await axios.get(`${API_BASE_URL}/api/docs/folders`, {
       headers: this.getHeaders()
     })
     return response.data
   }
 
   async getFolder(folderId) {
-    const response = await axios.get(`${API_BASE_URL}/folders/${folderId}`, {
+    const response = await axios.get(`${API_BASE_URL}/api/docs/folders/${folderId}`, {
       headers: this.getHeaders()
     })
     return response.data
   }
 
   async getChildFolders(folderId) {
-    const response = await axios.get(`${API_BASE_URL}/folders/${folderId}/children`, {
+    const response = await axios.get(`${API_BASE_URL}/api/docs/folders/${folderId}/children`, {
       headers: this.getHeaders()
     })
     return response.data
   }
 
   async getFolderPath(folderId) {
-    const response = await axios.get(`${API_BASE_URL}/folders/${folderId}/path`, {
+    const response = await axios.get(`${API_BASE_URL}/api/docs/folders/${folderId}/path`, {
       headers: this.getHeaders()
     })
     return response.data
   }
 
   async getUserFolderTree() {
-    const response = await axios.get(`${API_BASE_URL}/folders/trees`,{ 
+    const response = await axios.get(`${API_BASE_URL}/api/docs/folders/trees`,{
       headers: this.getHeaders() }
     )
     return response.data
   }
 
   async createFolder(name, parentFolderId = null) {
-    const response = await axios.post(`${API_BASE_URL}/folders`, {
+    const response = await axios.post(`${API_BASE_URL}/api/docs/folders`, {
       name,
       parentFolderId
     }, {
@@ -81,7 +80,7 @@ class DriveService {
   }
 
   async renameFolder(folderId, newName) {
-    const response = await axios.patch(`${API_BASE_URL}/folders/${folderId}`, {
+    const response = await axios.patch(`${API_BASE_URL}/api/docs/folders/${folderId}`, {
       newName
     }, {
       headers: this.getHeaders()
@@ -90,13 +89,13 @@ class DriveService {
   }
 
   async deleteFolder(folderId, recursive = true) {
-    await axios.delete(`${API_BASE_URL}/folders/${folderId}?recursive=${recursive}`, {
+    await axios.delete(`${API_BASE_URL}/api/docs/folders/${folderId}?recursive=${recursive}`, {
       headers: this.getHeaders()
     })
   }
 
   async moveFolder(folderId, parentFolderId) {
-    const response = await axios.patch(`${API_BASE_URL}/folders/${folderId}/move`, {
+    const response = await axios.patch(`${API_BASE_URL}/api/docs/folders/${folderId}/move`, {
       parentFolderId
     }, {
       headers: this.getHeaders()
@@ -107,28 +106,28 @@ class DriveService {
   // ===== Document/Page APIs =====
 
   async getAllDocuments() {
-    const response = await axios.get(`${API_BASE_URL}/pages`, {
+    const response = await axios.get(`${API_BASE_URL}/api/docs/pages`, {
       headers: this.getHeaders()
     })
     return response.data
   }
 
   async getSharedDocuments() {
-    const response = await axios.get(`${API_BASE_URL}/pages/shared`, {
+    const response = await axios.get(`${API_BASE_URL}/api/docs/pages/shared`, {
       headers: this.getHeaders()
     })
     return response.data
   }
 
   async getDocument(pageId) {
-    const response = await axios.get(`${API_BASE_URL}/pages/${pageId}`, {
+    const response = await axios.get(`${API_BASE_URL}/api/docs/pages/${pageId}`, {
       headers: this.getHeaders()
     })
     return response.data
   }
 
   async createDocument(title, folderId = null) {
-    const response = await axios.post(`${API_BASE_URL}/pages`, {
+    const response = await axios.post(`${API_BASE_URL}/api/docs/pages`, {
       title,
       folderId
     }, {
@@ -138,7 +137,7 @@ class DriveService {
   }
 
   async renameDocument(pageId, newTitle) {
-    const response = await axios.patch(`${API_BASE_URL}/pages/${pageId}`, {
+    const response = await axios.patch(`${API_BASE_URL}/api/docs/pages/${pageId}`, {
       newTitle
     }, {
       headers: this.getHeaders()
@@ -147,13 +146,13 @@ class DriveService {
   }
 
   async deleteDocument(pageId) {
-    await axios.delete(`${API_BASE_URL}/pages/${pageId}`, {
+    await axios.delete(`${API_BASE_URL}/api/docs/pages/${pageId}`, {
       headers: this.getHeaders()
     })
   }
 
   async moveDocument(pageId, folderId) {
-    const response = await axios.patch(`${API_BASE_URL}/pages/${pageId}/move`, {
+    const response = await axios.patch(`${API_BASE_URL}/api/docs/pages/${pageId}/move`, {
       folderId
     }, {
       headers: this.getHeaders()
@@ -162,7 +161,7 @@ class DriveService {
   }
 
   async updateDocument(pageId, content) {
-    const response = await axios.put(`${API_BASE_URL}/pages/${pageId}`, {
+    const response = await axios.put(`${API_BASE_URL}/api/docs/pages/${pageId}`, {
       content
     }, {
       headers: this.getHeaders()
@@ -171,7 +170,7 @@ class DriveService {
   }
 
   async shareDocument(pageId, userId, role = 'VIEWER') {
-    const response = await axios.post(`${API_BASE_URL}/pages/${pageId}/members`, {
+    const response = await axios.post(`${API_BASE_URL}/api/docs/pages/${pageId}/members`, {
       userId,
       role
     }, {
@@ -181,14 +180,14 @@ class DriveService {
   }
 
   async getDocumentMembers(pageId) {
-    const response = await axios.get(`${API_BASE_URL}/pages/${pageId}/members`, {
+    const response = await axios.get(`${API_BASE_URL}/api/docs/pages/${pageId}/members`, {
       headers: this.getHeaders()
     })
     return response.data
   }
 
   async updateDocumentMemberRole(pageId, userId, role) {
-    const response = await axios.patch(`${API_BASE_URL}/pages/${pageId}/members/${userId}`, {
+    const response = await axios.patch(`${API_BASE_URL}/api/docs/pages/${pageId}/members/${userId}`, {
       role
     }, {
       headers: this.getHeaders()
@@ -197,7 +196,7 @@ class DriveService {
   }
 
   async removeDocumentMember(pageId, userId) {
-    await axios.delete(`${API_BASE_URL}/pages/${pageId}/members/${userId}`, {
+    await axios.delete(`${API_BASE_URL}/api/docs/pages/${pageId}/members/${userId}`, {
       headers: this.getHeaders()
     })
   }

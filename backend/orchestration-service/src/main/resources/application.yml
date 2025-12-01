@@ -25,11 +25,16 @@ management:
       show-details: always
       probes:
         enabled: true
-      group:
-        services:
-          include:
-            - authService
-            - docsService
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+    group:
+      services:
+        include:
+          - authService
+          - docsService
 
 resilience4j:
   retry:
