@@ -1,5 +1,4 @@
 <script>
-import SidebarBase from '@/components/SidebarBase.vue'
 import TiptapEditor from '@/components/TiptapEditor.vue'
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useWebSocket } from '@/composables/useWebSocket'
@@ -12,7 +11,6 @@ import axios from 'axios'
 export default {
   name: 'DocsView',
   components: { 
-    SidebarBase,
     TiptapEditor
   },
   props: {
@@ -48,8 +46,9 @@ export default {
     const showFlashcards = ref(false)
     const pageFlashcards = ref([])
     const isLoadingFlashcards = ref(false)
-
-    webSocket.onOpen(() => {
+    
+    // Function to join a document
+    const joinDocument = () => {
       errorHandler.safe(() => {
         // Get user ID from auth or generate a temporary one
         let userId = auth.getUserId()
@@ -62,11 +61,23 @@ export default {
         isConnected.value = true
         console.log('[DocsView] Joined document session:', documentId.value, 'as user:', userId)
       })
+    }
+
+    // WebSocket event handlers
+    webSocket.onOpen(() => {
+      joinDocument()
     })
 
     webSocket.onMessage((event) => {
       errorHandler.safe(() => {
         const message = JSON.parse(event.data)
+        console.log('[Application] Message received:', message.type, 'for doc:', message.docId || 'unknown')
+        
+        // Only process messages for the current document
+        if (message.docId && message.docId !== documentId.value) {
+          console.log('[Application] Ignoring message for different document')
+          return
+        }
         
         let success = false
         
@@ -127,6 +138,19 @@ export default {
       isConnected.value = false
     })
 
+    // Watch for document ID changes
+    watch(() => props.id, (newId, oldId) => {
+      if (newId !== oldId) {
+        console.log('[Application] Switching document from', oldId, 'to', newId)
+        // Reset document state
+        document.resetDocument()
+        // Join new document if connected
+        if (webSocket.connectionState.value === 'connected') {
+          joinDocument()
+        }
+      }
+    })
+
     // Handle content changes from Tiptap editor (for WebSocket collaboration)
     const handleContentChange = (html) => {
       if (isReceivingUpdate.value) {
@@ -156,6 +180,7 @@ export default {
         }
       })
     }
+    
 
     // Handle autosave from Tiptap editor (different from collaborative changes)
     const handleAutosave = async (html) => {
@@ -303,11 +328,11 @@ export default {
     }
   }
 }
+
 </script>
 
 <template>
   <div class="flex flex-row h-screen w-screen bg-surface-light overflow-hidden">
-    <SidebarBase />
     <div class="flex flex-col h-full w-full overflow-hidden">
       <!-- Top Header -->
       <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-4 justify-between">
