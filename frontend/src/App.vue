@@ -8,8 +8,8 @@ import SidebarBase from '@/components/SidebarBase.vue';
 const { initTheme } = useTheme();
 const route = useRoute();
 
-// Hide sidebar only on login page
-const showSidebar = computed(() => route.path !== '/login');
+// Hide sidebar on login and register pages
+const showSidebar = computed(() => route.path !== '/login' && route.path !== '/register');
 
 onMounted(() => {
   initTheme();

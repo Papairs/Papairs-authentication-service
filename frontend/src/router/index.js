@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import DocsView from '../views/DocsView.vue'
 import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
 import DriveView from '../views/DriveView.vue'
 import SharedView from '../views/SharedView.vue'
 import AutocompleteView from '../views/AutocompleteView.vue'
@@ -50,6 +51,11 @@ const routes = [
     path: '/autocomplete',
     name: 'Autocomplete',
     component: AutocompleteView
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: RegisterView
   },
   {
     path: '/flashcards',
