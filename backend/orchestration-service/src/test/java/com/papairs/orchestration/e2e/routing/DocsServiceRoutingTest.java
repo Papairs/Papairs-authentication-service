@@ -1,5 +1,6 @@
 package com.papairs.orchestration.e2e.routing;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.papairs.orchestration.e2e.AbstractE2ETest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -222,9 +223,9 @@ public class DocsServiceRoutingTest extends AbstractE2ETest {
             authMock.stubValidTokenValidation(TEST_TOKEN, TEST_USER_ID, TEST_EMAIL);
             
             getDocsServiceMock().stubFor(
-                com.github.tomakehurst.wiremock.client.WireMock.post(
-                    com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo("/api/docs/folders"))
-                    .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
+                WireMock.post(
+                    WireMock.urlEqualTo("/api/docs/folders"))
+                    .willReturn(WireMock.aResponse()
                         .withStatus(400)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"message\": \"Folder name is required\"}"))

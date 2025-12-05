@@ -1,5 +1,6 @@
 package com.papairs.orchestration.e2e.routing;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.papairs.orchestration.e2e.AbstractE2ETest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -164,9 +165,9 @@ public class CircuitBreakerTest extends AbstractE2ETest {
             authMock.stubValidTokenValidation(TEST_TOKEN, TEST_USER_ID, TEST_EMAIL);
             
             getDocsServiceMock().stubFor(
-                com.github.tomakehurst.wiremock.client.WireMock.get(
-                    com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching("/api/docs/.*"))
-                    .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
+                WireMock.get(
+                    WireMock.urlPathMatching("/api/docs/.*"))
+                    .willReturn(WireMock.aResponse()
                         .withStatus(500)
                         .withBody("{\"error\": \"Internal error\"}"))
             );

@@ -1,5 +1,6 @@
 package com.papairs.orchestration.e2e.routing;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.papairs.orchestration.e2e.AbstractE2ETest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -121,9 +122,9 @@ public class AuthProtectedRoutesTest extends AbstractE2ETest {
 
     private void stubSuccessfulLogout() {
         getAuthServiceMock().stubFor(
-                com.github.tomakehurst.wiremock.client.WireMock.post(
-                        com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo("/api/auth/logout"))
-                        .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
+                WireMock.post(
+                        WireMock.urlEqualTo("/api/auth/logout"))
+                        .willReturn(WireMock.aResponse()
                                 .withStatus(200)
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("{\"message\": \"Logged out successfully\"}"))
@@ -132,18 +133,18 @@ public class AuthProtectedRoutesTest extends AbstractE2ETest {
 
     private void verifyLogoutCalledWithUserId(String userId) {
         getAuthServiceMock().verify(
-                com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor(
-                        com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo("/api/auth/logout"))
+                WireMock.postRequestedFor(
+                        WireMock.urlEqualTo("/api/auth/logout"))
                         .withHeader("X-User-Id", 
-                                com.github.tomakehurst.wiremock.client.WireMock.equalTo(userId))
+                                WireMock.equalTo(userId))
         );
     }
 
     private void stubAnyAuthServiceRequest() {
         getAuthServiceMock().stubFor(
-                com.github.tomakehurst.wiremock.client.WireMock.get(
-                        com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo("/api/auth/me"))
-                        .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
+                WireMock.get(
+                        WireMock.urlEqualTo("/api/auth/me"))
+                        .willReturn(WireMock.aResponse()
                                 .withStatus(200)
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("{\"userId\": \"test-user\", \"email\": \"test@test.com\"}"))
