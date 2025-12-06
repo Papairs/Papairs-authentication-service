@@ -9,6 +9,7 @@ import com.backblaze.b2.client.structures.B2UploadFileRequest;
 import com.papairs.docs.dto.request.FileUploadRequest;
 import com.papairs.docs.dto.response.UserFileResponse;
 import com.papairs.docs.exception.FileAlreadyExistsException;
+import com.papairs.docs.exception.ResourceNotFoundException;
 import com.papairs.docs.model.UserFile;
 import com.papairs.docs.repository.UserFileRepository;
 import org.slf4j.Logger;
@@ -99,7 +100,9 @@ public class FileService {
 
     @Transactional
     public UserFileResponse uploadFile(FileUploadRequest request) throws B2Exception, IOException {
-        userService.ensureUserExists(request.getUserId(), null);
+        if(!userService.userExists(request.getUserId())){
+            throw new ResourceNotFoundException("User dosn't exist");
+        };
         
         if (fileRepository.existsByUserIdAndFilename(request.getUserId(), request.getFilename())) {
             throw new FileAlreadyExistsException("File '" + request.getFilename() + "' already exists");
