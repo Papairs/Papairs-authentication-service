@@ -1,4 +1,4 @@
-package com.papairs.docs.ws;
+package com.papairs.docs.model;
 
 import com.papairs.docs.model.OT.Op;
 import org.springframework.web.socket.WebSocketSession;
@@ -8,8 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
 /**
- * Manages state for a collaborative document editing session.
- * Thread-safe container for document content, operation history, and user sessions.
+ * Thread-safe session state for a collaborative document.
+ * Tracks content, version, active users, and save timer.
  */
 public class DocumentSession {
     private final String documentId;
