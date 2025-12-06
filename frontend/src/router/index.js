@@ -12,6 +12,10 @@ import StudyModeView from '../views/StudyModeView.vue'
 const routes = [
   {
     path: '/',
+    redirect: '/login'
+  },
+  {
+    path: '/debug',
     name: 'Home',
     component: HomeView
   },
