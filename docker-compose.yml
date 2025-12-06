@@ -81,16 +81,13 @@ services:
       - ./backend/auth-service/.env
     environment:
       - SERVER_PORT=8081
+      - PORT=8081
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000
       - SESSION_DURATION_HOURS=48
       - TZ=Europe/Copenhagen
     networks:
       - papairs-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/api/auth/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # ============================================
   # DOCS SERVICE (Spring Boot)
@@ -107,17 +104,17 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      - docs-uploads:/app/uploads
     environment:
       - SERVER_PORT=8082
+      - PORT=8082
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000
       - TZ=Europe/Copenhagen
+      - STORAGE_MODE=b2
+      - STORAGE_LOCAL_PATH=/app/uploads
     networks:
       - papairs-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/api/docs/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # ============================================
   # AI SERVICE (Node.js + OpenAI)
@@ -132,14 +129,24 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      - docs-uploads:/app/uploads
     env_file:
       - ./backend/ai-service/.env
     environment:
       - PORT=3001
       - TZ=Europe/Copenhagen
+      - STORAGE_MODE=b2
+      - STORAGE_LOCAL_PATH=/app/uploads
     networks:
       - papairs-network
     restart: unless-stopped
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  docs-uploads:
+    driver: local
 
 # ============================================
 # NETWORKS

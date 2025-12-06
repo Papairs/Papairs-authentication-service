@@ -8,6 +8,7 @@ import SharedView from '../views/SharedView.vue'
 import AutocompleteView from '../views/AutocompleteView.vue'
 import FlashcardsView from '../views/FlashcardsView.vue'
 import StudyModeView from '../views/StudyModeView.vue'
+import AIView from '../views/AIView.vue'
 
 const routes = [
   {
@@ -66,6 +67,11 @@ const routes = [
     path: '/study',
     name: 'StudyMode',
     component: StudyModeView
+  },
+  {
+    path: '/ai',
+    name: 'AI',
+    component: AIView
   }
 ]
 
