@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbar flex items-center justify-center gap-1 p-2 bg-white flex-shrink-0 sticky top-0 z-10">
+  <div class="toolbar flex items-center justify-center gap-1 p-2 bg-white flex-shrink-0 sticky top-0 z-10 flex-wrap px-12">
     <!-- Headings & Normal Text -->
     <select 
       @change="$emit('set-heading', $event)"

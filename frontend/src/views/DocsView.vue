@@ -343,9 +343,9 @@ export default {
         </div>
       </div>
       
-      <!-- Document Content Area -->
-      <div class="flex flex-col flex-1 h-full w-full overflow-auto relative">
-        <!-- Error Overlay -->
+        <!-- Document Content Area -->
+      <div class="flex flex-row w-full flex-1 relative overflow-auto">
+        <!-- Error Overlay (Full Screen) -->
         <div 
           v-if="hasError"
           class="absolute inset-0 bg-white z-50 flex items-center justify-center"
@@ -359,9 +359,19 @@ export default {
           </div>
         </div>
         
+        <!-- Editor Container -->
+        <div class="flex flex-col flex-1 h-full w-full overflow-auto">
+          <TiptapEditor
+            v-if="!hasError"
+            :model-value="htmlContent"
+            @content-change="handleContentChange"
+            @ready="handleEditorReady"
+            placeholder="Start writing your document..."
+          />
+        </div>
         <!-- Flashcards Panel -->
         <transition name="slide">
-          <div v-if="showFlashcards && !hasError" class="absolute right-0 top-0 h-full w-96 bg-white border-l-2 border-accent shadow-xl overflow-y-auto z-10">
+          <div v-if="showFlashcards && !hasError" class="h-full w-96 bg-white border-l-2 border-accent overflow-y-auto">
               <div class="sticky top-0 bg-white border-b border-border-light-subtle p-4 flex justify-between items-center">
                 <h3 class="font-semibold text-content-primary">Page Flashcards</h3>
                 <button @click="toggleFlashcardsPanel" class="text-content-secondary hover:text-content-primary transition-colors">✕</button>
@@ -391,17 +401,9 @@ export default {
               </div>
             </div>
         </transition>
-        
-        <!-- Editor -->
-        <TiptapEditor
-          v-if="!hasError"
-          :model-value="htmlContent"
-          @content-change="handleContentChange"
-          @ready="handleEditorReady"
-          placeholder="Start writing your document..."
-        />
       </div>
     </div>
+    
   </div>
 </template>
 
