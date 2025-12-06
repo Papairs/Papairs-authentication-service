@@ -150,6 +150,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`AI Service is running on http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`AI Service is running on http://localhost:${PORT}`);
 });
