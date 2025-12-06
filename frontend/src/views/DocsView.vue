@@ -267,7 +267,7 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-row h-screen w-screen bg-surface-light overflow-hidden">
+  <div class="flex flex-row h-screen w-full bg-surface-light overflow-hidden">
     <div class="flex flex-col h-full w-full overflow-hidden">
       <!-- Top Header -->
       <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-4 justify-between">
