@@ -69,7 +69,10 @@ export default {
         documents.value = allDocuments.filter(doc => doc.folderId === folderId)
       } catch (error) {
         console.error('Error loading content:', error)
-        alert('Failed to load content. Please try again.')
+        // Don't show alert for authentication errors (user will be redirected)
+        if (error.status !== 401) {
+          alert('Failed to load content. Please try again.')
+        }
       } finally {
         loading.value = false
       }
@@ -98,7 +101,10 @@ export default {
         await loadContent(currentFolderId.value)
       } catch (error) {
         console.error('Error deleting folder:', error)
-        alert('Failed to delete folder. Please try again.')
+        // Don't show alert for authentication errors (user will be redirected)
+        if (error.status !== 401) {
+          alert('Failed to delete folder. Please try again.')
+        }
       }
     }
 
@@ -111,7 +117,10 @@ export default {
         await loadContent(currentFolderId.value)
       } catch (error) {
         console.error('Error deleting document:', error)
-        if (error.response?.status === 403) {
+        // Don't show alert for authentication errors (user will be redirected)
+        if (error.status === 401) {
+          return
+        } else if (error.response?.status === 403 || error.status === 403) {
           alert('You do not have permission to delete this document.')
         } else {
           alert('Failed to delete document. Please try again.')
