@@ -1,33 +1,32 @@
 <template>
   <div v-if="editor" class="tiptap-editor-container flex flex-col h-full">
     <!-- Formatting Toolbar -->
-    <EditorToolbar
-      :activeHeading="activeHeading"
-      :currentFontSize="currentFontSize"
-      :currentTextColor="currentTextColor"
-      :isActive="isActive"
-      :canUndo="canUndo"
-      :canRedo="canRedo"
-      @set-heading="setHeading"
-      @set-font-family="setFontFamily"
-      @set-font-size="setFontSize"
-      @increase-font-size="increaseFontSize"
-      @decrease-font-size="decreaseFontSize"
-      @toggle-bold="toggleBold"
-      @toggle-italic="toggleItalic"
-      @toggle-underline="toggleUnderline"
-      @toggle-strike="toggleStrike"
-      @open-text-color="openTextColorPicker"
-      @set-alignment="setTextAlign"
-      @toggle-bullet-list="toggleBulletList"
-      @toggle-ordered-list="toggleOrderedList"
-      @toggle-code="toggleCode"
-      @toggle-code-block="toggleCodeBlock"
-      @undo="undo"
-      @redo="redo"
-      class=""
-    />
-
+      <EditorToolbar
+        :activeHeading="activeHeading"
+        :currentFontSize="currentFontSize"
+        :currentTextColor="currentTextColor"
+        :isActive="isActive"
+        :canUndo="canUndo"
+        :canRedo="canRedo"
+        @set-heading="setHeading"
+        @set-font-family="setFontFamily"
+        @set-font-size="setFontSize"
+        @increase-font-size="increaseFontSize"
+        @decrease-font-size="decreaseFontSize"
+        @toggle-bold="toggleBold"
+        @toggle-italic="toggleItalic"
+        @toggle-underline="toggleUnderline"
+        @toggle-strike="toggleStrike"
+        @open-text-color="openTextColorPicker"
+        @set-alignment="setTextAlign"
+        @toggle-bullet-list="toggleBulletList"
+        @toggle-ordered-list="toggleOrderedList"
+        @toggle-code="toggleCode"
+        @toggle-code-block="toggleCodeBlock"
+        @undo="undo"
+        @redo="redo"
+        class="min-w-[800px] flex justify-center"
+      />
     <!-- Editor Content with centered max-width wrapper -->
     <div class="flex-1 flex justify-center w-full overflow-auto">
       <EditorContentArea
@@ -35,7 +34,7 @@
         :currentTextColor="currentTextColor"
         @text-color-change="handleTextColorChange"
         ref="editorContentArea"
-        class="w-full max-w-[800px] min-h-full h-fit"
+        class="w-full max-w-[800px] min-w-[800px] min-h-full h-fit"
       />
     </div>
   </div>

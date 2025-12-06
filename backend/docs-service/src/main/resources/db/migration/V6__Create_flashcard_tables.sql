@@ -8,10 +8,11 @@ DROP TABLE IF EXISTS flashcard_tags;
 DROP TABLE IF EXISTS flashcards;
 
 -- Create flashcards table
+-- Note: Using latin1 charset for ID columns to match existing page/user tables for foreign key compatibility
 CREATE TABLE flashcards (
-    flashcard_id VARCHAR(36) PRIMARY KEY,
-    page_id VARCHAR(36) NOT NULL,
-    owner_id VARCHAR(36) NOT NULL,
+    flashcard_id VARCHAR(36) CHARACTER SET latin1 PRIMARY KEY,
+    page_id VARCHAR(36) CHARACTER SET latin1 NOT NULL,
+    owner_id VARCHAR(36) CHARACTER SET latin1 NOT NULL,
     question VARCHAR(500) NOT NULL,
     answer VARCHAR(1000) NOT NULL,
     difficulty_level VARCHAR(20) DEFAULT 'MEDIUM',
@@ -38,8 +39,9 @@ CREATE TABLE flashcards (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create flashcard_tags table
+-- Note: Using latin1 charset for flashcard_id to match flashcards table for foreign key compatibility
 CREATE TABLE flashcard_tags (
-    flashcard_id VARCHAR(36) NOT NULL,
+    flashcard_id VARCHAR(36) CHARACTER SET latin1 NOT NULL,
     tag VARCHAR(255) NOT NULL,
     
     PRIMARY KEY (flashcard_id, tag),

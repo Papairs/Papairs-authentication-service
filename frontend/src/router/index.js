@@ -8,6 +8,7 @@ import SharedView from '../views/SharedView.vue'
 import AutocompleteView from '../views/AutocompleteView.vue'
 import FlashcardsView from '../views/FlashcardsView.vue'
 import StudyModeView from '../views/StudyModeView.vue'
+import AIView from '../views/AIView.vue'
 import auth from '../utils/auth'
 
 const routes = [
@@ -79,6 +80,12 @@ const routes = [
     path: '/study',
     name: 'StudyMode',
     component: StudyModeView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/ai',
+    name: 'AI',
+    component: AIView,
     meta: { requiresAuth: true }
   }
 ]
