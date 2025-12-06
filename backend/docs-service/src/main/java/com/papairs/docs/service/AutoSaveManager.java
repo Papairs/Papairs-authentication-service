@@ -1,6 +1,6 @@
-package com.papairs.docs.ws;
+package com.papairs.docs.service;
 
-import com.papairs.docs.service.PageService;
+import com.papairs.docs.model.DocumentSession;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -10,8 +10,8 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
- * Manages automatic saving of documents with configurable delay.
- * Provides timer-based auto-save functionality with conflict resolution.
+ * Manages debounced auto-save for collaborative documents.
+ * Saves changes after a delay when editing stops.
  */
 @Component
 public class AutoSaveManager {
@@ -65,6 +65,7 @@ public class AutoSaveManager {
 
         try {
             String userId = document.getAnyActiveUser();
+            logger.info("Saving document with userId: " + userId);
             pageService.updatePage(
                 document.getDocumentId(), 
                 userId,

@@ -1,48 +1,31 @@
 package com.papairs.docs.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.papairs.docs.dto.response.PageContentResponse;
+import com.papairs.docs.model.DocumentSession;
 import com.papairs.docs.model.Message;
-import com.papairs.docs.security.HtmlSanitizer;
-import com.papairs.docs.service.PageService;
+import com.papairs.docs.model.OT.AppliedOp;
+import com.papairs.docs.service.CollaborationService;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
- * WebSocket handler for real-time collaborative document editing.
- * Orchestrates document sessions, operational transforms, and auto-save functionality.
+ * WebSocket controller for collaborative document editing.
+ * Routes messages and broadcasts to clients.
  */
 @Component
 public class DocWebSocketHandler extends TextWebSocketHandler {
     private static final Logger logger = Logger.getLogger(DocWebSocketHandler.class.getName());
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Map<String, DocumentSession> documentSessions = new ConcurrentHashMap<>();
-    
-    private final PageService pageService;
-    private final AutoSaveManager autoSaveManager;
-    private final MessageFactory messageFactory;
-    private final WebSocketMessageBroker messageBroker;
-    private final HtmlSanitizer htmlSanitizer;
+    private final CollaborationService collaborationService;
 
-    public DocWebSocketHandler(
-            PageService pageService,
-            AutoSaveManager autoSaveManager,
-            MessageFactory messageFactory,
-            WebSocketMessageBroker messageBroker,
-            HtmlSanitizer htmlSanitizer) {
-        this.pageService = pageService;
-        this.autoSaveManager = autoSaveManager;
-        this.messageFactory = messageFactory;
-        this.messageBroker = messageBroker;
-        this.htmlSanitizer = htmlSanitizer;
+    public DocWebSocketHandler(CollaborationService collaborationService) {
+        this.collaborationService = collaborationService;
     }
 
     /**
@@ -53,125 +36,83 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
         try {
             var msg = objectMapper.readValue(message.getPayload(), Message.class);
-            var docId = sanitizeDocumentId(msg.docId);
-            var userId = sanitizeUserId(msg.userId);
-            var document = getOrCreateDocumentSession(docId, userId);
+            
+            // Validate required fields
+            if (msg.docId == null || msg.docId.isBlank()) {
+                sendError(session, "Document ID is required", 0);
+                session.close(CloseStatus.POLICY_VIOLATION);
+                return;
+            }
+            
+            if (msg.userId == null || msg.userId.isBlank()) {
+                sendError(session, "User ID is required", 0);
+                session.close(CloseStatus.POLICY_VIOLATION);
+                return;
+            }
+            
+            var docId = msg.docId.trim();
+            var userId = msg.userId.trim();
 
             switch (msg.action) {
-                case "join" -> handleJoinRequest(session, document, userId);
-                case "op" -> handleOperationRequest(msg.op, document, session, userId);
+                case "join" -> handleJoinRequest(session, docId, userId);
+                case "op" -> handleOperationRequest(session, docId, userId, msg.op);
                 default -> logger.warning("Unknown action: " + msg.action);
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error handling WebSocket message", e);
-            var errorMessage = messageFactory.createErrorMessage("Invalid message format", 0);
-            messageBroker.sendToSession(session, errorMessage);
+            sendError(session, "Invalid message format", 0);
         }
     }
 
     /**
      * Handles client joining a document session.
      */
-    private void handleJoinRequest(WebSocketSession session, DocumentSession document, String userId) {
-        document.addSession(session, userId);
-        var snapshot = messageFactory.createSnapshot(document);
-        messageBroker.sendToSession(session, snapshot);
-        
-        // Notify other users about the join
-        var joinMessage = messageFactory.createUserJoinedMessage(userId, document.getVersion());
-        messageBroker.broadcastToOthers(document, joinMessage, session);
-        
-        logger.info("User " + userId + " joined document " + document.getDocumentId());
+    private void handleJoinRequest(WebSocketSession session, String docId, String userId) {
+        try {
+            DocumentSession document = collaborationService.joinDocument(docId, userId, session);
+            sendSnapshot(session, document);
+            broadcastToOthers(document, createUserMessage("user_joined", userId, document.getVersion()), session);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "User " + userId + " denied access to document " + docId + ": " + e.getMessage());
+            sendError(session, "Document not found or access denied", 0);
+            try {
+                session.close(CloseStatus.POLICY_VIOLATION);
+            } catch (Exception closeEx) {
+                logger.log(Level.WARNING, "Failed to close session", closeEx);
+            }
+        }
     }
 
     /**
      * Handles HTML-based collaborative editing operations
      */
-    private void handleOperationRequest(Object incomingOp, DocumentSession document, 
-                                      WebSocketSession session, String userId) {
+    private void handleOperationRequest(WebSocketSession session, String docId, String userId, Object incomingOp) {
         if (incomingOp == null) {
             logger.warning("Received null operation from user: " + userId);
             return;
         }
 
+        DocumentSession document = collaborationService.getSession(docId);
+        if (document == null) {
+            sendError(session, "Document session not found", 0);
+            return;
+        }
+
         try {
             var operation = (com.papairs.docs.model.OT.Op) incomingOp;
+            String sanitizedHtml = collaborationService.applyOperation(document, operation, userId);
+            broadcastOperation(document, operation, sanitizedHtml);
             
-            if (operation.htmlContent == null) {
-                logger.warning("Received operation without HTML content from user: " + userId);
-                var errorMessage = messageFactory.createErrorMessage("Missing HTML content", document.getVersion());
-                messageBroker.sendToSession(session, errorMessage);
-                return;
-            }
-            
-            // Sanitize HTML content to prevent XSS attacks
-            String sanitizedHtml = htmlSanitizer.sanitize(operation.htmlContent);
-            
-            logger.info("User " + userId + " performed HTML update on document " + 
-                       document.getDocumentId() + " (length: " + sanitizedHtml.length() + ")");
-
-            // Update document state with sanitized HTML content
-            document.setContent(sanitizedHtml);
-            document.addOperation(operation);
-            document.incrementVersion();
-
-            // Broadcast operation with sanitized HTML content to all clients
-            var appliedOp = messageFactory.createAppliedOperation(
-                operation, 
-                document.getVersion(), 
-                sanitizedHtml
-            );
-            messageBroker.broadcastToDocument(document, appliedOp);
-            
-            // Schedule auto-save
-            autoSaveManager.scheduleDelayedSave(document);
-            
+        } catch (IllegalArgumentException e) {
+            logger.log(Level.WARNING, "Invalid operation: " + e.getMessage(), e);
+            sendError(session, e.getMessage(), document.getVersion());
         } catch (ClassCastException e) {
             logger.log(Level.WARNING, "Invalid operation format from user: " + userId, e);
-            var errorMessage = messageFactory.createErrorMessage("Invalid operation format", document.getVersion());
-            messageBroker.sendToSession(session, errorMessage);
+            sendError(session, "Invalid operation format", document.getVersion());
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error processing operation from user: " + userId, e);
-            var errorMessage = messageFactory.createErrorMessage("Error processing operation", document.getVersion());
-            messageBroker.sendToSession(session, errorMessage);
+            sendError(session, "Error processing operation", document.getVersion());
         }
-    }
-
-    /**
-     * Gets or creates a document session for the given document ID.
-     */
-    private DocumentSession getOrCreateDocumentSession(String docId, String userId) {
-        return documentSessions.computeIfAbsent(docId, k -> {
-            try {
-                PageContentResponse page = pageService.getPage(k, userId);
-                String initialContent = page.content();
-                
-                // Ensure we have valid HTML content for Tiptap
-                if (initialContent == null || initialContent.isEmpty()) {
-                    initialContent = "<p></p>"; // Default empty paragraph for Tiptap
-                }
-                
-                logger.info("Loaded existing content for document: " + k + " (length: " + initialContent.length() + ")");
-                return new DocumentSession(k, initialContent);
-            } catch (Exception e) {
-                logger.info("Starting with default content for new document: " + k);
-                return new DocumentSession(k, "<p></p>"); // Default empty paragraph for Tiptap
-            }
-        });
-    }
-
-    /**
-     * Sanitizes document ID input.
-     */
-    private String sanitizeDocumentId(String docId) {
-        return (docId == null || docId.isBlank()) ? "default" : docId.trim();
-    }
-
-    /**
-     * Sanitizes user ID input.
-     */
-    private String sanitizeUserId(String userId) {
-        return (userId == null || userId.isBlank()) ? "anonymous" : userId.trim();
     }
 
     /**
@@ -180,53 +121,86 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) {
-        documentSessions.values().forEach(document -> {
-            String userId = document.getUserForSession(session);
-            document.removeSession(session);
-            
-            if (userId != null) {
-                logger.info("User " + userId + " disconnected from document " + document.getDocumentId());
-                
-                // Notify remaining users about the disconnect
-                var leaveMessage = messageFactory.createUserLeftMessage(userId, document.getVersion());
-                messageBroker.broadcastToDocument(document, leaveMessage);
-            }
-            
-            // Auto-save when last user disconnects
-            if (!document.hasActiveSessions() && document.isDirty()) {
-                autoSaveManager.saveImmediately(document);
-                logger.info("Auto-saved document " + document.getDocumentId() + " on disconnect");
-            }
-        });
-        
-        // Clean up empty document sessions
-        cleanupEmptyDocuments();
-    }
-
-    /**
-     * Removes document sessions that have no active users.
-     */
-    private void cleanupEmptyDocuments() {
-        documentSessions.entrySet().removeIf(entry -> {
-            DocumentSession document = entry.getValue();
-            if (!document.hasActiveSessions()) {
-                logger.info("Removing empty document session: " + entry.getKey());
-                return true;
-            }
-            return false;
-        });
+        collaborationService.disconnectUser(session);
     }
 
     /**
      * Gracefully shuts down resources.
      */
     public void shutdown() {
-        // Save all dirty documents before shutdown
-        documentSessions.values().stream()
-            .filter(DocumentSession::isDirty)
-            .forEach(autoSaveManager::saveImmediately);
-            
-        autoSaveManager.shutdown();
+        collaborationService.shutdown();
         logger.info("WebSocket handler shut down successfully");
+    }
+
+    // Message helpers
+    private void sendSnapshot(WebSocketSession session, DocumentSession document) {
+        var snapshot = new AppliedOp();
+        snapshot.type = "snapshot";
+        snapshot.version = document.getVersion();
+        snapshot.content = document.getContent();
+        sendMessage(session, snapshot);
+    }
+
+    private void sendError(WebSocketSession session, String error, int version) {
+        var message = new AppliedOp();
+        message.type = "error";
+        message.version = version;
+        message.content = error;
+        sendMessage(session, message);
+    }
+
+    private AppliedOp createUserMessage(String type, String userId, int version) {
+        var message = new AppliedOp();
+        message.type = type;
+        message.version = version;
+        message.clientId = userId;
+        return message;
+    }
+
+    private void broadcastOperation(DocumentSession document, com.papairs.docs.model.OT.Op operation, String htmlContent) {
+        var message = new AppliedOp();
+        message.type = operation.type;
+        message.version = document.getVersion();
+        message.clientId = operation.clientId;
+        message.opId = operation.opId;
+        message.htmlContent = htmlContent;
+        broadcastToAll(document, message);
+    }
+
+    private void sendMessage(WebSocketSession session, AppliedOp message) {
+        if (!session.isOpen()) return;
+        try {
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to send message", e);
+        }
+    }
+
+    private void broadcastToAll(DocumentSession document, AppliedOp message) {
+        try {
+            var textMessage = new TextMessage(objectMapper.writeValueAsString(message));
+            document.getActiveSessions().stream()
+                .filter(WebSocketSession::isOpen)
+                .forEach(s -> {
+                    try { s.sendMessage(textMessage); } 
+                    catch (Exception e) { logger.log(Level.WARNING, "Send failed", e); }
+                });
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Broadcast failed", e);
+        }
+    }
+
+    private void broadcastToOthers(DocumentSession document, AppliedOp message, WebSocketSession sender) {
+        try {
+            var textMessage = new TextMessage(objectMapper.writeValueAsString(message));
+            document.getActiveSessions().stream()
+                .filter(s -> !s.equals(sender) && s.isOpen())
+                .forEach(s -> {
+                    try { s.sendMessage(textMessage); } 
+                    catch (Exception e) { logger.log(Level.WARNING, "Send failed", e); }
+                });
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Broadcast failed", e);
+        }
     }
 }

@@ -1,10 +1,10 @@
 <script>
 import TiptapEditor from '@/components/TiptapEditor.vue'
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { useWebSocket } from '@/composables/useWebSocket'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { useTiptapDocument } from '@/composables/useTiptapDocument'
 import { createErrorHandler } from '@/utils/errorHandler'
-import { useRouter } from 'vue-router'
+import { createDocumentWebSocketService } from '@/services/documentWebSocketService'
 import auth from '@/utils/auth'
 import axios from 'axios'
 
@@ -16,186 +16,122 @@ export default {
   props: {
     id: {
       type: String,
-      default: 'demo'
+      required: true
     }
   },
   setup(props) {
-    const errorHandler = createErrorHandler()
-    const clientId = crypto.randomUUID()
+    // Initialize router and error handler
     const router = useRouter()
+    const errorHandler = createErrorHandler()
+    
+    // Use document ID from props or default to 'demo'
     const documentId = computed(() => props.id)
     
-    // Initialize document and WebSocket
-    const document = useTiptapDocument(clientId, documentId.value)
-    const webSocket = useWebSocket('http://localhost:8082/ws/doc')
+    // Initialize WebSocket service
+    const wsService = createDocumentWebSocketService()
+    wsService.init()
+    
+    // Initialize document manager
+    const document = useTiptapDocument(wsService.getClientId())
     
     const editor = ref(null)
     const isGenerating = ref(false)    
     const isConnected = ref(false)
     const isReceivingUpdate = ref(false)
+    const hasError = ref(false)
+    const errorMessage = ref('')
     
-    // Load initial content when document ID changes
-    watch(documentId, async (newId) => {
-      if (newId) {
-        await document.loadContent(newId)
-      }
-    }, { immediate: true })
-
+    // Flashcard state
     const showSuccess = ref(false)
     const numberOfCards = ref(5)
     const showFlashcards = ref(false)
     const pageFlashcards = ref([])
     const isLoadingFlashcards = ref(false)
 
-    // Function to join a document
-    const joinDocument = () => {
-      errorHandler.safe(() => {
-        // Get user ID from auth or generate a temporary one
-        let userId = auth.getUserId()
-        if (!userId) {
-          userId = 'temp-user-' + crypto.randomUUID().slice(0, 8)
-          console.log('[DocsView] No authenticated user, using temporary ID:', userId)
-        }
-        
-        webSocket.send({ action: 'join', docId: documentId.value, userId: userId })
-        isConnected.value = true
-        console.log('[DocsView] Joined document session:', documentId.value, 'as user:', userId)
-      })
+    const updateEditorContent = (newContent) => {
+      if (!editor.value || editor.value.getHTML() === newContent) return
+      
+      isReceivingUpdate.value = true
+      setTimeout(() => {
+        editor.value.commands.setContent(newContent, false)
+        setTimeout(() => { isReceivingUpdate.value = false }, 100)
+      }, 50)
     }
 
-    // WebSocket event handlers
-    webSocket.onOpen(() => {
-      joinDocument()
+    // Validate document ID
+    if (!props.id) {
+      hasError.value = true
+      errorMessage.value = 'No document ID provided'
+    }
+
+    // Setup WebSocket event handlers
+    wsService.on('onConnected', () => {
+      errorHandler.safe(() => {
+        if (hasError.value) return // Don't try to join if already errored
+        
+        const userId = wsService.getUserId()
+        wsService.joinDocument(documentId.value, userId)
+        isConnected.value = true
+      }, () => {
+        hasError.value = true
+        errorMessage.value = 'There was an error finding your page'
+      })
     })
 
-    webSocket.onMessage((event) => {
+    wsService.on('onDisconnected', () => {
+      isConnected.value = false
+      // If disconnected due to error, don't reconnect
+      if (hasError.value) {
+        wsService.disconnect()
+      }
+    })
+
+    wsService.on('onSnapshot', (message) => {
       errorHandler.safe(() => {
-        const message = JSON.parse(event.data)
-        console.log('[Application] Message received:', message.type, 'for doc:', message.docId || 'unknown')
-        
-        // Only process messages for the current document
-        if (message.docId && message.docId !== documentId.value) {
-          console.log('[Application] Ignoring message for different document')
+        if (message.type === 'error') {
+          hasError.value = true
+          errorMessage.value = 'There was an error finding your page'
+          wsService.disconnect()
           return
         }
-        
-        let success = false
-        
-        if (message.type === 'snapshot') {
-          success = document.handleSnapshot(message)
-          // Update Tiptap editor with snapshot content (only if different)
-          if (success && editor.value) {
-            const currentContent = editor.value.getHTML()
-            const newContent = document.htmlContent.value
-            if (currentContent !== newContent) {
-              // Temporarily disable updates to prevent doubling
-              isReceivingUpdate.value = true
-              setTimeout(() => {
-                editor.value.commands.setContent(newContent, false)
-                setTimeout(() => {
-                  isReceivingUpdate.value = false
-                }, 100)
-              }, 50)
-            }
-          }
-        } else if (['user_joined', 'user_left'].includes(message.type)) {
-          success = true
-        } else {
-          // Only apply operations from other users, not our own
-          if (message.clientId !== clientId) {
-            success = document.handleServerOperation(message)
-            // Apply collaborative changes to Tiptap editor
-            if (success && editor.value) {
-              const currentContent = editor.value.getHTML()
-              const newContent = document.htmlContent.value
-              if (currentContent !== newContent) {
-                isReceivingUpdate.value = true
-                setTimeout(() => {
-                  editor.value.commands.setContent(newContent, false)
-                  setTimeout(() => {
-                    isReceivingUpdate.value = false
-                  }, 100)
-                }, 50)
-              }
-            }
-          } else {
-            success = true
-          }
-        }
-        
-        if (!success && !['user_joined', 'user_left'].includes(message.type)) {
-          errorHandler.document('Failed to process server message')
+        if (document.handleSnapshot(message)) {
+          updateEditorContent(document.htmlContent.value)
         }
       })
     })
 
-    webSocket.onError((error) => {
-      errorHandler.websocket('Connection error', error)
-      isConnected.value = false
-    })
-
-    webSocket.onClose(() => {
-      isConnected.value = false
-    })
-
-    // Watch for document ID changes
-    watch(() => props.id, (newId, oldId) => {
-      if (newId !== oldId) {
-        console.log('[Application] Switching document from', oldId, 'to', newId)
-        // Reset document state
-        document.reset()
-        // Join new document if connected
-        if (webSocket.connectionState.value === 'connected') {
-          joinDocument()
+    wsService.on('onOperation', (message) => {
+      errorHandler.safe(() => {
+        if (document.handleServerOperation(message)) {
+          updateEditorContent(document.htmlContent.value)
         }
-      }
+      })
     })
 
-    // Handle content changes from Tiptap editor (for WebSocket collaboration)
+    wsService.on('onUserJoined', () => {})
+    wsService.on('onUserLeft', () => {})
+
+    wsService.on('onError', (error) => {
+      errorHandler.websocket('WebSocket error', error)
+      hasError.value = true
+      errorMessage.value = 'There was an error finding your page'
+    })
+
     const handleContentChange = (html) => {
-      if (isReceivingUpdate.value) {
-        return
-      }
+      if (isReceivingUpdate.value) return
       
       errorHandler.safe(() => {
         const operation = document.handleHTMLInput(html)
-        
         if (operation && isConnected.value) {
-          // Send operation to server for collaborative editing
-          let userId = auth.getUserId()
-          if (!userId) {
-            userId = 'temp-user-' + crypto.randomUUID().slice(0, 8)
-          }
-          
-          const messageWithUser = { 
-            action: 'op', 
-            docId: documentId.value, 
-            op: operation,
-            userId: userId
-          }
-          
-          if (!webSocket.send(messageWithUser)) {
-            errorHandler.websocket('Failed to send operation to server')
-          }
+          const userId = wsService.getUserId()
+          wsService.sendOperation(documentId.value, operation, userId)
         }
       })
     }
     
 
-    // Handle autosave from Tiptap editor (different from collaborative changes)
-    const handleAutosave = async (html) => {
-      try {
-        document.htmlContent.value = html
-        await document.triggerAutosave()
-      } catch (error) {
-        errorHandler.document('Autosave failed', error)
-      }
-    }
-
-    // Handle editor ready event
     const handleEditorReady = (editorInstance) => {
       editor.value = editorInstance
-      
       if (document.htmlContent.value) {
         editorInstance.commands.setContent(document.htmlContent.value, false)
       }
@@ -278,16 +214,15 @@ export default {
       }
     }
 
-    onMounted(async () => {
-      if (documentId.value) {
-        await document.loadContent(documentId.value)
+    // Lifecycle hooks
+    onMounted(() => {
+      if (!hasError.value) {
+        wsService.connect()
       }
-      webSocket.connect()
     })
 
-    onBeforeUnmount(async () => {
-      await document.forceSave()
-      webSocket.disconnect()
+    onBeforeUnmount(() => {
+      wsService.disconnect()
       document.cleanup()
     })
 
@@ -297,22 +232,22 @@ export default {
       text: document.text,
       version: document.version,
       hasPendingOperations: document.hasPendingOperations,
-      hasUnsavedChanges: document.hasUnsavedChanges,
-      isSaving: document.isSaving,
       isLoading: document.isLoading,
-      lastSaveTime: document.lastSaveTime,
       
       // WebSocket state
-      connectionState: webSocket.connectionState,
-      connectionError: webSocket.connectionError,
+      connectionState: wsService.connectionState,
+      connectionError: wsService.connectionError,
       isConnected,
+      
+      // Error state
+      hasError,
+      errorMessage,
       
       // Document info
       documentId,
       
       // Event handlers
       handleContentChange,
-      handleAutosave,
       handleEditorReady,
       
       // Flashcard functionality
@@ -332,7 +267,7 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-row h-screen w-screen bg-surface-light overflow-hidden">
+  <div class="flex flex-row h-screen w-full bg-surface-light overflow-hidden">
     <div class="flex flex-col h-full w-full overflow-hidden">
       <!-- Top Header -->
       <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-4 justify-between">
@@ -408,21 +343,38 @@ export default {
         </div>
       </div>
       
-      <!-- Document Content Area -->
-      <div class="flex flex-col flex-1 w-full overflow-auto">
-        <div class="flex flex-row w-full justify-center min-h-full">
-          <div class="w-full max-w-[1000px] min-w-[1000px] bg-white border-x border-b border-border-light-subtle h-fit min-h-full">
-            <TiptapEditor
-              :model-value="htmlContent"
-              @content-change="handleContentChange"
-              @autosave="handleAutosave"
-              @ready="handleEditorReady"
-              placeholder="Start writing your document..."
-              :autosave-delay="5000"
-            />
+        <!-- Document Content Area -->
+      <div class="flex flex-row w-full flex-1 relative overflow-auto">
+        <!-- Error Overlay (Full Screen) -->
+        <div 
+          v-if="hasError"
+          class="absolute inset-0 bg-white z-50 flex items-center justify-center"
+        >
+          <div class="text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2">{{ errorMessage }}</h2>
+            <p class="text-gray-600">The document you're looking for doesn't exist or you don't have access to it.</p>
           </div>
-          <transition name="slide">
-            <div v-if="showFlashcards" class="absolute right-0 top-0 h-full w-96 bg-white border-l-2 border-accent shadow-xl overflow-y-auto z-10">
+        </div>
+        
+        <!-- Editor Container -->
+        <div 
+          class="flex flex-col flex-1 h-full w-full overflow-auto transition-all duration-300 ease-out"
+          :class="{ 'mr-96': showFlashcards }"
+        >
+          <TiptapEditor
+            v-if="!hasError"
+            :model-value="htmlContent"
+            @content-change="handleContentChange"
+            @ready="handleEditorReady"
+            placeholder="Start writing your document..."
+          />
+        </div>
+        <!-- Flashcards Panel -->
+        <transition name="slide">
+          <div v-if="showFlashcards && !hasError" class=" absolute right-0 top-0 h-full w-96 bg-white border-l-2 border-accent overflow-y-auto">
               <div class="sticky top-0 bg-white border-b border-border-light-subtle p-4 flex justify-between items-center">
                 <h3 class="font-semibold text-content-primary">Page Flashcards</h3>
                 <button @click="toggleFlashcardsPanel" class="text-content-secondary hover:text-content-primary transition-colors">✕</button>
@@ -451,10 +403,10 @@ export default {
                 </div>
               </div>
             </div>
-          </transition>
-        </div>
+        </transition>
       </div>
     </div>
+    
   </div>
 </template>
 
