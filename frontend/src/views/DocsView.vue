@@ -360,7 +360,10 @@ export default {
         </div>
         
         <!-- Editor Container -->
-        <div class="flex flex-col flex-1 h-full w-full overflow-auto">
+        <div 
+          class="flex flex-col flex-1 h-full w-full overflow-auto transition-all duration-300 ease-out"
+          :class="{ 'mr-96': showFlashcards }"
+        >
           <TiptapEditor
             v-if="!hasError"
             :model-value="htmlContent"
@@ -371,7 +374,7 @@ export default {
         </div>
         <!-- Flashcards Panel -->
         <transition name="slide">
-          <div v-if="showFlashcards && !hasError" class="h-full w-96 bg-white border-l-2 border-accent overflow-y-auto">
+          <div v-if="showFlashcards && !hasError" class=" absolute right-0 top-0 h-full w-96 bg-white border-l-2 border-accent overflow-y-auto">
               <div class="sticky top-0 bg-white border-b border-border-light-subtle p-4 flex justify-between items-center">
                 <h3 class="font-semibold text-content-primary">Page Flashcards</h3>
                 <button @click="toggleFlashcardsPanel" class="text-content-secondary hover:text-content-primary transition-colors">✕</button>
