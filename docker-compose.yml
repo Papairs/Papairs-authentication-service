@@ -51,6 +51,8 @@ services:
       - SERVICES_AUTH_SERVICE_TIMEOUT_SECONDS=5
       - SERVICES_DOCS_SERVICE_TIMEOUT_SECONDS=5
       - SERVICES_COMPENSATION_TIMEOUT_SECONDS=3
+      - SERVICES_AI_SERVICE_URL=http://ai-service:3001
+      - SERVICES_AI_SERVICE_TIMEOUT_SECONDS=5
       - TZ=Europe/Copenhagen
     depends_on:
       - auth-service

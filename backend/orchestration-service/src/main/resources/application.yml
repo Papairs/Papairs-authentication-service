@@ -14,6 +14,9 @@ services:
     timeout-seconds: ${SERVICES_DOCS_SERVICE_TIMEOUT_SECONDS:10}
   compensation:
     timeout-seconds: ${SERVICES_COMPENSATION_TIMEOUT_SECONDS:5}
+  ai-service:
+    url: ${SERVICES_AI_SERVICE_URL:http://ai-service:3001}
+    timeout-seconds: ${SERVICES_AI_SERVICE_TIMEOUT_SECONDS:10}
 
 management:
   endpoints:
