@@ -8,7 +8,7 @@
       <!-- Health Check -->
       <TestCard
         title="Health Check"
-        description="GET /api/docs/health"
+        description="GET /actuator/health/services/docsService"
         button-text="Test Health"
         :is-loading="testManager.isTestLoading('docs-health')"
         :result="formatResult('docs-health')"
@@ -50,3 +50,4 @@ export default {
   }
 }
 </script>
+

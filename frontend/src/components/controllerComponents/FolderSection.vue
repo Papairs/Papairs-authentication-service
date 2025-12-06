@@ -1,129 +1,3 @@
-<template>
-  <div class="space-y-6">
-    <h2 class="text-2xl font-bold text-content-primary dark:text-content-inverse mb-4">
-      Folder Management Tests
-    </h2>
-    
-    <!-- Authentication Warning -->
-    <AuthWarning 
-      v-if="!getCurrentUserId()" 
-      message="Folder operations require authentication. Please login first using the Auth section above."
-    />
-    
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Get All Folders -->
-      <TestCard
-        title="Get All Folders"
-        description="GET /api/docs/folders"
-        button-text="Test Get All Folders"
-        :is-loading="testManager.isTestLoading('folders-get-all')"
-        :result="formatResult('folders-get-all')"
-        @test="testGetAllFolders"
-        @clear-result="clearResult('folders-get-all')"
-      />
-
-      <!-- Get Root Folders -->
-      <TestCard
-        title="Get Root Folders"
-        description="GET /api/docs/folders/roots"
-        button-text="Test Get Root Folders"
-        :is-loading="testManager.isTestLoading('folders-get-roots')"
-        :result="formatResult('folders-get-roots')"
-        @test="testGetRootFolders"
-        @clear-result="clearResult('folders-get-roots')"
-      />
-
-      <!-- Create Folder -->
-      <TestCard
-        title="Create Folder"
-        description="POST /api/docs/folders"
-        button-text="Test Create Folder"
-        :form-fields="createFolderFormFields"
-        :is-loading="testManager.isTestLoading('folders-create')"
-        :result="formatResult('folders-create')"
-        @test="testCreateFolder"
-        @clear-result="clearResult('folders-create')"
-        @field-update="updateFormField('createFolder', $event)"
-      />
-
-      <!-- Get Folder -->
-      <TestCard
-        title="Get Folder by ID"
-        description="GET /api/docs/folders/{folderId}"
-        button-text="Test Get Folder"
-        :form-fields="getFolderFormFields"
-        :is-loading="testManager.isTestLoading('folders-get')"
-        :result="formatResult('folders-get')"
-        @test="testGetFolder"
-        @clear-result="clearResult('folders-get')"
-        @field-update="updateFormField('renameFolder', $event)"
-      />
-
-      <!-- Rename Folder -->
-      <TestCard
-        title="Rename Folder"
-        description="PATCH /api/docs/folders/{folderId}"
-        button-text="Test Rename Folder"
-        :form-fields="renameFolderFormFields"
-        :is-loading="testManager.isTestLoading('folders-rename')"
-        :result="formatResult('folders-rename')"
-        @test="testRenameFolder"
-        @clear-result="clearResult('folders-rename')"
-        @field-update="updateFormField('renameFolder', $event)"
-      />
-
-      <!-- Move Folder -->
-      <TestCard
-        title="Move Folder"
-        description="PATCH /api/docs/folders/{folderId}/move"
-        button-text="Test Move Folder"
-        :form-fields="moveFolderFormFields"
-        :is-loading="testManager.isTestLoading('folders-move')"
-        :result="formatResult('folders-move')"
-        @test="testMoveFolder"
-        @clear-result="clearResult('folders-move')"
-        @field-update="updateFormField('moveFolder', $event)"
-      />
-
-      <!-- Get Folder Trees -->
-      <TestCard
-        title="Get Folder Trees"
-        description="GET /api/docs/folders/trees"
-        button-text="Test Get Folder Trees"
-        :is-loading="testManager.isTestLoading('folders-get-trees')"
-        :result="formatResult('folders-get-trees')"
-        @test="testGetFolderTrees"
-        @clear-result="clearResult('folders-get-trees')"
-      />
-
-      <!-- Get Folder Path -->
-      <TestCard
-        title="Get Folder Path"
-        description="GET /api/docs/folders/{folderId}/path"
-        button-text="Test Get Folder Path"
-        :is-loading="testManager.isTestLoading('folders-get-path')"
-        :result="formatResult('folders-get-path')"
-        @test="testGetFolderPath"
-        @clear-result="clearResult('folders-get-path')"
-      />
-
-      <!-- Delete Folder -->
-      <TestCard
-        title="Delete Folder"
-        description="DELETE /api/docs/folders/{folderId}"
-        button-text="Test Delete Folder"
-        loading-text="Deleting..."
-        button-color="danger"
-        warning="This will permanently delete the folder!"
-        :is-loading="testManager.isTestLoading('folders-delete')"
-        :result="formatResult('folders-delete')"
-        @test="testDeleteFolder"
-        @clear-result="clearResult('folders-delete')"
-      />
-    </div>
-  </div>
-</template>
-
 <script>
 import TestCard from './TestCard.vue';
 import AuthWarning from './AuthWarning.vue';
@@ -307,3 +181,130 @@ export default {
   }
 }
 </script>
+
+<template>
+  <div class="space-y-6">
+    <h2 class="text-2xl font-bold text-content-primary dark:text-content-inverse mb-4">
+      Folder Management Tests
+    </h2>
+    
+    <!-- Authentication Warning -->
+    <AuthWarning 
+      v-if="!getCurrentUserId()" 
+      message="Folder operations require authentication. Please login first using the Auth section above."
+    />
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Get All Folders -->
+      <TestCard
+        title="Get All Folders"
+        description="GET /api/docs/folders"
+        button-text="Test Get All Folders"
+        :is-loading="testManager.isTestLoading('folders-get-all')"
+        :result="formatResult('folders-get-all')"
+        @test="testGetAllFolders"
+        @clear-result="clearResult('folders-get-all')"
+      />
+
+      <!-- Get Root Folders -->
+      <TestCard
+        title="Get Root Folders"
+        description="GET /api/docs/folders/roots"
+        button-text="Test Get Root Folders"
+        :is-loading="testManager.isTestLoading('folders-get-roots')"
+        :result="formatResult('folders-get-roots')"
+        @test="testGetRootFolders"
+        @clear-result="clearResult('folders-get-roots')"
+      />
+
+      <!-- Create Folder -->
+      <TestCard
+        title="Create Folder"
+        description="POST /api/docs/folders"
+        button-text="Test Create Folder"
+        :form-fields="createFolderFormFields"
+        :is-loading="testManager.isTestLoading('folders-create')"
+        :result="formatResult('folders-create')"
+        @test="testCreateFolder"
+        @clear-result="clearResult('folders-create')"
+        @field-update="updateFormField('createFolder', $event)"
+      />
+
+      <!-- Get Folder -->
+      <TestCard
+        title="Get Folder by ID"
+        description="GET /api/docs/folders/{folderId}"
+        button-text="Test Get Folder"
+        :form-fields="getFolderFormFields"
+        :is-loading="testManager.isTestLoading('folders-get')"
+        :result="formatResult('folders-get')"
+        @test="testGetFolder"
+        @clear-result="clearResult('folders-get')"
+        @field-update="updateFormField('renameFolder', $event)"
+      />
+
+      <!-- Rename Folder -->
+      <TestCard
+        title="Rename Folder"
+        description="PATCH /api/docs/folders/{folderId}"
+        button-text="Test Rename Folder"
+        :form-fields="renameFolderFormFields"
+        :is-loading="testManager.isTestLoading('folders-rename')"
+        :result="formatResult('folders-rename')"
+        @test="testRenameFolder"
+        @clear-result="clearResult('folders-rename')"
+        @field-update="updateFormField('renameFolder', $event)"
+      />
+
+      <!-- Move Folder -->
+      <TestCard
+        title="Move Folder"
+        description="PATCH /api/docs/folders/{folderId}/move"
+        button-text="Test Move Folder"
+        :form-fields="moveFolderFormFields"
+        :is-loading="testManager.isTestLoading('folders-move')"
+        :result="formatResult('folders-move')"
+        @test="testMoveFolder"
+        @clear-result="clearResult('folders-move')"
+        @field-update="updateFormField('moveFolder', $event)"
+      />
+
+      <!-- Get Folder Trees -->
+      <TestCard
+        title="Get Folder Trees"
+        description="GET /api/docs/folders/trees"
+        button-text="Test Get Folder Trees"
+        :is-loading="testManager.isTestLoading('folders-get-trees')"
+        :result="formatResult('folders-get-trees')"
+        @test="testGetFolderTrees"
+        @clear-result="clearResult('folders-get-trees')"
+      />
+
+      <!-- Get Folder Path -->
+      <TestCard
+        title="Get Folder Path"
+        description="GET /api/docs/folders/{folderId}/path"
+        button-text="Test Get Folder Path"
+        :is-loading="testManager.isTestLoading('folders-get-path')"
+        :result="formatResult('folders-get-path')"
+        @test="testGetFolderPath"
+        @clear-result="clearResult('folders-get-path')"
+      />
+
+      <!-- Delete Folder -->
+      <TestCard
+        title="Delete Folder"
+        description="DELETE /api/docs/folders/{folderId}"
+        button-text="Test Delete Folder"
+        loading-text="Deleting..."
+        button-color="danger"
+        warning="This will permanently delete the folder!"
+        :is-loading="testManager.isTestLoading('folders-delete')"
+        :result="formatResult('folders-delete')"
+        @test="testDeleteFolder"
+        @clear-result="clearResult('folders-delete')"
+      />
+    </div>
+  </div>
+</template>
+

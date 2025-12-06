@@ -1,4 +1,5 @@
 import { BaseApiController } from './BaseApiController.js';
+import { API_BASE_URL } from "@/config";
 
 /**
  * Documentation Service Controller
@@ -6,13 +7,14 @@ import { BaseApiController } from './BaseApiController.js';
  */
 export class DocsController extends BaseApiController {
   constructor() {
-    super('http://localhost:8080/api/docs');
+    super(API_BASE_URL);
+    this.servicePath = '/api/docs';
   }
 
   /**
    * Check service health
    */
   async checkHealth() {
-    return this.get('/health');
+    return this.get('/actuator/health/services/docsService');
   }
 }

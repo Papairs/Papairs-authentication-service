@@ -1,3 +1,9 @@
+<script>
+export default {
+  name: 'LoginHeader'
+}
+</script>
+
 <template>
   <header class="h-24 bg-surface-light border-b border-border-light-subtle flex items-center justify-between dark:bg-surface-dark px-8">
     <div class="flex items-center gap-3">
@@ -16,9 +22,3 @@
     </div>
   </header>
 </template>
-
-<script>
-export default {
-  name: 'LoginHeader'
-}
-</script>

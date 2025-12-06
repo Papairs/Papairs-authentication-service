@@ -1,4 +1,5 @@
 import { BaseApiController } from './BaseApiController.js';
+import { API_BASE_URL } from "@/config";
 
 /**
  * Folder Management Controller
@@ -6,7 +7,8 @@ import { BaseApiController } from './BaseApiController.js';
  */
 export class FolderController extends BaseApiController {
   constructor() {
-    super('http://localhost:8080/api/docs');
+    super(API_BASE_URL);
+    this.servicePath = '/api/docs';
   }
 
   /**
@@ -14,7 +16,7 @@ export class FolderController extends BaseApiController {
    * @param {string} folderId - The folder ID
    */
   async getFolder(folderId) {
-    return this.get(`/folders/${folderId}`);
+    return this.get(`${this.servicePath}/folders/${folderId}`);
   }
 
   /**
@@ -22,7 +24,7 @@ export class FolderController extends BaseApiController {
    * @param {Object} folderData - { name, parentFolderId? }
    */
   async createFolder(folderData) {
-    return this.post('/folders', folderData);
+    return this.post(`${this.servicePath}/folders`, folderData);
   }
 
   /**
@@ -31,7 +33,7 @@ export class FolderController extends BaseApiController {
    * @param {Object} renameData - { newName }
    */
   async renameFolder(folderId, renameData) {
-    return this.patch(`/folders/${folderId}`, renameData);
+    return this.patch(`${this.servicePath}/folders/${folderId}`, renameData);
   }
 
   /**
@@ -41,21 +43,21 @@ export class FolderController extends BaseApiController {
    */
   async deleteFolder(folderId, recursive = false) {
     const queryParam = recursive ? '?recursive=true' : '';
-    return this.delete(`/folders/${folderId}${queryParam}`);
+    return this.delete(`${this.servicePath}/folders/${folderId}${queryParam}`);
   }
 
   /**
    * Get all user folders
    */
   async getAllFolders() {
-    return this.get('/folders');
+    return this.get(`${this.servicePath}/folders`);
   }
 
   /**
    * Get root folders
    */
   async getRootFolders() {
-    return this.get('/folders/roots');
+    return this.get(`${this.servicePath}/folders/roots`);
   }
 
   /**
@@ -63,7 +65,7 @@ export class FolderController extends BaseApiController {
    * @param {string} folderId - The folder ID
    */
   async getChildFolders(folderId) {
-    return this.get(`/folders/${folderId}/children`);
+    return this.get(`${this.servicePath}/folders/${folderId}/children`);
   }
 
   /**
@@ -71,14 +73,14 @@ export class FolderController extends BaseApiController {
    * @param {string} folderId - The folder ID
    */
   async getFolderTree(folderId) {
-    return this.get(`/folders/${folderId}/tree`);
+    return this.get(`${this.servicePath}/folders/${folderId}/tree`);
   }
 
   /**
    * Get all user folder trees
    */
   async getUserFolderTrees() {
-    return this.get('/folders/trees');
+    return this.get(`${this.servicePath}/folders/trees`);
   }
 
   /**
@@ -86,7 +88,7 @@ export class FolderController extends BaseApiController {
    * @param {string} folderId - The folder ID
    */
   async getFolderPath(folderId) {
-    return this.get(`/folders/${folderId}/path`);
+    return this.get(`${this.servicePath}/folders/${folderId}/path`);
   }
 
   /**
@@ -95,6 +97,6 @@ export class FolderController extends BaseApiController {
    * @param {Object} moveData - { parentFolderId }
    */
   async moveFolder(folderId, moveData) {
-    return this.patch(`/folders/${folderId}/move`, moveData);
+    return this.patch(`${this.servicePath}/folders/${folderId}/move`, moveData);
   }
 }

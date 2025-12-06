@@ -92,6 +92,17 @@ export class HtmlDocumentState {
   }
 
   /**
+   * Get plain text content from HTML (for features like flashcard generation)
+   */
+  get textContent() {
+    // Create a temporary DOM element to parse HTML
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = this.htmlContent
+    // Extract text content and return
+    return tempDiv.textContent || tempDiv.innerText || ''
+  }
+
+  /**
    * Get current state for debugging
    */
   getState() {

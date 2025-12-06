@@ -1,4 +1,5 @@
 import { BaseApiController } from './BaseApiController.js';
+import { API_BASE_URL } from '@/config';
 
 /**
  * Authentication Service Controller
@@ -6,14 +7,15 @@ import { BaseApiController } from './BaseApiController.js';
  */
 export class AuthController extends BaseApiController {
   constructor() {
-    super('http://localhost:8080/api/auth');
+    super(API_BASE_URL);
+    this.servicePath = '/api/auth';
   }
 
   /**
    * Check service health
    */
   async checkHealth() {
-    return this.get('/health');
+    return this.get('/actuator/health/services/authService');
   }
 
   /**
@@ -21,17 +23,17 @@ export class AuthController extends BaseApiController {
    * @param {Object} credentials - { email, password }
    */
   async login(credentials) {
-    const result = await this.post('/login', credentials);
+    const result = await this.post(`${this.servicePath}/login`, credentials);
     
     // Store auth data on successful login
-    if (result.success && result.data.sessionToken) {
-      localStorage.setItem('papairs_token', result.data.sessionToken);
+    if (result.success && result.data.token) {
+      localStorage.setItem('papairs_token', result.data.token);
       if (result.data.user) {
         localStorage.setItem('papairs_user', JSON.stringify({
           id: result.data.user.id,
           email: result.data.user.email,
           emailVerified: result.data.user.emailVerified || false,
-          isActive: result.data.user.isActive || true
+          active: result.data.user.active || true
         }));
       }
     }
@@ -44,14 +46,14 @@ export class AuthController extends BaseApiController {
    * @param {Object} userDetails - { email, password }
    */
   async register(userDetails) {
-    return this.post('/register', userDetails);
+    return this.post(`${this.servicePath}/register`, userDetails);
   }
 
   /**
    * Logout current user
    */
   async logout() {
-    const result = await this.post('/logout');
+    const result = await this.post(`${this.servicePath}/logout`);
     
     // Clear stored auth data
     localStorage.removeItem('papairs_token');
@@ -64,7 +66,7 @@ export class AuthController extends BaseApiController {
    * Validate current session token
    */
   async validateToken() {
-    return this.post('/validate');
+    return this.post(`${this.servicePath}/validation`);
   }
 
   /**
@@ -72,7 +74,7 @@ export class AuthController extends BaseApiController {
    * @param {Object} passwordData - { currentPassword, newPassword }
    */
   async changePassword(passwordData) {
-    return this.post('/change-password', passwordData);
+    return this.post(`${this.servicePath}/change-password`, passwordData);
   }
 
   /**

@@ -1,4 +1,5 @@
 import { BaseApiController } from './BaseApiController.js';
+import { API_BASE_URL } from "@/config";
 
 /**
  * Page Management Controller
@@ -6,14 +7,15 @@ import { BaseApiController } from './BaseApiController.js';
  */
 export class PageController extends BaseApiController {
   constructor() {
-    super('http://localhost:8080/api/docs');
+    super(API_BASE_URL );
+    this.servicePath = '/api/docs';
   }
 
   /**
    * Get all pages user has access to
    */
   async getAllPages() {
-    return this.get('/pages');
+    return this.get(`${this.servicePath}/pages`);
   }
 
   /**
@@ -21,7 +23,7 @@ export class PageController extends BaseApiController {
    * @param {Object} pageData - { title, folderId? }
    */
   async createPage(pageData) {
-    return this.post('/pages', pageData);
+    return this.post(`${this.servicePath}/pages`, pageData);
   }
 
   /**
@@ -29,7 +31,7 @@ export class PageController extends BaseApiController {
    * @param {string} pageId - The page ID
    */
   async getPage(pageId) {
-    return this.get(`/pages/${pageId}`);
+    return this.get(`${this.servicePath}/pages/${pageId}`);
   }
 
   /**
@@ -38,7 +40,7 @@ export class PageController extends BaseApiController {
    * @param {Object} updateData - { content }
    */
   async updatePage(pageId, updateData) {
-    return this.put(`/pages/${pageId}`, updateData);
+    return this.put(`${this.servicePath}/pages/${pageId}`, updateData);
   }
 
   /**
@@ -47,7 +49,7 @@ export class PageController extends BaseApiController {
    * @param {Object} renameData - { newTitle }
    */
   async renamePage(pageId, renameData) {
-    return this.patch(`/pages/${pageId}`, renameData);
+    return this.patch(`${this.servicePath}/pages/${pageId}`, renameData);
   }
 
   /**
@@ -56,7 +58,7 @@ export class PageController extends BaseApiController {
    * @param {Object} moveData - { folderId }
    */
   async movePage(pageId, moveData) {
-    return this.patch(`/pages/${pageId}/move`, moveData);
+    return this.patch(`${this.servicePath}/pages/${pageId}/move`, moveData);
   }
 
   /**
@@ -64,6 +66,6 @@ export class PageController extends BaseApiController {
    * @param {string} pageId - The page ID
    */
   async deletePage(pageId) {
-    return this.delete(`/pages/${pageId}`);
+    return this.delete(`${this.servicePath}/pages/${pageId}`);
   }
 }
