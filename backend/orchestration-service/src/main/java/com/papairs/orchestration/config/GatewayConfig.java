@@ -99,6 +99,15 @@ public class GatewayConfig {
                         )
                         .uri(serviceProperties.docsService().url()))
 
+                .route("docs-websocket", r -> r
+                        .path("/ws/doc/**")
+                        .filters(f -> f
+                                .removeRequestHeader("Origin")
+                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
+                                .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")
+                        )
+                        .uri(serviceProperties.docsService().url()))
+
                 .build();
     }
 }
