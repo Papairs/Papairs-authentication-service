@@ -4,6 +4,8 @@ import { ref, onMounted} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
 import SearchBar from '@/components/SearchBar.vue'
+import auth from '@/utils/auth'
+import axios from 'axios'
 import FolderCard from '@/components/FolderCard.vue'
 import DocumentCard from '@/components/DocumentCard.vue'
 import CreateFolderModal from '@/components/CreateFolderModal.vue'
@@ -183,9 +185,33 @@ export default {
       }
     }
 
-    const handleSearch = (query) => {
-      // Implement search functionality later
-      console.log('Searching for:', query)
+    const handleSearch = async (query) => {
+      if (!query.trim()) {
+        // Reload all content if search is cleared
+        await loadContent(currentFolderId.value)
+        return
+      }
+
+      try {
+        const headers = await auth.getAuthHeaders(router)
+        // Get all pages the user has access to
+        const response = await axios.get(
+          'http://localhost:8082/api/docs/pages',
+          { headers }
+        )
+        
+        const pages = response.data || []
+        const searchTerm = query.toLowerCase().trim()
+        
+        // Filter documents by title match
+        documents.value = pages
+          .filter(page => page.title.toLowerCase().includes(searchTerm))
+        
+        // Clear folders during search to show only matching documents
+        folders.value = []
+      } catch (error) {
+        console.error('Search failed:', error)
+      }
     }
 
     onMounted(() => {
