@@ -172,6 +172,7 @@ export default {
     return {
       flashcards,
       loading,
+      flippedCards,
       deleteFlashcard,
       toggleFlip,
       isFlipped,
