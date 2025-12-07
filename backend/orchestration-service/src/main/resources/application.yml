@@ -40,6 +40,18 @@ management:
           - docsService
 
 resilience4j:
+  circuitbreaker:
+    instances:
+      aiService:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+  timelimiter:
+    instances:
+      aiService:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
   retry:
     instances:
       authService:
