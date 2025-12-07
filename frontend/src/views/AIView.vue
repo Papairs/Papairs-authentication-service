@@ -250,16 +250,16 @@ export default {
         const userId = auth.getUserId()
         const response = await fetch('http://localhost:3001/autocomplete', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-Id': userId
+          },
           body: JSON.stringify({ 
             userInput: text,
-            userId: userId,
-            mode: aiMode.value, // Send selected mode
+            mode: aiMode.value,
             selectedFiles: selectedFiles.value.map(f => ({
               fileId: f.fileId,
               filename: f.filename,
-              b2FileId: f.b2FileId,
-              b2FilePath: f.b2FilePath,
               mimeType: f.mimeType
             }))
           })
