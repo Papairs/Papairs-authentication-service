@@ -83,6 +83,32 @@ public class GatewayConfig {
                         )
                         .uri(serviceProperties.docsService().url()))
 
+                .route("ai-service-public", r -> r
+                        .path("/api/ai/health")
+                        .filters(f -> f
+                                .rewritePath("/api/ai/(?<segment>.*)", "/${segment}")
+                                .removeRequestHeader("Origin")
+                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
+                                .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")
+                                .circuitBreaker(config -> config
+                                        .setName(CircuitBreakerNames.AI_SERVICE)
+                                        .setFallbackUri("forward:/fallback/ai-service"))
+                        )
+                        .uri(serviceProperties.aiService().url()))
+
+                .route("ai-service-protected", r -> r
+                        .path("/api/ai/**")
+                        .filters(f -> f
+                                .filter(authenticationFilter)
+                                .rewritePath("/api/ai/(?<segment>.*)", "/${segment}")
+                                .removeRequestHeader("Origin")
+                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
+                                .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")
+                                .circuitBreaker(config -> config
+                                        .setName(CircuitBreakerNames.AI_SERVICE)
+                                        .setFallbackUri("forward:/fallback/ai-service"))
+                        )
+                        .uri(serviceProperties.aiService().url()))
                 .build();
     }
 }

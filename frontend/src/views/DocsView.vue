@@ -148,10 +148,17 @@ export default {
       isGenerating.value = true
       showSuccess.value = false
       try {
-        const aiResponse = await axios.post('http://localhost:3001/generate-flashcards', {
+        const aiResponse = await axios.post('http://localhost:8080/api/ai/generate-flashcards',
+        {
           content: content,
           numberOfCards: numberOfCards.value
-        })
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${auth.getToken()}`
+            }
+          }
+        )
         const flashcards = aiResponse.data.flashcards
         if (!flashcards || flashcards.length === 0) {
           throw new Error('No flashcards generated')

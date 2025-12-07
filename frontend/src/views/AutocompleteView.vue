@@ -44,6 +44,7 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import LoginHeader from '../components/LoginHeader.vue'
+import auth from "@/utils/auth";
 
 export default {
   name: 'AutocompleteView',
@@ -87,11 +88,11 @@ export default {
       }
 
       try {
-        const response = await fetch('http://localhost:3001/autocomplete', {
+        const response = await fetch('http://localhost:8080/api/ai/autocomplete', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'X-User-Id': ''
+            'Authorization': `Bearer ${auth.getToken()}`
           },
           body: JSON.stringify({ 
             userInput: text,

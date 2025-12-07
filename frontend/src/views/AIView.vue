@@ -247,24 +247,34 @@ export default {
 
       isLoading.value = true
       try {
-        const userId = auth.getUserId()
-        const response = await fetch('http://localhost:3001/autocomplete', {
+        const requestBody = { 
+          userInput: text,
+          mode: aiMode.value,
+          selectedFiles: selectedFiles.value.map(f => ({
+            fileId: f.fileId,
+            filename: f.filename,
+            mimeType: f.mimeType
+          }))
+        }
+        
+        const response = await fetch('http://localhost:8080/api/ai/autocomplete', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'X-User-Id': userId
+            'Authorization': `Bearer ${auth.getToken()}`
           },
-          body: JSON.stringify({ 
-            userInput: text,
-            mode: aiMode.value,
-            selectedFiles: selectedFiles.value.map(f => ({
-              fileId: f.fileId,
-              filename: f.filename,
-              mimeType: f.mimeType
-            }))
-          })
+          body: JSON.stringify(requestBody)
         })
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('API error:', response.status, errorText)
+          suggestion.value = ''
+          return
+        }
+        
         const data = await response.json()
+        console.log('Response data:', data) // Debug log
         suggestion.value = data.suggestion || ''
       } catch (error) {
         console.error('Error fetching suggestion:', error)
