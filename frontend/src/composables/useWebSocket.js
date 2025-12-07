@@ -60,7 +60,8 @@ export function useWebSocket(url, options = {}) {
     connectionError.value = null
 
     try {
-      ws.value = new SockJS(url.replace('ws://', 'http://').replace('/ws/doc', '/ws/doc'))
+      const sockJsUrl = url.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:')
+      ws.value = new SockJS(sockJsUrl)
 
       ws.value.onopen = () => {
         connecting.value = false
