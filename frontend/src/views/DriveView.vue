@@ -4,6 +4,8 @@ import { ref, onMounted} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
 import SearchBar from '@/components/SearchBar.vue'
+import auth from '@/utils/auth'
+import axios from 'axios'
 import FolderCard from '@/components/FolderCard.vue'
 import DocumentCard from '@/components/DocumentCard.vue'
 import CreateFolderModal from '@/components/CreateFolderModal.vue'
@@ -11,6 +13,7 @@ import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
 import RenameFolderModal from '@/components/RenameFolderModal.vue'
 import RenameDocumentModal from '@/components/RenameDocumentModal.vue'
 import ShareDocumentModal from '@/components/ShareDocumentModal.vue'
+import NewDropdown from '@/components/NewDropdown.vue'
 import { driveService } from '@/utils/driveService'
 
 export default {
@@ -23,7 +26,8 @@ export default {
     CreateDocumentModal,
     RenameFolderModal,
     RenameDocumentModal,
-    ShareDocumentModal
+    ShareDocumentModal,
+    NewDropdown
   },
   setup() {
     const router = useRouter()
@@ -192,9 +196,33 @@ export default {
       }
     }
 
-    const handleSearch = (query) => {
-      // Implement search functionality later
-      console.log('Searching for:', query)
+    const handleSearch = async (query) => {
+      if (!query.trim()) {
+        // Reload all content if search is cleared
+        await loadContent(currentFolderId.value)
+        return
+      }
+
+      try {
+        const headers = await auth.getAuthHeaders(router)
+        // Get all pages the user has access to
+        const response = await axios.get(
+          'http://localhost:8082/api/docs/pages',
+          { headers }
+        )
+        
+        const pages = response.data || []
+        const searchTerm = query.toLowerCase().trim()
+        
+        // Filter documents by title match
+        documents.value = pages
+          .filter(page => page.title.toLowerCase().includes(searchTerm))
+        
+        // Clear folders during search to show only matching documents
+        folders.value = []
+      } catch (error) {
+        console.error('Search failed:', error)
+      }
     }
 
     onMounted(() => {
@@ -205,6 +233,11 @@ export default {
       // Listen for sidebar new document button
       window.addEventListener('open-create-document-modal', () => {
         showCreateDocModal.value = true
+      })
+      
+      // Listen for sidebar new folder button
+      window.addEventListener('open-create-folder-modal', () => {
+        showCreateFolderModal.value = true
       })
     })
 
@@ -280,29 +313,12 @@ export default {
               </button>
 
               <!-- Dropdown Menu -->
-              <div 
-                v-if="showNotebookDropdown"
-                class="absolute left-0 mt-2 w-56 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg overflow-hidden z-10"
-              >
-                <button 
-                  @click="showCreateDocModal = true; showNotebookDropdown = false"
-                  class="w-full flex items-center space-x-3 px-4 py-3 hover:bg-surface-light dark:hover:bg-surface-dark text-content-primary dark:text-content-inverse transition-colors text-left"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span class="text-sm font-medium">New Papair</span>
-                </button>
-                <button 
-                  @click="showCreateFolderModal = true; showNotebookDropdown = false"
-                  class="w-full flex items-center space-x-3 px-4 py-3 hover:bg-surface-light dark:hover:bg-surface-dark text-content-primary dark:text-content-inverse transition-colors text-left"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                  </svg>
-                  <span class="text-sm font-medium">New Folder</span>
-                </button>
-              </div>
+              <NewDropdown 
+                :is-open="showNotebookDropdown"
+                @new-papair="showCreateDocModal = true"
+                @new-folder="showCreateFolderModal = true"
+                @close="showNotebookDropdown = false"
+              />
             </div>
           </div>
         </div>
