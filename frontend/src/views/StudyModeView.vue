@@ -113,17 +113,19 @@
         <div class="flex gap-4 mt-8 justify-center">
           <button
             @click="markAsNotLearned"
-            class="px-8 py-4 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center gap-2"
+            :disabled="processingAction"
+            class="px-8 py-4 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <XmarkIcon :size="20" />
-            Not Learned
+            {{ processingAction ? 'Processing...' : 'Not Learned' }}
           </button>
           <button
             @click="markAsLearned"
-            class="px-8 py-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center gap-2"
+            :disabled="processingAction"
+            class="px-8 py-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <CheckmarkIcon :size="20" class="text-green-700" />
-            Learned
+            {{ processingAction ? 'Processing...' : 'Learned' }}
           </button>
         </div>
 
@@ -131,7 +133,8 @@
         <div class="flex justify-center mt-4">
           <button
             @click="skipCard"
-            class="px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors text-sm"
+            :disabled="processingAction"
+            class="px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Skip for now →
           </button>
@@ -180,6 +183,7 @@ const currentIndex = ref(0)
 const isFlipped = ref(false)
 const loading = ref(true)
 const studyComplete = ref(false)
+const processingAction = ref(false) // Prevent double-clicks
 
 const currentCard = computed(() => {
   if (currentIndex.value < flashcards.value.length) {
@@ -246,17 +250,32 @@ async function loadFlashcards() {
 }
 
 function flipCard() {
+  if (processingAction.value) return // Don't allow flip while processing
   isFlipped.value = !isFlipped.value
 }
 
 async function markAsLearned() {
-  await updateLearnedStatus(true)
-  nextCard()
+  if (processingAction.value) return // Prevent double-click
+  processingAction.value = true
+  
+  try {
+    await updateLearnedStatus(true)
+    nextCard()
+  } finally {
+    processingAction.value = false
+  }
 }
 
 async function markAsNotLearned() {
-  await updateLearnedStatus(false)
-  nextCard()
+  if (processingAction.value) return // Prevent double-click
+  processingAction.value = true
+  
+  try {
+    await updateLearnedStatus(false)
+    nextCard()
+  } finally {
+    processingAction.value = false
+  }
 }
 
 async function updateLearnedStatus(learned) {
@@ -280,10 +299,12 @@ async function updateLearnedStatus(learned) {
   } catch (error) {
     console.error('Failed to update learned status:', error)
     console.error('Error details:', error.response?.data)
+    throw error // Re-throw to be handled by caller
   }
 }
 
 function skipCard() {
+  if (processingAction.value) return // Prevent skip during processing
   nextCard()
 }
 
