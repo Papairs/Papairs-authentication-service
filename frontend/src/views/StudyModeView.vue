@@ -168,6 +168,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { API_BASE_URL } from '@/config'
 import axios from 'axios'
 import auth from '../utils/auth'
 import CheckmarkIcon from '@/components/icons/CheckmarkIcon.vue'
@@ -220,13 +221,13 @@ async function loadFlashcards() {
     if (pageId && pageId !== 'all') {
       // Load flashcards for specific page
       response = await axios.get(
-        `http://localhost:8082/api/docs/flashcards/page/${pageId}`,
+        `${API_BASE_URL}/api/docs/flashcards/page/${pageId}`,
         { headers }
       )
     } else {
       // Load all user flashcards
       response = await axios.get(
-        'http://localhost:8082/api/docs/flashcards',
+        `${API_BASE_URL}/api/docs/flashcards`,
         { headers }
       )
     }
@@ -282,7 +283,7 @@ async function updateLearnedStatus(learned) {
   try {
     const headers = await auth.getAuthHeaders(router)
     const response = await axios.put(
-      `http://localhost:8082/api/docs/flashcards/${currentCard.value.flashcardId}/learned`,
+      `${API_BASE_URL}/api/docs/flashcards/${currentCard.value.flashcardId}/learned`,
       learned,
       { 
         headers: {
@@ -331,7 +332,7 @@ async function resetAllAndRestart() {
     
     // Reset all flashcards to unlearned
     await axios.put(
-      'http://localhost:8082/api/docs/flashcards/reset',
+      `${API_BASE_URL}/api/docs/flashcards/reset`,
       null,
       { headers }
     )

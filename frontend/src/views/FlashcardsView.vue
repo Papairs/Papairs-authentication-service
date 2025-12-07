@@ -1,6 +1,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { API_BASE_URL } from '@/config'
 import auth from '@/utils/auth'
 import axios from 'axios'
 import FlashcardsHeader from '@/components/FlashcardsHeader.vue'
@@ -25,7 +26,7 @@ export default {
       loading.value = true
       try {
         const headers = await auth.getAuthHeaders(router)
-        const response = await axios.get('http://localhost:8082/api/docs/flashcards', {
+        const response = await axios.get(`${API_BASE_URL}/api/docs/flashcards`, {
           headers
         })
         
@@ -67,7 +68,7 @@ export default {
         for (const [pageId, pageData] of pageMap.entries()) {
           try {
             const response = await axios.get(
-              `http://localhost:8082/api/docs/pages/${pageId}`,
+              `${API_BASE_URL}/api/docs/pages/${pageId}`,
               { headers }
             )
             
@@ -111,7 +112,7 @@ export default {
 
       try {
         const headers = await auth.getAuthHeaders(router)
-        await axios.delete(`http://localhost:8082/api/docs/flashcards/${flashcardId}`, {
+        await axios.delete(`${API_BASE_URL}/api/docs/flashcards/${flashcardId}`, {
           headers
         })
         
@@ -152,7 +153,7 @@ export default {
       try {
         const headers = await auth.getAuthHeaders(router)
         await axios.put(
-          'http://localhost:8082/api/docs/flashcards/reset',
+          `${API_BASE_URL}/api/docs/flashcards/reset`,
           null,
           { headers }
         )

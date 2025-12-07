@@ -6,6 +6,7 @@ import TrashIcon from '@/components/icons/TrashIcon.vue'
 import { useTiptapDocument } from '@/composables/useTiptapDocument'
 import { createErrorHandler } from '@/utils/errorHandler'
 import { createDocumentWebSocketService } from '@/services/documentWebSocketService'
+import { API_BASE_URL } from '@/config'
 import auth from '@/utils/auth'
 import axios from 'axios'
 
@@ -148,17 +149,24 @@ export default {
       isGenerating.value = true
       showSuccess.value = false
       try {
-        const aiResponse = await axios.post('http://localhost:3001/generate-flashcards', {
+        const aiResponse = await axios.post(`${API_BASE_URL}/api/ai/generate-flashcards`,
+        {
           content: content,
           numberOfCards: numberOfCards.value
-        })
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${auth.getToken()}`
+            }
+          }
+        )
         const flashcards = aiResponse.data.flashcards
         if (!flashcards || flashcards.length === 0) {
           throw new Error('No flashcards generated')
         }
         const headers = await auth.getAuthHeaders(router)
         for (const card of flashcards) {
-          await axios.post('http://localhost:8082/api/docs/flashcards', {
+          await axios.post(`${API_BASE_URL}/api/docs/flashcards`, {
             pageId: documentId.value,
             question: card.question,
             answer: card.answer,
@@ -185,7 +193,7 @@ export default {
       isLoadingFlashcards.value = true
       try {
         const headers = await auth.getAuthHeaders(router)
-        const response = await axios.get('http://localhost:8082/api/docs/flashcards/page/' + documentId.value, { headers })
+        const response = await axios.get(`${API_BASE_URL}/api/docs/flashcards/page/${documentId.value}`, { headers })
         pageFlashcards.value = response.data.data || []
       } catch (error) {
         console.error('Failed to load flashcards:', error)
@@ -208,7 +216,7 @@ export default {
       }
       try {
         const headers = await auth.getAuthHeaders(router)
-        await axios.delete('http://localhost:8082/api/docs/flashcards/' + flashcardId, { headers })
+        await axios.delete(`${API_BASE_URL}/api/docs/flashcards/${flashcardId}`, { headers })
         await loadPageFlashcards()
       } catch (error) {
         console.error('Failed to delete flashcard:', error)

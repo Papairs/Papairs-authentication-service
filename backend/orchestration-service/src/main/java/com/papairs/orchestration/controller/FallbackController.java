@@ -39,6 +39,20 @@ public class FallbackController {
     }
 
     /**
+     * Provides a fallback response for requests to the AI Service
+     * <p>
+     * This method is triggered when the circuit breaker for the AI Service is open
+     * </p>
+     * @param exchange The current server exchange, used to extract details like the original request path.
+     * @return A {@link ResponseEntity} containing a standardized {@link ErrorResponse}
+     * with an HTTP 503 Service Unavailable status.
+     */
+    @RequestMapping("/ai-service")
+    public ResponseEntity<ErrorResponse> aiServiceFallback(ServerWebExchange exchange) {
+        return createFallbackResponse("AI service", exchange);
+    }
+
+    /**
      * Private helper method to construct a standardized fallback response
      * @param serviceName The friendly name of the service that is unavailable
      * @param exchange The current server exchange from which the original request path is obtained

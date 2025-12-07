@@ -89,6 +89,7 @@
 <script>
 import TestCard from './TestCard.vue';
 import { docsController } from '@/controllers/index.js';
+import { API_BASE_URL } from '@/config';
 import axios from 'axios';
 import auth from '@/utils/auth';
 
@@ -135,7 +136,7 @@ export default {
 
       try {
         const response = await axios.get(
-            `http://localhost:8080/api/docs/files`,
+            `${API_BASE_URL}/api/docs/files`,
             {
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -167,7 +168,7 @@ export default {
       formData.append('file', file);
 
       try {
-        await axios.post('http://localhost:8080/api/docs/files', formData,
+        await axios.post(`${API_BASE_URL}/api/docs/files`, formData,
           {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -192,7 +193,7 @@ export default {
     async deleteFile(fileId) {
       try {
         await axios.delete(
-            `http://localhost:8080/api/docs/files/${fileId}`,
+            `${API_BASE_URL}/api/docs/files/${fileId}`,
             {
               headers: {
                 'Authorization': `Bearer ${auth.getToken()}`

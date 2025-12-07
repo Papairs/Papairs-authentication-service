@@ -1,6 +1,7 @@
 <script>
 import axios from 'axios'
- import auth from '@/utils/auth'
+import { API_BASE_URL } from '@/config'
+import auth from '@/utils/auth'
 import { useTheme } from '@/composables/useTheme';
 import { ApiTestManager } from '@/controllers/ApiTestManager.js';
 import AuthSection from '@/components/controllerComponents/AuthSection.vue';
@@ -49,7 +50,7 @@ import AISection from '@/components/controllerComponents/AISection.vue';
     methods: {
       async testAuth() {
         try {
-          const response = await axios.get('http://localhost:8080/api/auth/health');
+          const response = await axios.get(`${API_BASE_URL}/api/auth/health`);
           this.authResult = JSON.stringify(response.data, null, 2);
         } catch (error) {
           this.authResult = `Error: ${error.message}`;
@@ -57,7 +58,7 @@ import AISection from '@/components/controllerComponents/AISection.vue';
       },
       async testDocs() {
         try {
-          const response = await axios.get('http://localhost:8080/api/docs/health');
+          const response = await axios.get(`${API_BASE_URL}/api/docs/health`);
           this.docsResult = JSON.stringify(response.data, null, 2);
         } catch (error) {
           this.docsResult = `Error: ${error.message}`;
@@ -107,7 +108,7 @@ import AISection from '@/components/controllerComponents/AISection.vue';
         this.creatingPage = true
         
         try {
-          const response = await axios.post('http://localhost:8080/api/docs/pages', {
+          const response = await axios.post(`${API_BASE_URL}/api/docs/pages`, {
             title: this.pageName.trim(),
             folderId: null // Optional - no folder for now
           }, {

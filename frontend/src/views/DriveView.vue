@@ -4,6 +4,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
 import SearchBar from '@/components/SearchBar.vue'
+import { API_BASE_URL } from '@/config'
 import auth from '@/utils/auth'
 import axios from 'axios'
 import FolderCard from '@/components/FolderCard.vue'
@@ -226,8 +227,8 @@ export default {
         const searchTerm = query.toLowerCase().trim()
         
         // Get all pages the user has access to
-        const pagesResponse = await axios.get(
-          'http://localhost:8082/api/docs/pages',
+        const response = await axios.get(
+          `${API_BASE_URL}/api/docs/pages`,
           { headers }
         )
         
