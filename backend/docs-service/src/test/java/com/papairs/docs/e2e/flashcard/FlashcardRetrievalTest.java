@@ -25,8 +25,8 @@ public class FlashcardRetrievalTest extends AbstractE2ETest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].ownerId").value(TEST_USER_1_ID))
-                .andExpect(jsonPath("$.data[1].ownerId").value(TEST_USER_1_ID));
+                .andExpect(jsonPath("$.data[0].flashcardId").exists())
+                .andExpect(jsonPath("$.data[1].flashcardId").exists());
     }
 
     @Test
@@ -83,13 +83,13 @@ public class FlashcardRetrievalTest extends AbstractE2ETest {
                         .header(USER_ID_HEADER, TEST_USER_1_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data[0].ownerId").value(TEST_USER_1_ID));
+                .andExpect(jsonPath("$.data[0].question").value("User 1 Question"));
 
         mockMvc.perform(get("/api/docs/flashcards")
                         .header(USER_ID_HEADER, TEST_USER_2_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data[0].ownerId").value(TEST_USER_2_ID));
+                .andExpect(jsonPath("$.data[0].question").value("User 2 Question"));
     }
 
     @Test
@@ -152,18 +152,22 @@ public class FlashcardRetrievalTest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("Should retrieve correct review statistics")
-    public void getFlashcardsWithReviewStats() throws Exception {
+    @DisplayName("Should retrieve flashcards with essential fields only")
+    public void getFlashcardsWithEssentialFields() throws Exception {
         String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Study Page");
         fixtures.createFlashcardAsUser(TEST_USER_1_ID, pageId, "Question", "Answer");
 
         mockMvc.perform(get("/api/docs/flashcards")
                         .header(USER_ID_HEADER, TEST_USER_1_ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].timesReviewed").value(0))
-                .andExpect(jsonPath("$.data[0].timesCorrect").value(0))
-                .andExpect(jsonPath("$.data[0].lastReviewed").isEmpty())
-                .andExpect(jsonPath("$.data[0].nextReviewDate").isEmpty());
+                .andExpect(jsonPath("$.data[0].flashcardId").exists())
+                .andExpect(jsonPath("$.data[0].pageId").value(pageId))
+                .andExpect(jsonPath("$.data[0].question").value("Question"))
+                .andExpect(jsonPath("$.data[0].answer").value("Answer"))
+                .andExpect(jsonPath("$.data[0].learned").value(false))
+                .andExpect(jsonPath("$.data[0].ownerId").doesNotExist())
+                .andExpect(jsonPath("$.data[0].timesReviewed").doesNotExist())
+                .andExpect(jsonPath("$.data[0].createdAt").doesNotExist());
     }
 }
 

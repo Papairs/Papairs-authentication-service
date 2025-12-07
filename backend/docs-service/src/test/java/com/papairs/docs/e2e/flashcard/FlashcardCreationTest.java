@@ -31,12 +31,12 @@ public class FlashcardCreationTest extends AbstractE2ETest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.flashcardId").exists())
                 .andExpect(jsonPath("$.data.pageId").value(pageId))
-                .andExpect(jsonPath("$.data.ownerId").value(TEST_USER_1_ID))
                 .andExpect(jsonPath("$.data.question").value("What is Java?"))
                 .andExpect(jsonPath("$.data.answer").value("A programming language"))
                 .andExpect(jsonPath("$.data.learned").value(false))
-                .andExpect(jsonPath("$.data.timesReviewed").value(0))
-                .andExpect(jsonPath("$.data.timesCorrect").value(0));
+                .andExpect(jsonPath("$.data.ownerId").doesNotExist())
+                .andExpect(jsonPath("$.data.timesReviewed").doesNotExist())
+                .andExpect(jsonPath("$.data.timesCorrect").doesNotExist());
     }
 
     @Test

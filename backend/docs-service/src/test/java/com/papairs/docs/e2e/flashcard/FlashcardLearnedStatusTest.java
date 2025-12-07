@@ -20,7 +20,7 @@ public class FlashcardLearnedStatusTest extends AbstractE2ETest {
         mockMvc.perform(put("/api/docs/flashcards/" + flashcardId + "/learned")
                         .header(USER_ID_HEADER, TEST_USER_1_ID)
                         .contentType(CONTENT_TYPE_JSON)
-                        .content("true"))
+                        .content("{\"learned\": true}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.flashcardId").value(flashcardId))
                 .andExpect(jsonPath("$.data.learned").value(true))
@@ -41,7 +41,7 @@ public class FlashcardLearnedStatusTest extends AbstractE2ETest {
         mockMvc.perform(put("/api/docs/flashcards/" + flashcardId + "/learned")
                         .header(USER_ID_HEADER, TEST_USER_1_ID)
                         .contentType(CONTENT_TYPE_JSON)
-                        .content("false"))
+                        .content("{\"learned\": false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.learned").value(false));
 
@@ -75,7 +75,7 @@ public class FlashcardLearnedStatusTest extends AbstractE2ETest {
         mockMvc.perform(put("/api/docs/flashcards/" + flashcardId + "/learned")
                         .header(USER_ID_HEADER, TEST_USER_2_ID)
                         .contentType(CONTENT_TYPE_JSON)
-                        .content("true"))
+                        .content("{\"learned\": true}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value(containsString("permission")));
 
@@ -90,7 +90,7 @@ public class FlashcardLearnedStatusTest extends AbstractE2ETest {
         mockMvc.perform(put("/api/docs/flashcards/" + nonExistentFlashcardId + "/learned")
                         .header(USER_ID_HEADER, TEST_USER_1_ID)
                         .contentType(CONTENT_TYPE_JSON)
-                        .content("true"))
+                        .content("{\"learned\": true}"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value(containsString("not found")));
     }
@@ -103,7 +103,7 @@ public class FlashcardLearnedStatusTest extends AbstractE2ETest {
 
         mockMvc.perform(put("/api/docs/flashcards/" + flashcardId + "/learned")
                         .contentType(CONTENT_TYPE_JSON)
-                        .content("true"))
+                        .content("{\"learned\": true}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
     }
@@ -152,13 +152,13 @@ public class FlashcardLearnedStatusTest extends AbstractE2ETest {
         mockMvc.perform(put("/api/docs/flashcards/" + flashcardId + "/learned")
                         .header(USER_ID_HEADER, TEST_USER_1_ID)
                         .contentType(CONTENT_TYPE_JSON)
-                        .content("true"))
+                        .content("{\"learned\": true}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.question").value("What is Java?"))
                 .andExpect(jsonPath("$.data.answer").value("A programming language"))
                 .andExpect(jsonPath("$.data.tags.length()").value(2))
                 .andExpect(jsonPath("$.data.pageId").value(pageId))
-                .andExpect(jsonPath("$.data.ownerId").value(TEST_USER_1_ID))
+                .andExpect(jsonPath("$.data.ownerId").doesNotExist())
                 .andExpect(jsonPath("$.data.learned").value(true));
     }
 }
