@@ -89,8 +89,14 @@ export default {
       try {
         const response = await fetch('http://localhost:3001/autocomplete', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userInput: text })
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-Id': ''
+          },
+          body: JSON.stringify({ 
+            userInput: text,
+            selectedFiles: [] // TODO: Integrate with file selection
+          })
         })
         const data = await response.json()
         suggestion.value = (data.suggestion || '').trim()
