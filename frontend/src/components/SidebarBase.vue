@@ -1,6 +1,6 @@
 <script>
-import { ref, computed, onMounted, watch} from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
 import User3Icon from '@/components/icons/User3Icon.vue'
 import SearchIcon from '@/components/icons/SearchIcon.vue'
@@ -11,9 +11,9 @@ import FlashcardIcon from '@/components/icons/FlashcardIcon.vue'
 import FolderIcon from '@/components/icons/FolderIcon.vue'
 import DocumentIcon from '@/components/icons/DocumentIcon.vue'
 import FolderTreeItem from '@/components/FolderTreeItem.vue'
+import NewDropdown from '@/components/NewDropdown.vue'
 import { driveService } from '@/utils/driveService'
 import auth from '@/utils/auth'
-import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 export default {
@@ -27,42 +27,47 @@ export default {
     FlashcardIcon,
     FolderIcon,
     DocumentIcon,
-    FolderTreeItem
+    FolderTreeItem,
+    NewDropdown
   },
   setup() {
     const router = useRouter()
     const route = useRoute()
     const { isDark, toggleTheme } = useTheme()
+
+    // State
     const loading = ref(false)
     const folderTree = ref([])
     const isDropdownOpen = ref(false)
     const isSettingsDropdownOpen = ref(false)
+    const isNewDropdownOpen = ref(false)
+    const isFolderTreeDropdownOpen = ref(false)
     const assistedWritingEnabled = ref(false)
     const isSearchActive = ref(false)
     const searchQuery = ref('')
     const searchResults = ref([])
 
-    const isDocsView = computed(() => route.path.startsWith('/docs'))
-    const isDriveView = computed(() => route.path.startsWith('/drive') || route.path === '/')
-    const isFlashcardsView = computed(() => route.path.startsWith('/flashcards'))
-    const isHomeActive = computed(() => route.path === '/' || route.path === '/drive')
-    const isSharedActive = computed(() => route.path === '/drive/shared')
-
-    function navigateTo(route) {
-      router.push(route)
-    }
-
+    // Computed
     const userDisplayName = computed(() => {
       const user = auth.getUser()
-      // Check if username exists
-      if (user?.username) {
-        return user.username
-      }
-      // Otherwise use first 4 characters of userId
+      if (user?.username) return user.username
       const userId = auth.getUserId()
       return userId ? userId.substring(0, 4) : 'User'
     })
 
+    const isHomeActive = computed(() => route.path === '/' || route.path === '/drive')
+    const isSharedActive = computed(() => route.path === '/drive/shared')
+    const isFlashcardsView = computed(() => route.path.startsWith('/flashcards'))
+
+    // Navigation
+    const navigateTo = (path) => router.push(path)
+    
+    const navigateToPage = (pageId) => {
+      router.push(`/docs/${pageId}`)
+      clearSearch()
+    }
+
+    // Dropdowns
     const toggleDropdown = () => {
       isDropdownOpen.value = !isDropdownOpen.value
     }
@@ -71,6 +76,15 @@ export default {
       isSettingsDropdownOpen.value = !isSettingsDropdownOpen.value
     }
 
+    const toggleNewDropdown = () => {
+      isNewDropdownOpen.value = !isNewDropdownOpen.value
+    }
+
+    const toggleFolderTreeDropdown = () => {
+      isFolderTreeDropdownOpen.value = !isFolderTreeDropdownOpen.value
+    }
+
+    // Settings
     const toggleAssistedWriting = () => {
       assistedWritingEnabled.value = !assistedWritingEnabled.value
       console.log('Assisted Writing:', assistedWritingEnabled.value ? 'Enabled' : 'Disabled')
@@ -81,25 +95,40 @@ export default {
       window.location.href = '/login'
     }
 
+    // Modals
     const openNewDocumentModal = () => {
-      // Emit event to parent to open modal
+      isNewDropdownOpen.value = false
       window.dispatchEvent(new CustomEvent('open-create-document-modal'))
     }
 
+    const openNewFolderModal = () => {
+      isNewDropdownOpen.value = false
+      window.dispatchEvent(new CustomEvent('open-create-folder-modal'))
+    }
+
+    // Folder Tree
     const loadFolderTree = async () => {
+      if (!auth.getUserId()) {
+        folderTree.value = []
+        return
+      }
+      
       loading.value = true
       try {
         folderTree.value = await driveService.getUserFolderTree()
       } catch (error) {
-        console.error('Error loading folder tree:', error)
+        folderTree.value = []
+        if (error.response?.status !== 401 && error.code !== 'ERR_NETWORK') {
+          console.error('Error loading folder tree:', error)
+        }
       } finally {
         loading.value = false
       }
     }
 
+    // Search
     const activateSearch = () => {
       isSearchActive.value = true
-      // Focus input on next tick
       setTimeout(() => {
         document.getElementById('sidebar-search-input')?.focus()
       }, 0)
@@ -120,24 +149,14 @@ export default {
 
       try {
         const headers = await auth.getAuthHeaders(router)
-        // Get all pages the user has access to
-        const response = await axios.get(
-          'http://localhost:8082/api/docs/pages',
-          { headers }
-        )
-        
+        const response = await axios.get('http://localhost:8082/api/docs/pages', { headers })
         const pages = response.data || []
         const query = searchQuery.value.toLowerCase().trim()
         
-        // Filter pages by title match
         searchResults.value = pages
           .filter(page => page.title.toLowerCase().includes(query))
-          .map(page => ({
-            pageId: page.pageId,
-            title: page.title,
-            content: '' // We don't have content in the list view
-          }))
-          .slice(0, 10) // Limit to 10 results
+          .map(page => ({ pageId: page.pageId, title: page.title, content: '' }))
+          .slice(0, 10)
       } catch (error) {
         console.error('Search failed:', error)
         searchResults.value = []
@@ -150,50 +169,50 @@ export default {
       isSearchActive.value = false
     }
 
-    const navigateToPage = (pageId) => {
-      router.push(`/docs/${pageId}`)
-      clearSearch()
-    }
-
+    // Lifecycle
     onMounted(() => {
-      loadFolderTree()
+      if (auth.getUserId()) {
+        loadFolderTree()
+      }
     })
-
-    // Watch for route changes to docs view
+    
     watch(() => route.path, (newPath) => {
-      if (newPath.startsWith('/docs')) {
+      if (auth.getUserId() && (newPath.startsWith('/docs') || newPath.startsWith('/drive') || newPath === '/')) {
         loadFolderTree()
       }
     })
 
     return {
-        loading,
-        folderTree,
-        userDisplayName,
-        isDropdownOpen,
-        isSettingsDropdownOpen,
-        assistedWritingEnabled,
-        isDocsView,
-        isDriveView,
-        isFlashcardsView,
-        isHomeActive,
-        isSharedActive,
-        isDark,
-        isSearchActive,
-        searchQuery,
-        searchResults,
-        toggleDropdown,
-        toggleSettingsDropdown,
-        toggleAssistedWriting,
-        toggleTheme,
-        handleLogout,
-        openNewDocumentModal,
-        navigateTo,
-        activateSearch,
-        deactivateSearch,
-        performSearch,
-        clearSearch,
-        navigateToPage
+      loading,
+      folderTree,
+      userDisplayName,
+      isDropdownOpen,
+      isSettingsDropdownOpen,
+      isNewDropdownOpen,
+      isFolderTreeDropdownOpen,
+      assistedWritingEnabled,
+      isHomeActive,
+      isSharedActive,
+      isFlashcardsView,
+      isDark,
+      isSearchActive,
+      searchQuery,
+      searchResults,
+      toggleDropdown,
+      toggleSettingsDropdown,
+      toggleNewDropdown,
+      toggleFolderTreeDropdown,
+      toggleAssistedWriting,
+      toggleTheme,
+      handleLogout,
+      openNewDocumentModal,
+      openNewFolderModal,
+      navigateTo,
+      activateSearch,
+      deactivateSearch,
+      performSearch,
+      clearSearch,
+      navigateToPage
     }
   }
 }
@@ -236,14 +255,23 @@ export default {
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto">
             <div class="mt-3 flex flex-col gap-0.5 px-3">
-            <!-- New Button -->
-            <button 
-                @click="openNewDocumentModal"
-                class="inline-flex items-center justify-center px-3 py-2.5 mb-3 w-[120px] bg-surface-light dark:bg-surface-dark border-[1.5px] border-content-primary dark:border-content-inverse rounded-lg hover:bg-gray-50 dark:hover:bg-surface-dark-secondary transition-colors"
-            >
-                <span class="text-sm font-semibold text-surface-dark dark:text-surface-light">New</span>
-                <span class="text-base text-accent font-bold leading-none ml-0.5 -mt-1.5">+</span>
-            </button>
+            <!-- New Button with Dropdown -->
+            <div class="relative mb-3">
+                <button 
+                    @click="toggleNewDropdown"
+                    class="inline-flex items-center justify-center px-3 py-2.5 w-[120px] bg-surface-light dark:bg-surface-dark border-[1.5px] border-content-primary dark:border-content-inverse rounded-lg hover:bg-gray-50 dark:hover:bg-surface-dark-secondary transition-colors"
+                >
+                    <span class="text-sm font-semibold text-surface-dark dark:text-surface-light">New</span>
+                    <span class="text-base text-accent font-bold leading-none ml-0.5 -mt-1.5">+</span>
+                </button>
+                
+                <NewDropdown 
+                    :is-open="isNewDropdownOpen"
+                    @new-papair="openNewDocumentModal"
+                    @new-folder="openNewFolderModal"
+                    @close="isNewDropdownOpen = false"
+                />
+            </div>
             
             <!-- Search -->
             <div 
@@ -352,11 +380,18 @@ export default {
             
             <!-- Papairs Section -->
             <div class="mt-3 mb-1">
-                <div class="flex justify-between items-center px-2">
+                <div class="flex justify-between items-center px-2 relative">
                     <h2 class="text-xs font-semibold text-surface-dark-secondary dark:text-surface-light-secondary">Papairs</h2>
-                    <button class="text-accent hover:text-orange-600">
+                    <button @click="toggleFolderTreeDropdown" class="text-accent hover:text-orange-600">
                         <PlusIcon :size="20" class="w-5 h-5" />
                     </button>
+                    
+                    <NewDropdown 
+                        :is-open="isFolderTreeDropdownOpen"
+                        @new-papair="openNewDocumentModal"
+                        @new-folder="openNewFolderModal"
+                        @close="isFolderTreeDropdownOpen = false"
+                    />
                 </div>
             </div>
             
