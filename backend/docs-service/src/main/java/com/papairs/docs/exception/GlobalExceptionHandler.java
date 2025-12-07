@@ -112,4 +112,34 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    /**
+     * Handle file already exists
+     * @param e exception
+     * @return ResponseEntity (409 Conflict)
+     */
+    @ExceptionHandler(FileAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleFileAlreadyExists(FileAlreadyExistsException e) {
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                e.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * Handle storage errors
+     * @param e exception
+     * @return ResponseEntity (500 Internal Server Error)
+     */
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ErrorResponse> handleStorageException(StorageException e) {
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Storage Error",
+                e.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
 }
