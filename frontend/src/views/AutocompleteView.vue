@@ -44,6 +44,7 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import LoginHeader from '../components/LoginHeader.vue'
+import { API_BASE_URL } from '@/config'
 import auth from "@/utils/auth";
 
 export default {
@@ -88,7 +89,7 @@ export default {
       }
 
       try {
-        const response = await fetch('http://localhost:8080/api/ai/autocomplete', {
+        const response = await fetch(`${API_BASE_URL}/api/ai/autocomplete`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',

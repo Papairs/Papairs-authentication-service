@@ -191,6 +191,7 @@
 <script>
 import { ref, watch, computed, onMounted } from 'vue'
 import LoginHeader from '../components/LoginHeader.vue'
+import { API_BASE_URL } from '@/config'
 import axios from 'axios'
 import auth from '@/utils/auth'
 
@@ -257,7 +258,7 @@ export default {
           }))
         }
         
-        const response = await fetch('http://localhost:8080/api/ai/autocomplete', {
+        const response = await fetch(`${API_BASE_URL}/api/ai/autocomplete`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -313,7 +314,7 @@ export default {
 
       try {
         const response = await axios.get(
-            `http://localhost:8080/api/docs/files`,
+            `${API_BASE_URL}/api/docs/files`,
             {
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -349,7 +350,7 @@ export default {
       formData.append('file', file)
 
       try {
-        await axios.post('http://localhost:8080/api/docs/files', formData, {
+        await axios.post(`${API_BASE_URL}/api/docs/files`, formData, {
           headers: {
             'Authorization': `Bearer ${token}`
           },
@@ -403,7 +404,7 @@ export default {
         }
 
         await axios.delete(
-            `http://localhost:8080/api/docs/files/${fileId}`,
+            `${API_BASE_URL}/api/docs/files/${fileId}`,
             {
               headers: {
                 'Authorization': `Bearer ${token}`
