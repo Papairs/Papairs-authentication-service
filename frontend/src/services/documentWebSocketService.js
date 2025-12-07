@@ -1,4 +1,5 @@
 import { useWebSocket } from '@/composables/useWebSocket'
+import { getWebSocketUrl } from '@/config'
 import auth from '@/utils/auth'
 
 /**
@@ -6,7 +7,7 @@ import auth from '@/utils/auth'
  * Manages WebSocket connection for real-time document collaboration
  */
 export class DocumentWebSocketService {
-  constructor(url = 'http://localhost:8080/ws/doc') {
+  constructor(url = getWebSocketUrl()) {
     this.url = url
     this.webSocket = null
     this.clientId = crypto.randomUUID()
