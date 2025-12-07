@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
+import { API_BASE_URL } from '@/config'
 import User3Icon from '@/components/icons/User3Icon.vue'
 import SearchIcon from '@/components/icons/SearchIcon.vue'
 import HomeIconNew from '@/components/icons/HomeIconNew.vue'
@@ -149,7 +150,7 @@ export default {
 
       try {
         const headers = await auth.getAuthHeaders(router)
-        const response = await axios.get('http://localhost:8082/api/docs/pages', { headers })
+        const response = await axios.get(`${API_BASE_URL}/api/docs/pages`, { headers })
         const pages = response.data || []
         const query = searchQuery.value.toLowerCase().trim()
         
