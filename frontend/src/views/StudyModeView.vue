@@ -283,7 +283,7 @@ async function updateLearnedStatus(learned) {
     const headers = await auth.getAuthHeaders(router)
     const response = await axios.put(
       `http://localhost:8082/api/docs/flashcards/${currentCard.value.flashcardId}/learned`,
-      learned,
+      { learned }, // Send as object to match UpdateLearnedRequest DTO
       { 
         headers: {
           ...headers,
