@@ -6,7 +6,7 @@ import { BaseApiController } from './BaseApiController.js';
  */
 export class AIController extends BaseApiController {
   constructor() {
-    super('http://localhost:3001');
+    super('http://localhost:8080');
   }
 
   /**
