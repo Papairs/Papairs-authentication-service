@@ -298,11 +298,18 @@ export default {
 
     // File management methods
     const loadUserFiles = async () => {
-      const userId = auth.getUserId()
-      if (!userId) return
+      const token = auth.getToken()
+      if (!token) return
 
       try {
-        const response = await axios.get(`http://localhost:8082/api/files/${userId}`)
+        const response = await axios.get(
+            `http://localhost:8080/api/docs/files`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+        )
         userFiles.value = response.data
       } catch (error) {
         console.error('Error loading files:', error)
@@ -319,66 +326,46 @@ export default {
       currentUploadFile.value = file.name
       uploadAbortController.value = new AbortController()
 
-      const userId = auth.getUserId()
-      if (!userId) {
-        uploadError.value = 'User ID not found. Please log in.'
+      const token = auth.getToken()
+      if (!token) {
+        uploadError.value = 'Token not found. Please log in.'
         isUploading.value = false
         currentUploadFile.value = null
         uploadAbortController.value = null
         return
       }
 
-      const reader = new FileReader()
-      reader.onload = async (e) => {
-        const base64Content = e.target.result.split(',')[1]
-        
-        let mimeType = file.type
-        if (!mimeType) {
-          if (file.name.endsWith('.pdf')) {
-            mimeType = 'application/pdf'
-          } else if (file.name.endsWith('.txt')) {
-            mimeType = 'text/plain'
-          } else if (file.name.endsWith('.md')) {
-            mimeType = 'text/markdown'
-          } else {
-            mimeType = 'text/plain'
-          }
-        }
+      const formData = new FormData()
+      formData.append('file', file)
 
-        try {
-          await axios.post('http://localhost:8082/api/files', {
-            userId: userId,
-            filename: file.name,
-            base64Content: base64Content,
-            mimeType: mimeType
-          }, {
-            signal: uploadAbortController.value.signal
-          })
+      try {
+        await axios.post('http://localhost:8080/api/docs/files', formData, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          signal: uploadAbortController.value.signal
+        })
 
-          uploadSuccess.value = `File "${file.name}" uploaded successfully!`
-          await loadUserFiles()
-          event.target.value = ''
-          
-          // Clear success message after 3 seconds
-          setTimeout(() => {
-            uploadSuccess.value = null
-          }, 3000)
-        } catch (error) {
-          if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-            uploadError.value = 'Upload canceled'
-          } else if (error.response?.status === 409) {
-            uploadError.value = `File "${file.name}" already exists`
-          } else {
-            uploadError.value = error.response?.data || 'Error uploading file'
-          }
-        } finally {
-          isUploading.value = false
-          currentUploadFile.value = null
-          uploadAbortController.value = null
+        uploadSuccess.value = `File "${file.name}" uploaded successfully!`
+        await loadUserFiles()
+        event.target.value = ''
+
+        setTimeout(() => {
+          uploadSuccess.value = null
+        }, 3000)
+      } catch (error) {
+        if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+          uploadError.value = 'Upload canceled'
+        } else if (error.response?.status === 409) {
+          uploadError.value = `File "${file.name}" already exists`
+        } else {
+          uploadError.value = error.response?.data?.message || 'Error uploading file'
         }
+      } finally {
+        isUploading.value = false
+        currentUploadFile.value = null
+        uploadAbortController.value = null
       }
-
-      reader.readAsDataURL(file)
     }
 
     const cancelOrDeleteUpload = async () => {
@@ -399,13 +386,20 @@ export default {
 
     const deleteFile = async (fileId) => {
       try {
-        const userId = auth.getUserId()
-        if (!userId) {
-          uploadError.value = 'User ID not found. Please log in.'
+        const token = auth.getToken()
+        if (!token) {
+          uploadError.value = 'Token not found. Please log in.'
           return
         }
-        
-        await axios.delete(`http://localhost:8082/api/files/${fileId}?userId=${userId}`)
+
+        await axios.delete(
+            `http://localhost:8080/api/docs/files/${fileId}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+        )
         uploadSuccess.value = 'File deleted successfully'
         await loadUserFiles()
         selectedFiles.value = selectedFiles.value.filter(f => f.fileId !== fileId)
