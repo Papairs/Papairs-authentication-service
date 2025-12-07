@@ -1,12 +1,12 @@
 <template>
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-h-[80vh] overflow-y-auto">
-      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Share Document</h2>
+    <div class="bg-white rounded-lg p-6 w-[500px] max-h-[80vh] overflow-y-auto">
+      <h2 class="text-xl font-semibold mb-4 text-gray-900">Share Document</h2>
       
       <!-- Add New Member Form - Only for Owner/Editor -->
       <form v-if="canManageMembers" @submit.prevent="handleSubmit" class="mb-6">
         <div class="mb-4">
-          <label for="userId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label for="userId" class="block text-sm font-medium text-gray-700 mb-2">
             Add User by ID
           </label>
           <input
@@ -15,17 +15,17 @@
             id="userId"
             required
             placeholder="Enter user ID"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
           />
         </div>
         <div class="mb-4">
-          <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
             Role
           </label>
           <select
             v-model="role"
             id="role"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
           >
             <option value="VIEWER">Viewer</option>
             <option value="EDITOR">Editor</option>
@@ -40,26 +40,26 @@
       </form>
 
       <!-- Read-only message for viewers -->
-      <div v-else class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <p class="text-sm text-blue-800 dark:text-blue-300">You have view-only access to this document.</p>
+      <div v-else class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p class="text-sm text-blue-800">You have view-only access to this document.</p>
       </div>
 
       <!-- Existing Members List -->
-      <div v-if="members.length > 0" class="border-t border-gray-200 dark:border-gray-700 pt-4">
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Current Members</h3>
+      <div v-if="members.length > 0" class="border-t border-gray-200 pt-4">
+        <h3 class="text-sm font-medium text-gray-700 mb-3">Current Members</h3>
         <div class="space-y-2">
           <div 
             v-for="member in members" 
             :key="member.userId"
-            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
           >
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-900 dark:text-white">
+              <p class="text-sm font-medium text-gray-900">
                 {{ member.userId }}
-                <span v-if="member.userId === currentUserId" class="text-xs text-gray-500 dark:text-gray-400">(You)</span>
-                <span v-if="member.userId === document.ownerId" class="text-xs text-blue-600 dark:text-blue-400">(Owner)</span>
+                <span v-if="member.userId === currentUserId" class="text-xs text-gray-500">(You)</span>
+                <span v-if="member.userId === document.ownerId" class="text-xs text-blue-600">(Owner)</span>
               </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">{{ member.email || 'No email' }}</p>
+              <p class="text-xs text-gray-500">{{ member.email || 'No email' }}</p>
             </div>
             
             <!-- Role dropdown or display - hidden for current user -->
@@ -68,12 +68,12 @@
                 v-if="canManageMembers"
                 :value="member.role"
                 @change="handleRoleChange(member.userId, $event.target.value)"
-                class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="px-3 py-1 text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="VIEWER">Viewer</option>
                 <option value="EDITOR">Editor</option>
               </select>
-              <span v-else class="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">
+              <span v-else class="px-3 py-1 text-sm text-gray-600">
                 {{ member.role }}
               </span>
               
@@ -81,7 +81,7 @@
               <button
                 v-if="canManageMembers && member.userId !== document.ownerId"
                 @click="handleRemoveMember(member.userId)"
-                class="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                class="p-1 text-red-600 hover:bg-red-50 rounded"
                 title="Remove member"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +90,7 @@
               </button>
             </div>
             <!-- Show current user's role (read-only) -->
-            <span v-else class="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">
+            <span v-else class="px-3 py-1 text-sm text-gray-600">
               {{ member.role }}
             </span>
           </div>
@@ -98,13 +98,13 @@
       </div>
 
       <!-- Loading State -->
-      <div v-else-if="loading" class="border-t border-gray-200 dark:border-gray-700 pt-4">
-        <p class="text-sm text-gray-500 dark:text-gray-400 text-center">Loading members...</p>
+      <div v-else-if="loading" class="border-t border-gray-200 pt-4">
+        <p class="text-sm text-gray-500 text-center">Loading members...</p>
       </div>
 
       <!-- No Members State -->
-      <div v-else class="border-t border-gray-200 dark:border-gray-700 pt-4">
-        <p class="text-sm text-gray-500 dark:text-gray-400 text-center">No members yet</p>
+      <div v-else class="border-t border-gray-200 pt-4">
+        <p class="text-sm text-gray-500 text-center">No members yet</p>
       </div>
 
       <!-- Close Button -->
@@ -112,7 +112,7 @@
         <button
           type="button"
           @click="$emit('close')"
-          class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
         >
           Close
         </button>

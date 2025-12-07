@@ -1,8 +1,8 @@
 <template>
-  <div class="flex border-x border-t border-border-light-subtle min-h-full w-full">
+  <div class="flex min-h-full w-full pt-4">
     <editor-content 
       :editor="editor" 
-      class="px-12 py-12 prose prose-lg min-w-full min-h-full focus:outline-none border-x border-t border-border-light-subtle"
+      class="px-12 py-12 prose prose-lg min-w-full min-h-full focus:outline-none border-x-2 border-t-2 border-border-opa"
     />
     
     <!-- Hidden color picker -->

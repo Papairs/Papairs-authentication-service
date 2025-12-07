@@ -11,7 +11,7 @@ export default {
 </script>
 
 <template>
-  <div class="bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 px-4 py-3 rounded mb-6">
+  <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded mb-6">
     <div class="flex">
       <div class="flex-shrink-0">
         <span class="text-lg">⚠️</span>

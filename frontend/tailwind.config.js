@@ -8,28 +8,30 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        accent: '#FF7700',
-        red: '#FF0000',
+        accent: 'var(--accent)',
+        red: 'var(--red)',
         
         surface: {
-          light: '#FFFFFF',
-          'light-secondary': '#F3F3F3',
-          dark: '#191919',
-          'dark-secondary': '#202020',
+          light: 'var(--surface-light)',
+          'light-secondary': 'var(--surface-light-secondary)',
+          dark: 'var(--surface-dark)',
+          'dark-secondary': 'var(--surface-dark-secondary)',
         },
         
         content: {
-          primary: '#2A2A2A',
-          secondary: '#B8B8B8',
-          inverse: '#F0EFED',
-          black: '#000000',
+          primary: 'var(--content-primary)',
+          secondary: 'var(--content-secondary)',
+          inverse: 'var(--content-inverse)',
+          black: 'var(--content-black)',
+          white: 'var(--content-white)',
         },
         
         border: {
-          light: 'rgba(25, 25, 25, 0.75)',
-          dark: 'rgba(32, 32, 32, 0.75)',
-          'light-subtle': 'rgba(25, 25, 25, 0.1)',
-          'dark-subtle': 'rgba(243, 243, 243, 0.05)',
+          light: 'var(--border-light)',
+          dark: 'var(--border-dark)',
+          'light-subtle': 'var(--border-light-subtle)',
+          'dark-subtle': 'var(--border-dark-subtle)',
+          'opa': 'var(--border-opa)',
         },
       },
     },

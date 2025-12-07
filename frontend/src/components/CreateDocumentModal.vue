@@ -1,34 +1,34 @@
 <template>
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="$emit('close')">
-    <div class="bg-white dark:bg-surface-dark-secondary rounded-lg shadow-xl p-6 w-full max-w-md">
-      <h2 class="text-xl font-semibold text-content-primary dark:text-content-inverse mb-4">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+      <h2 class="text-xl font-semibold text-content-primary mb-4">
         Create New Document
       </h2>
       
       <form @submit.prevent="handleSubmit">
         <div class="mb-4">
-          <label class="block text-sm font-medium text-content-primary dark:text-content-inverse mb-2">
+          <label class="block text-sm font-medium text-content-primary mb-2">
             Document Title
           </label>
           <input 
             v-model="documentTitle"
             type="text"
             placeholder="Enter document title..."
-            class="w-full px-4 py-2 border border-border-light dark:border-border-dark rounded-lg focus:outline-none focus:border-accent bg-white dark:bg-surface-dark text-content-primary dark:text-content-inverse"
+            class="w-full px-4 py-2 border border-border-light rounded-lg focus:outline-none focus:border-accent bg-white text-content-primary"
             :disabled="loading"
             autofocus
           />
         </div>
 
-        <div v-if="error" class="mb-4 p-3 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg">
-          <p class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
+        <div v-if="error" class="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg">
+          <p class="text-sm text-red-700">{{ error }}</p>
         </div>
 
         <div class="flex justify-end space-x-3">
           <button 
             type="button"
             @click="$emit('close')"
-            class="px-4 py-2 border border-border-light dark:border-border-dark rounded-lg text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
+            class="px-4 py-2 border border-border-light rounded-lg text-content-primary hover:bg-surface-light-secondary"
             :disabled="loading"
           >
             Cancel

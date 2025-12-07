@@ -39,7 +39,7 @@
     </div>
   </div>
   <div v-else class="flex items-center justify-center h-full">
-    <div class="text-gray-500">Loading editor...</div>
+    <div class="text-content-primary">Loading editor...</div>
   </div>
 </template>
 

@@ -134,44 +134,44 @@ import AISection from '@/components/controllerComponents/AISection.vue';
 </script>
 
 <template>
-  <div class="bg-surface-light dark:bg-surface-dark transition-colors min-h-screen">
+  <div class="bg-surface-light transition-colors min-h-screen">
     <!-- Navigation -->
-    <nav class="bg-surface-light dark:bg-surface-dark-secondary shadow-lg">
+    <nav class="bg-surface-light shadow-lg">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
-            <h1 class="text-xl font-bold text-content-primary dark:text-content-inverse">
+            <h1 class="text-xl font-bold text-content-primary">
               Papairs API Tester
             </h1>
           </div>
           <div class="flex items-center space-x-4">
             <router-link 
               to="/" 
-              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
+              class="text-content-secondary hover:text-content-primary px-3 py-2 rounded-md"
             >
               Home
             </router-link>
             <router-link 
               to="/ai" 
-              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
+              class="text-content-secondary hover:text-content-primary px-3 py-2 rounded-md"
             >
               AI
             </router-link>
             <router-link 
               to="/docs" 
-              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
+              class="text-content-secondary hover:text-content-primary px-3 py-2 rounded-md"
             >
               Docs
             </router-link>
             <router-link 
               to="/drive" 
-              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
+              class="text-content-secondary hover:text-content-primary px-3 py-2 rounded-md"
             >
               Drive
             </router-link>
             <button 
               @click="toggleTheme"
-              class="p-2 rounded-md text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
+              class="p-2 rounded-md text-content-primary hover:bg-surface-light-secondary"
               :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
             >
               {{ isDark ? '☀️' : '🌙' }}
@@ -192,7 +192,7 @@ import AISection from '@/components/controllerComponents/AISection.vue';
     <div class="max-w-7xl mx-auto px-4 py-8">
       <!-- Header -->
       <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-content-primary dark:text-content-inverse mb-4">
+        <h1 class="text-4xl font-bold text-content-primary mb-4">
           API Endpoint Testing Dashboard
         </h1>
         <p class="text-lg text-content-secondary mb-6">
@@ -201,7 +201,7 @@ import AISection from '@/components/controllerComponents/AISection.vue';
       </div>
 
       <!-- Section Tabs -->
-      <div class="mb-8 border-b border-border-light dark:border-border-dark">
+      <div class="mb-8 border-b border-border-light">
         <nav class="flex space-x-8">
           <button 
             v-for="section in ['auth', 'ai', 'docs', 'pages', 'folders']" 

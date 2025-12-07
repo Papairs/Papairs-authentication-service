@@ -46,7 +46,7 @@ export default {
   <div class="folder-tree-item">
     <!-- Folder Header -->
     <div 
-      class="flex items-center gap-2 py-1 px-2 hover:bg-gray-100 rounded cursor-pointer"
+      class="flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-surface-light"
       :style="{ paddingLeft: `${level * 12 + 8}px` }"
       @click="toggleExpand"
     >
@@ -61,14 +61,14 @@ export default {
       </svg>
       
       <!-- Folder Icon -->
-      <FolderOpenIcon v-if="isExpanded" :size="16" class="text-content-primary dark:text-content-inverse" />
-      <FolderIcon v-else :size="16" class="text-content-primary dark:text-content-inverse" />
+      <FolderOpenIcon v-if="isExpanded" :size="16" class="text-content-primary" />
+      <FolderIcon v-else :size="16" class="text-content-primary" />
       
       <!-- Folder Name -->
       <span class="text-sm flex-1">{{ folder.name }}</span>
       
       <!-- Item Count -->
-      <span class="text-xs text-gray-400">
+      <span class="text-xs text-content-primary">
         {{ folder.childCount + folder.pageCount }}
       </span>
     </div>
@@ -87,12 +87,12 @@ export default {
       <div
         v-for="document in folder.documents"
         :key="document.pageId"
-        class="flex items-center gap-2 py-1 px-2 hover:bg-gray-100 rounded cursor-pointer"
+        class="flex items-center gap-2 py-1 px-2 hover:bg-surface-light rounded cursor-pointer"
         :style="{ paddingLeft: `${(level + 1) * 12 + 8 + 16}px` }"
         @click="handleDocumentClick(document)"
       >
         <!-- Document Icon -->
-        <DocumentIcon :size="16" class="text-content-primary dark:text-content-inverse" />
+        <DocumentIcon :size="16" class="text-content-primary" />
         
         <!-- Document Title -->
         <span class="text-sm">{{ document.title }}</span>

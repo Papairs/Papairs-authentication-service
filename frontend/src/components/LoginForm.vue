@@ -35,9 +35,9 @@ input[type="checkbox"] {
 </style>
 
 <template>
-  <div class="w-[500px] p-2.5 flex-shrink-0">
+  <div class="w-[500px] p-2.5 flex-shrink-0 border-content-primary text-content-primary">
     <div class="pt-12">
-      <h1 class="text-6xl lg:text-7xl font-extrabold text-content-primary dark:text-content-inverse mb-6">
+      <h1 class="text-6xl lg:text-7xl font-extrabold mb-6">
         Sign In<span class="text-accent">.</span>
       </h1>
 
@@ -48,7 +48,7 @@ input[type="checkbox"] {
             v-model="formData.email" 
             type="email" 
             required
-            class="w-full bg-transparent border-0 border-b-2 border-border-light-subtle focus:border-content-primary py-2 px-1 text-xl outline-none text-content-primary placeholder-content-secondary"
+            class="w-full bg-transparent border-b-2 border-content-primary py-2 px-1 text-xl outline-none placeholder-content-primary"
           />
         </div>
 
@@ -58,7 +58,7 @@ input[type="checkbox"] {
             v-model="formData.password" 
             type="password" 
             required
-            class="w-full bg-transparent border-0 border-b-2 border-border-light-subtle focus:border-content-primary py-2 px-1 text-xl s outline-none text-content-primary placeholder-content-secondary"
+            class="w-full bg-transparent border-b-2 border-content-primary py-2 px-1 text-xl s outline-none placeholder-content-primary"
           />
         </div>
 
@@ -67,30 +67,30 @@ input[type="checkbox"] {
             <input 
               type="checkbox" 
               v-model="formData.remember" 
-              class="h-5 w-5 rounded-sm border border-border-light-subtle"
+              class="h-5 w-5 rounded-sm border border-content-primary"
             />
-            <span class="ml-3 text-content-secondary">Remember me</span>
+            <span class="ml-3 text-content-primary">Remember me</span>
           </label>
         </div>
 
         <div class="mb-6">
-          <a href="#" class="text-sm text-content-secondary font-medium hover:underline">Password Help?</a>
+          <a href="#" class="text-sm text-content-primary font-medium hover:underline">Password Help?</a>
         </div>
 
         <div class="mb-8">
           <button 
             :disabled="loading" 
             type="submit"
-            class="bg-content-black text-content-inverse rounded-md py-3 px-6 w-40 text-center font-semibold hover:opacity-90 disabled:opacity-60"
+            class=" bg-content-primary text-content-inverse rounded-md py-3 px-6 w-40 text-center font-semibold hover:opacity-90 disabled:opacity-60"
           >
             <span v-if="!loading">Sign In</span>
             <span v-else>Signing in...</span>
           </button>
         </div>
 
-        <div class="text-sm text-content-secondary">
+        <div class="text-sm text-content-primary">
           Don't have an account? <br />
-          <a @click.prevent="$emit('create-account')" class="font-semibold underline cursor-pointer text-content-primary dark:text-content-inverse">
+          <a @click.prevent="$emit('create-account')" class="font-semibold underline cursor-pointer">
             Create One Now
           </a>
         </div>

@@ -63,7 +63,7 @@ export default {
 
 
 <template>
-  <div class="min-h-screen bg-surface-light dark:bg-surface-dark" :style="gridBg">
+  <div class="min-h-screen bg-surface-light" :style="gridBg">
     <!-- Header with height 100px -->
     <LoginHeader />
     

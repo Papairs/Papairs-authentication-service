@@ -1,16 +1,16 @@
 <template>
-  <div class="min-h-screen bg-surface-light dark:bg-surface-dark">
+  <div class="min-h-screen bg-surface-light">
     <LoginHeader />
     
     <div class="max-w-7xl mx-auto px-8 py-12">
       <div class="flex items-center justify-between mb-8">
-        <h1 class="text-4xl font-bold text-content-primary dark:text-content-inverse">
+        <h1 class="text-4xl font-bold text-content-primary">
           AI Autocomplete with Context
         </h1>
         
         <!-- Mode Toggle -->
         <div class="flex items-center gap-4">
-          <div class="flex items-center bg-white dark:bg-surface-dark-secondary rounded-lg shadow px-2 py-1 border border-border-light dark:border-border-dark">
+          <div class="flex items-center bg-white rounded-lg shadow px-2 py-1 border border-border-light">
             <button
               @click="aiMode = 'fast'"
               :class="[
@@ -35,13 +35,13 @@
             </button>
           </div>
           
-          <div v-if="!isLoggedIn" class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg px-4 py-2">
-            <router-link to="/login" class="text-yellow-800 dark:text-yellow-200 hover:underline">
+          <div v-if="!isLoggedIn" class="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
+            <router-link to="/login" class="text-yellow-800 hover:underline">
               Please log in to upload files
             </router-link>
           </div>
-          <div v-else class="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg px-4 py-2">
-            <p class="text-sm text-green-800 dark:text-green-200">
+          <div v-else class="bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+            <p class="text-sm text-green-800">
               Logged in as: <strong>{{ userEmail }}</strong>
             </p>
           </div>
@@ -49,13 +49,13 @@
       </div>
       
       <!-- Mode Info Banner -->
-      <div v-if="aiMode === 'fast'" class="mb-6 p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
-        <p class="text-sm text-blue-800 dark:text-blue-200">
+      <div v-if="aiMode === 'fast'" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p class="text-sm text-blue-800">
           <strong>⚡ Fast Mode:</strong> Quick responses with GPT-4o-mini. Supports text, markdown, and PDF files (local parsing).
         </p>
       </div>
-      <div v-else class="mb-6 p-4 bg-purple-50 dark:bg-purple-900 border border-purple-200 dark:border-purple-700 rounded-lg">
-        <p class="text-sm text-purple-800 dark:text-purple-200">
+      <div v-else class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+        <p class="text-sm text-purple-800">
           <strong>🎯 Advanced Mode:</strong> Slower but more accurate with GPT-4o + semantic search. Supports all file types (OpenAI handles parsing).
         </p>
       </div>
@@ -63,14 +63,14 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- File Management Panel (Left Side) -->
         <div class="lg:col-span-1">
-          <div class="bg-white dark:bg-surface-dark-secondary rounded-lg shadow p-6 sticky top-8">
-            <h3 class="text-lg font-semibold text-content-primary dark:text-content-inverse mb-4">
+          <div class="bg-white rounded-lg shadow p-6 sticky top-8">
+            <h3 class="text-lg font-semibold text-content-primary mb-4">
               Context Files
             </h3>
             
             <!-- Upload Section -->
             <div class="mb-4">
-              <label class="block mb-2 text-sm font-medium text-content-primary dark:text-content-inverse">
+              <label class="block mb-2 text-sm font-medium text-content-primary">
                 Upload File
               </label>
               <div class="relative">
@@ -85,7 +85,7 @@
                 <button
                   v-if="isUploading || currentUploadFile"
                   @click="cancelOrDeleteUpload"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 text-red-600 hover:text-red-800 text-2xl font-bold bg-white dark:bg-surface-dark rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:shadow-lg transition-all"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 text-red-600 hover:text-red-800 text-2xl font-bold bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:shadow-lg transition-all"
                   :title="isUploading ? 'Cancel upload' : 'Delete uploaded file'"
                 >
                   ×
@@ -98,7 +98,7 @@
 
             <!-- Files List -->
             <div class="space-y-2 max-h-96 overflow-y-auto">
-              <h4 class="text-sm font-medium text-content-primary dark:text-content-inverse mb-2">
+              <h4 class="text-sm font-medium text-content-primary mb-2">
                 Your Files ({{ userFiles.length }})
               </h4>
               <div v-if="userFiles.length === 0" class="text-sm text-content-secondary italic">
@@ -107,7 +107,7 @@
               <div
                 v-for="file in userFiles"
                 :key="file.fileId"
-                class="flex items-center justify-between p-2 border border-border-light dark:border-border-dark rounded hover:bg-surface-light dark:hover:bg-surface-dark transition-colors"
+                class="flex items-center justify-between p-2 border border-border-light rounded hover:bg-surface-light transition-colors"
               >
                 <label class="flex items-center flex-1 cursor-pointer">
                   <input
@@ -117,7 +117,7 @@
                     class="mr-2 w-4 h-4 text-accent bg-gray-100 border-gray-300 rounded focus:ring-accent"
                   />
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-content-primary dark:text-content-inverse truncate">
+                    <p class="text-sm font-medium text-content-primary truncate">
                       {{ file.filename }}
                     </p>
                     <p class="text-xs text-content-secondary">{{ (file.fileSize / 1024).toFixed(1) }} KB</p>
@@ -133,8 +133,8 @@
               </div>
             </div>
 
-            <div v-if="selectedFiles.length > 0" class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded text-sm">
-              <p class="font-medium text-blue-900 dark:text-blue-100">
+            <div v-if="selectedFiles.length > 0" class="mt-4 p-3 bg-blue-50 rounded text-sm">
+              <p class="font-medium text-blue-900">
                 {{ selectedFiles.length }} file(s) selected as context
               </p>
             </div>
@@ -143,8 +143,8 @@
 
         <!-- Autocomplete Editor (Right Side) -->
         <div class="lg:col-span-2">
-          <div class="bg-white dark:bg-surface-dark-secondary rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-content-primary dark:text-content-inverse mb-4">
+          <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-content-primary mb-4">
               AI Autocomplete
             </h3>
             
@@ -156,7 +156,7 @@
                   @keydown="handleKeyDown"
                   @input="updateMirror"
                   @scroll="syncScroll"
-                  class="w-full h-96 p-5 text-base font-mono bg-white dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg resize-y outline-none transition-shadow focus:border-accent focus:shadow-md relative z-0 text-content-primary dark:text-content-inverse"
+                  class="w-full h-96 p-5 text-base font-mono bg-white border border-border-light rounded-lg resize-y outline-none transition-shadow focus:border-accent focus:shadow-md relative z-0 text-content-primary"
                   :placeholder="isFocused ? '' : 'Start typing...'"
                   @focus="isFocused = true"
                   @blur="isFocused = false"
@@ -175,7 +175,7 @@
             
             <div class="flex items-center justify-between">
               <p class="text-sm text-content-secondary">
-                Press <strong class="text-content-primary bg-border-light dark:bg-border-dark px-2 py-1 rounded">Tab</strong> to accept suggestion
+                Press <strong class="text-content-primary bg-border-light px-2 py-1 rounded">Tab</strong> to accept suggestion
               </p>
               <p v-if="isLoading" class="text-sm text-accent">
                 Generating...

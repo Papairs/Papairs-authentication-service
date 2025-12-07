@@ -1,23 +1,32 @@
 <template>
-  <div class="relative" style="max-width: 500px; height: 48px; gap: 24px;">
-    <svg class="absolute left-6 top-1/2 transform -translate-y-1/2 w-5 h-5 text-content-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
+  <div class="flex flex-row align-middle items-center bg-surface-light-secondary text-content-primary border-2 border-border-opa rounded-full px-4 h-10 w-96 gap-3">
+    <SearchIcon :size="16" class="text-content-primary" />
     <input 
       type="text" 
       :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
+      @input="handleInput"
       @keyup.enter="$emit('search', modelValue)"
       :placeholder="placeholder"
-      class="w-full h-full bg-[#F3F3F3] dark:bg-surface-dark text-content-primary dark:text-content-inverse focus:outline-none focus:ring-2 focus:ring-accent transition-shadow"
-      style="border: 2px solid #202020BF; border-radius: 100px; padding-left: 56px; padding-right: 24px;"
+      class="w-full h-full focus:outline-none bg-surface-light-secondary text-content-primary"
     />
+    <button 
+      v-if="modelValue"
+      @click="clearSearch"
+      class="text-content-secondary hover:text-content-primary transition-colors"
+    >
+      ✕
+    </button>
   </div>
 </template>
 
 <script>
+import SearchIcon from '@/components/icons/SearchIcon.vue'
+
 export default {
   name: 'SearchBar',
+  components: {
+    SearchIcon
+  },
   props: {
     modelValue: {
       type: String,
@@ -28,6 +37,18 @@ export default {
       default: 'Search in Papairs'
     }
   },
-  emits: ['update:modelValue', 'search']
+  emits: ['update:modelValue', 'search'],
+  methods: {
+    handleInput(event) {
+      const value = event.target.value
+      this.$emit('update:modelValue', value)
+      // Trigger search as user types (with slight debounce would be better in production)
+      this.$emit('search', value)
+    },
+    clearSearch() {
+      this.$emit('update:modelValue', '')
+      this.$emit('search', '')
+    }
+  }
 }
 </script>

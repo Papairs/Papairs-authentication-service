@@ -132,7 +132,7 @@ export default {
 
 <template>
   <div class="space-y-6">
-    <h2 class="text-2xl font-bold text-content-primary dark:text-content-inverse mb-4">
+    <h2 class="text-2xl font-bold text-content-primary mb-4">
       AI Service Tests
     </h2>
     
@@ -177,16 +177,16 @@ export default {
     </div>
 
     <!-- AI Service Info -->
-    <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
       <div class="flex">
         <div class="flex-shrink-0">
           <span class="text-lg">🤖</span>
         </div>
         <div class="ml-3">
-          <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">
+          <h3 class="text-sm font-medium text-blue-800">
             AI Service Information
           </h3>
-          <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+          <div class="mt-2 text-sm text-blue-700">
             <p>• The AI service provides autocompletion suggestions using OpenAI's GPT model</p>
             <p>• It processes user input and returns completion suggestions with a maximum of 30 tokens</p>
             <p>• The service runs on port 3001 and requires an OpenAI API key to function</p>
