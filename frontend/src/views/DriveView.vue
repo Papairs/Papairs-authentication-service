@@ -227,7 +227,7 @@ export default {
         const searchTerm = query.toLowerCase().trim()
         
         // Get all pages the user has access to
-        const response = await axios.get(
+        const pagesResponse = await axios.get(
           `${API_BASE_URL}/api/docs/pages`,
           { headers }
         )

@@ -84,14 +84,14 @@ input[type="checkbox"] {
         Register<span class="text-accent">.</span>
       </h1>
 
-      <form @submit.prevent="handleSubmit" class="max-w-sm">
-        <div class="mb-10">
+      <form @submit.prevent="handleSubmit" class=" max-w-80 text-content-primary">
+        <div class="mb-6">
           <input 
             placeholder="Email*"
             v-model="formData.email" 
             type="email" 
             required
-            class="w-full bg-transparent border-0 border-b-2 border-border-light-subtle focus:border-content-primary py-2 px-1 text-xl outline-none text-content-primary placeholder-content-secondary"
+            class="w-full bg-transparent border-b-2 border-content-primary py-2 px-1 text-xl outline-none placeholder-content-primary"
           />
         </div>
 
@@ -101,62 +101,62 @@ input[type="checkbox"] {
             v-model="formData.password" 
             type="password" 
             required
-            class="w-full bg-transparent border-0 border-b-2 border-border-light-subtle focus:border-content-primary py-2 px-1 text-xl outline-none text-content-primary placeholder-content-secondary"
+            class="w-full bg-transparent border-b-2 border-content-primary py-2 px-1 text-xl outline-none placeholder-content-primary"
           />
         </div>
 
-        <div class="mb-8">
+        <div class="mb-6">
           <input 
             placeholder="Confirm Password*"
             v-model="formData.confirmPassword" 
             type="password" 
             required
-            class="w-full bg-transparent border-0 border-b-2 border-border-light-subtle focus:border-content-primary py-2 px-1 text-xl outline-none text-content-primary placeholder-content-secondary"
+            class="w-full bg-transparent border-b-2 border-content-primary py-2 px-1 text-xl outline-none placeholder-content-primary"
           />
         </div>
 
-        <!-- Password Requirements -->
-        <div class="mb-6 text-xs text-content-secondary">
-          <p class="mb-1">Password must contain:</p>
-          <ul class="list-disc ml-4 space-y-1">
-            <li :class="{'text-green-600': hasLowercase, 'text-content-secondary': !hasLowercase}">
-              One lowercase letter
-            </li>
-            <li :class="{'text-green-600': hasUppercase, 'text-content-secondary': !hasUppercase}">
-              One uppercase letter
-            </li>
-            <li :class="{'text-green-600': hasNumber, 'text-content-secondary': !hasNumber}">
-              One number
-            </li>
-            <li :class="{'text-green-600': hasSpecial, 'text-content-secondary': !hasSpecial}">
-              One special character (@$!%*?&)
-            </li>
-            <li :class="{'text-green-600': hasMinLength, 'text-content-secondary': !hasMinLength}">
-              At least 8 characters
-            </li>
-          </ul>
-        </div>
-
-        <div class="mb-8">
+        <div class="mb-4">
           <button 
             :disabled="loading || !isFormValid" 
             type="submit"
-            class="bg-content-black text-content-inverse rounded-md py-3 px-6 w-40 text-center font-semibold hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-opacity"
+            class="bg-content-primary text-content-inverse rounded-md py-3 px-6 w-40 text-center font-semibold hover:opacity-90 disabled:opacity-60"
           >
             <span v-if="!loading">Register</span>
             <span v-else>Registering...</span>
           </button>
         </div>
 
-        <div class="text-sm text-content-secondary">
+        <div class="text-sm text-content-primary mb-4">
           Already have an account? <br />
-          <a @click.prevent="$emit('back-to-login')" class="font-semibold underline cursor-pointer text-content-primary">
+          <a @click.prevent="$emit('back-to-login')" class="font-semibold underline cursor-pointer">
             Sign In Here
           </a>
         </div>
 
+        <!-- Password Requirements -->
+        <div class="text-xs text-content-secondary">
+          <p class="mb-1">Password must contain:</p>
+          <ul class="list-disc ml-4 space-y-1">
+            <li :class="{'text-[#10B981]': hasLowercase, 'text-content-secondary': !hasLowercase}">
+              One lowercase letter
+            </li>
+            <li :class="{'text-[#10B981]': hasUppercase, 'text-content-secondary': !hasUppercase}">
+              One uppercase letter
+            </li>
+            <li :class="{'text-[#10B981]': hasNumber, 'text-content-secondary': !hasNumber}">
+              One number
+            </li>
+            <li :class="{'text-[#10B981]': hasSpecial, 'text-content-secondary': !hasSpecial}">
+              One special character (@$!%*?&)
+            </li>
+            <li :class="{'text-[#10B981]': hasMinLength, 'text-content-secondary': !hasMinLength}">
+              At least 8 characters
+            </li>
+          </ul>
+        </div>
+
         <p v-if="error" class="mt-6 text-sm text-red">{{ error }}</p>
-        <p v-if="success" class="mt-6 text-sm text-green-600">{{ success }}</p>
+        <p v-if="success" class="mt-6 text-sm text-[#10B981]">{{ success }}</p>
       </form>
     </div>
   </div>

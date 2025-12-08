@@ -83,8 +83,8 @@ export default {
       class="absolute inset-0 flex items-center justify-center transition-all duration-700 ease-out"
       :class="isAnimating ? 'opacity-0 scale-50' : 'opacity-100 scale-100'"
     >
-      <div class="text-3xl font-bold text-gray-900">
-        {{ current }}<span class="text-gray-400 mx-1">/</span>{{ total }}
+      <div class="text-3xl font-bold text-content-primary">
+        {{ current }}<span class="text-content-primary mx-1">/</span>{{ total }}
       </div>
     </div>
   </div>
