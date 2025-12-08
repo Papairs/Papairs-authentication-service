@@ -1,12 +1,14 @@
 import { BaseApiController } from './BaseApiController.js';
+import { API_BASE_URL } from '@/config';
 
 /**
  * AI Service Controller
- * Handles all AI-related API calls
+ * Handles all AI-related API calls through the orchestration gateway
  */
 export class AIController extends BaseApiController {
   constructor() {
-    super('http://localhost:3001');
+    super(API_BASE_URL);
+    this.servicePath = '/api/ai';
   }
 
   /**
@@ -14,7 +16,7 @@ export class AIController extends BaseApiController {
    * @param {Object} requestData - { userInput }
    */
   async getAutocompletion(requestData) {
-    return this.post('/autocomplete', requestData);
+    return this.post(`${this.servicePath}/autocomplete`, requestData);
   }
 
   /**
@@ -22,7 +24,7 @@ export class AIController extends BaseApiController {
    * @param {Object} requestData - { content, numberOfCards }
    */
   async generateFlashcards(requestData) {
-    return this.post('/generate-flashcards', requestData);
+    return this.post(`${this.servicePath}/generate-flashcards`, requestData);
   }
 
   /**
@@ -30,7 +32,7 @@ export class AIController extends BaseApiController {
    */
   async checkHealth() {
     try {
-      const response = await this.get('/health');
+      const response = await this.get(`${this.servicePath}/health`);
       return {
         success: true,
         data: response.data,

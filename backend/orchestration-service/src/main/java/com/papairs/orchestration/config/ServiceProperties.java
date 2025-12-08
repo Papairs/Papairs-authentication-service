@@ -10,7 +10,8 @@ import org.springframework.validation.annotation.Validated;
 public record ServiceProperties(
         ServiceConfig authService,
         ServiceConfig docsService,
-        CompensationConfig compensation
+        CompensationConfig compensation,
+        ServiceConfig aiService
 ) {
     public record ServiceConfig(
             @NotBlank String url,

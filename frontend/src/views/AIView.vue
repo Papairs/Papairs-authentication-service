@@ -191,6 +191,7 @@
 <script>
 import { ref, watch, computed, onMounted } from 'vue'
 import LoginHeader from '../components/LoginHeader.vue'
+import { API_BASE_URL } from '@/config'
 import axios from 'axios'
 import auth from '@/utils/auth'
 
@@ -247,24 +248,34 @@ export default {
 
       isLoading.value = true
       try {
-        const userId = auth.getUserId()
-        const response = await fetch('http://localhost:3001/autocomplete', {
+        const requestBody = { 
+          userInput: text,
+          mode: aiMode.value,
+          selectedFiles: selectedFiles.value.map(f => ({
+            fileId: f.fileId,
+            filename: f.filename,
+            mimeType: f.mimeType
+          }))
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/api/ai/autocomplete`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'X-User-Id': userId
+            'Authorization': `Bearer ${auth.getToken()}`
           },
-          body: JSON.stringify({ 
-            userInput: text,
-            mode: aiMode.value,
-            selectedFiles: selectedFiles.value.map(f => ({
-              fileId: f.fileId,
-              filename: f.filename,
-              mimeType: f.mimeType
-            }))
-          })
+          body: JSON.stringify(requestBody)
         })
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('API error:', response.status, errorText)
+          suggestion.value = ''
+          return
+        }
+        
         const data = await response.json()
+        console.log('Response data:', data) // Debug log
         suggestion.value = data.suggestion || ''
       } catch (error) {
         console.error('Error fetching suggestion:', error)
@@ -303,7 +314,7 @@ export default {
 
       try {
         const response = await axios.get(
-            `http://localhost:8080/api/docs/files`,
+            `${API_BASE_URL}/api/docs/files`,
             {
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -339,7 +350,7 @@ export default {
       formData.append('file', file)
 
       try {
-        await axios.post('http://localhost:8080/api/docs/files', formData, {
+        await axios.post(`${API_BASE_URL}/api/docs/files`, formData, {
           headers: {
             'Authorization': `Bearer ${token}`
           },
@@ -393,7 +404,7 @@ export default {
         }
 
         await axios.delete(
-            `http://localhost:8080/api/docs/files/${fileId}`,
+            `${API_BASE_URL}/api/docs/files/${fileId}`,
             {
               headers: {
                 'Authorization': `Bearer ${token}`
