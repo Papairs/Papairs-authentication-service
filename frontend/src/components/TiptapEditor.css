@@ -1,0 +1,176 @@
+.toolbar-button {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 150ms ease-in-out;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--content-primary);
+}
+
+.toolbar-button:hover {
+  background-color: var(--surface-light-secondary);
+}
+
+.toolbar-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-button.is-active {
+  background-color: var(--accent);
+  color: var(--content-white);
+}
+
+.toolbar-select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-opa);
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  background-color: var(--surface-light);
+  color: var(--content-primary);
+}
+
+.toolbar-select:hover {
+  border-color: var(--border-opa);
+}
+
+.toolbar-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Tiptap styles - using class selector to scope to component */
+.tiptap-editor-container .ProseMirror {
+  outline: none;
+  min-height: 100%;
+  padding: 0;
+  color: var(--content-primary);
+}
+
+/* Override Tailwind prose colors to use design system */
+.tiptap-editor-container .prose {
+  color: var(--content-primary);
+  max-width: none;
+}
+
+.tiptap-editor-container .prose strong {
+  color: var(--content-primary);
+}
+
+.tiptap-editor-container .prose h1,
+.tiptap-editor-container .prose h2,
+.tiptap-editor-container .prose h3,
+.tiptap-editor-container .prose h4,
+.tiptap-editor-container .prose h5,
+.tiptap-editor-container .prose h6 {
+  color: var(--content-primary);
+}
+
+.tiptap-editor-container .prose a {
+  color: var(--accent);
+}
+
+.tiptap-editor-container .prose code {
+  color: var(--content-primary);
+}
+
+.tiptap-editor-container .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--content-secondary);
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap-editor-container .ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--content-secondary);
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap-editor-container pre {
+  background-color: var(--surface-light-secondary);
+  border-radius: 0.25rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.tiptap-editor-container code {
+  background-color: var(--surface-light-secondary);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.tiptap-editor-container mark {
+  padding: 0.125rem 0;
+  border-radius: 0.125rem;
+}
+
+.tiptap-editor-container blockquote {
+  border-left: 4px solid var(--border-opa);
+  padding-left: 1rem;
+  font-style: italic;
+}
+
+.tiptap-editor-container ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+}
+
+.tiptap-editor-container ol {
+  list-style-type: decimal;
+  margin-left: 1.5rem;
+}
+
+.tiptap-editor-container h1 {
+  font-size: 1.875rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+}
+
+.tiptap-editor-container h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.tiptap-editor-container h3 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.tiptap-editor-container h4 {
+  font-size: 1.125rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.tiptap-editor-container h5 {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.tiptap-editor-container h6 {
+  font-size: 0.875rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.tiptap-editor-container {
+  min-height: 100%;
+}

@@ -1,6 +1,11 @@
 package com.papairs.docs.dto.request;
 
+import com.papairs.docs.annotation.Sanitize;
+import jakarta.annotation.Nullable;
+
 public class MovePageRequest {
+    @Nullable
+    @Sanitize(trim = true, blankToNull = true)
     private String folderId;
 
     public MovePageRequest() {

@@ -1,14 +1,14 @@
 import { ref } from 'vue'
+import SockJS from 'sockjs-client'
 
 export function useWebSocket(url, options = {}) {
-  // State
   const ws = ref(null)
   const connecting = ref(false)
   const connectionState = ref('closed')
   const connectionError = ref(null)
   const messageQueue = []
+  const handlers = {}
 
-  // Config
   const config = {
     initialDelay: options.initialReconnectDelay || 500,
     maxDelay: options.maxReconnectDelay || 30000
@@ -16,17 +16,12 @@ export function useWebSocket(url, options = {}) {
   let reconnectDelay = config.initialDelay
   let reconnectTimer = null
 
-  // Event handlers storage
-  const handlers = {}
-
-  // Smart connection checker
   const canConnect = () => {
     if (connecting.value) return false
     const state = ws.value?.readyState
     return state !== WebSocket.OPEN && state !== WebSocket.CONNECTING
   }
 
-  // Message queue drainer
   const drainQueue = () => {
     if (ws.value?.readyState !== WebSocket.OPEN) return
     while (messageQueue.length > 0) {
@@ -34,13 +29,12 @@ export function useWebSocket(url, options = {}) {
       try {
         ws.value.send(typeof data === 'string' ? data : JSON.stringify(data))
       } catch (error) {
-        messageQueue.unshift(data) // Put it back
+        messageQueue.unshift(data)
         break
       }
     }
   }
 
-  // Smart reconnect scheduler
   const scheduleReconnect = () => {
     if (reconnectTimer) return
     reconnectTimer = setTimeout(() => {
@@ -50,7 +44,6 @@ export function useWebSocket(url, options = {}) {
     }, reconnectDelay)
   }
 
-  // Event handler caller - safe execution
   const callHandler = (event, ...args) => {
     try {
       handlers[event]?.(...args)
@@ -59,7 +52,6 @@ export function useWebSocket(url, options = {}) {
     }
   }
 
-  // Core connection function
   const connect = () => {
     if (!canConnect()) return
 
@@ -68,10 +60,10 @@ export function useWebSocket(url, options = {}) {
     connectionError.value = null
 
     try {
-      ws.value = new WebSocket(url)
+      const sockJsUrl = url.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:')
+      ws.value = new SockJS(sockJsUrl)
 
       ws.value.onopen = () => {
-        console.log('[WebSocket] Connected')
         connecting.value = false
         connectionState.value = 'open'
         reconnectDelay = config.initialDelay
@@ -80,7 +72,6 @@ export function useWebSocket(url, options = {}) {
       }
 
       ws.value.onclose = (event) => {
-        console.warn('[WebSocket] Closed:', event.code)
         connectionState.value = 'closed'
         connecting.value = false
         if (event.code !== 1000) {
@@ -91,13 +82,12 @@ export function useWebSocket(url, options = {}) {
       }
 
       ws.value.onerror = (error) => {
-        console.error('[WebSocket] Error:', error)
         connectionError.value = 'Connection error occurred'
         callHandler('onError', error)
         try { 
           ws.value?.close() 
-        } catch (closeError) {
-          // Ignore close errors during error handling
+        } catch (e) { 
+          console.debug('WebSocket close error ignored') 
         }
       }
 
@@ -112,7 +102,6 @@ export function useWebSocket(url, options = {}) {
     }
   }
 
-  // Smart send function
   const send = (data) => {
     const state = ws.value?.readyState
     
@@ -127,26 +116,20 @@ export function useWebSocket(url, options = {}) {
       }
     }
     
-    // Queue message and try to reconnect if needed
     messageQueue.push(data)
     if (state !== WebSocket.CONNECTING) scheduleReconnect()
     return false
   }
 
-  // Clean disconnect
   const disconnect = () => {
     if (reconnectTimer) {
       clearTimeout(reconnectTimer)
       reconnectTimer = null
     }
-    try { 
-      ws.value?.close() 
-    } catch (closeError) {
-      // Ignore close errors during disconnect
-    }
+    try { ws.value?.close() } catch (e) { console.debug('WebSocket close error ignored'); }
   }
 
-  // Event handler setters - clean API
+  // Event handler registration
   const on = (event, handler) => { handlers[event] = handler }
 
   return {

@@ -29,6 +29,23 @@ public class ApiResponse {
         return new ApiResponse(false, null, message);
     }
 
+    public static ApiResponse success(String message, Object data) {
+        ApiResponse response = new ApiResponse();
+        response.success = true;
+        response.status = "success";
+        response.message = message;
+        response.data = data;
+        return response;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
     public String getStatus() {
         return status;
     }
