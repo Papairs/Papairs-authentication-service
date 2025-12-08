@@ -1,6 +1,6 @@
 
 <script>
-import { ref, onMounted} from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
 import SearchBar from '@/components/SearchBar.vue'
@@ -14,6 +14,7 @@ import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
 import RenameFolderModal from '@/components/RenameFolderModal.vue'
 import RenameDocumentModal from '@/components/RenameDocumentModal.vue'
 import ShareDocumentModal from '@/components/ShareDocumentModal.vue'
+import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
 import NewDropdown from '@/components/NewDropdown.vue'
 import { driveService } from '@/utils/driveService'
 
@@ -24,6 +25,7 @@ export default {
     FolderCard,
     DocumentCard,
     CreateFolderModal,
+    ChevronDownIcon,
     CreateDocumentModal,
     RenameFolderModal,
     RenameDocumentModal,
@@ -52,26 +54,40 @@ export default {
     const documentToShare = ref(null)
     const showNotebookDropdown = ref(false)
     const searchQuery = ref('')
+    const isSearching = ref(false)
+
+    // Check if we're in shared view
+    const isSharedView = computed(() => route.path === '/drive/shared')
 
     const loadContent = async (folderId = null) => {
       loading.value = true
       try {
-        currentFolderId.value = folderId
-
-        // Load folders
-        if (folderId) {
-          folders.value = await driveService.getChildFolders(folderId)
-          currentFolder.value = await driveService.getFolder(folderId)
-          breadcrumbs.value = await driveService.getFolderPath(folderId)
-        } else {
-          folders.value = await driveService.getRootFolders()
+        if (isSharedView.value) {
+          // Load shared documents
+          documents.value = await driveService.getSharedDocuments()
+          folders.value = []
+          currentFolderId.value = null
           currentFolder.value = null
           breadcrumbs.value = []
-        }
+        } else {
+          // Load regular drive content
+          currentFolderId.value = folderId
 
-        // Load documents - filter by current folder
-        const allDocuments = await driveService.getAllDocuments()
-        documents.value = allDocuments.filter(doc => doc.folderId === folderId)
+          // Load folders
+          if (folderId) {
+            folders.value = await driveService.getChildFolders(folderId)
+            currentFolder.value = await driveService.getFolder(folderId)
+            breadcrumbs.value = await driveService.getFolderPath(folderId)
+          } else {
+            folders.value = await driveService.getRootFolders()
+            currentFolder.value = null
+            breadcrumbs.value = []
+          }
+
+          // Load documents - filter by current folder
+          const allDocuments = await driveService.getAllDocuments()
+          documents.value = allDocuments.filter(doc => doc.folderId === folderId)
+        }
       } catch (error) {
         console.error('Error loading content:', error)
         // Don't show alert for authentication errors (user will be redirected)
@@ -200,27 +216,44 @@ export default {
     const handleSearch = async (query) => {
       if (!query.trim()) {
         // Reload all content if search is cleared
+        isSearching.value = false
         await loadContent(currentFolderId.value)
         return
       }
 
       try {
+        isSearching.value = true
         const headers = await auth.getAuthHeaders(router)
+        const searchTerm = query.toLowerCase().trim()
+        
         // Get all pages the user has access to
-        const response = await axios.get(
+        const pagesResponse = await axios.get(
           `${API_BASE_URL}/api/docs/pages`,
           { headers }
         )
         
-        const pages = response.data || []
-        const searchTerm = query.toLowerCase().trim()
+        const pages = pagesResponse.data || []
         
         // Filter documents by title match
         documents.value = pages
           .filter(page => page.title.toLowerCase().includes(searchTerm))
         
-        // Clear folders during search to show only matching documents
-        folders.value = []
+        // Get all folders and filter by name match
+        const allFolders = await driveService.getRootFolders()
+        const childFolders = await Promise.all(
+          allFolders.map(async (folder) => {
+            try {
+              return await driveService.getChildFolders(folder.folderId)
+            } catch {
+              return []
+            }
+          })
+        )
+        
+        // Flatten all folders and filter
+        const allFoldersFlat = [...allFolders, ...childFolders.flat()]
+        folders.value = allFoldersFlat
+          .filter(folder => folder.name.toLowerCase().includes(searchTerm))
       } catch (error) {
         console.error('Search failed:', error)
       }
@@ -228,8 +261,12 @@ export default {
 
     onMounted(() => {
       initTheme()
-      const folderId = route.params.folderId || null
-      loadContent(folderId)
+      if (isSharedView.value) {
+        loadContent()
+      } else {
+        const folderId = route.params.folderId || null
+        loadContent(folderId)
+      }
       
       // Listen for sidebar new document button
       window.addEventListener('open-create-document-modal', () => {
@@ -251,6 +288,7 @@ export default {
       currentFolderId,
       currentFolder,
       breadcrumbs,
+      isSharedView,
       showCreateFolderModal,
       showCreateDocModal,
       showRenameFolderModal,
@@ -258,6 +296,7 @@ export default {
       showShareDocModal,
       showNotebookDropdown,
       searchQuery,
+      isSearching,
       folderToRename,
       documentToRename,
       documentToShare,
@@ -282,11 +321,11 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-surface-light dark:bg-surface-dark transition-colors overflow-hidden">
+  <div class="flex flex-col h-full bg-surface-light overflow-hidden">
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto">
       <!-- Top Bar -->
-      <div class="bg-white dark:bg-surface-dark-secondary border-border-light dark:border-border-dark">
+      <div class="bg-surface-light border-content-primary">
         <div class="px-8 py-4">
           <div class="flex items-center justify-between">
             <!-- Search -->
@@ -299,18 +338,26 @@ export default {
           </div>
         </div>
 
-        <!-- Section Header with Dropdown -->
+        <!-- Section Header with Dropdown or Title -->
         <div class="px-8 py-3 border-t-2 border-accent">
           <div class="flex items-center justify-between">
-            <div class="relative">
+            <!-- Shared View Title -->
+            <h2 v-if="isSharedView" class="text-2xl space-x-2 font-semibold text-content-primary py-1">
+              Shared with me
+            </h2>
+            
+            <!-- Drive View Dropdown -->
+            <div v-else class="relative">
               <button 
                 @click="showNotebookDropdown = !showNotebookDropdown"
-                class="flex items-center space-x-2 text-2xl font-semibold text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark py-1 rounded"
+                class="flex items-center space-x-2 text-2xl font-semibold text-content-primary py-1 min-w-[200px]"
               >
                 <span>{{ currentFolder ? currentFolder.name : 'My Notebooks' }}</span>
-                <svg class="w-5 h-5 transition-transform" :class="{ 'rotate-180': showNotebookDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
+                <ChevronDownIcon 
+                    :size="24" 
+                    class="transition-transform text-content-primary"
+                    :class="{ 'rotate-180': showNotebookDropdown }"
+                />
               </button>
 
               <!-- Dropdown Menu -->
@@ -330,7 +377,7 @@ export default {
         <!-- Section Labels -->
         <div class="mb-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-medium text-accent">Notebooks</h3>
+            <h3 class="text-sm font-medium text-accent">{{ isSharedView ? 'Papairs' : 'Notebooks' }}</h3>
           </div>
         </div>
 
@@ -341,16 +388,17 @@ export default {
 
         <!-- Empty State -->
         <div v-else-if="folders.length === 0 && documents.length === 0" class="text-center py-20">
-          <div class="text-6xl mb-4">Nothing to see here</div>
-          <h3 class="text-xl font-medium text-content-primary dark:text-content-inverse mb-2">
-            No items yet
+          <div class="text-6xl mb-4">{{ isSearching ? '' : 'Nothing to see here' }}</div>
+          <h3 class="text-xl font-medium text-content-primary mb-2">
+            {{ isSearching ? 'No results found' : (isSharedView ? 'No shared documents' : 'No items yet') }}
           </h3>
           <p class="text-content-secondary mb-4">
-            Create a new folder or document to get started
+            {{ isSearching ? 'Try a different search term or create a new item' : (isSharedView ? 'Documents that others share with you will appear here' : 'Create a new folder or document to get started') }}
           </p>
           <button 
+            v-if="!isSharedView"
             @click="showCreateDocModal = true"
-            class="px-6 py-2 bg-accent hover:bg-[#E66900] text-white rounded-lg transition-colors"
+            class="px-6 py-2 bg-surface-light-secondary border border-accent text-content-primary rounded-lg"
           >
             Create First Document
           </button>
@@ -358,8 +406,8 @@ export default {
 
         <!-- Content Grid -->
         <div v-else>
-          <!-- Folders Grid -->
-          <div v-if="folders.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
+          <!-- Folders Grid (Drive View Only) -->
+          <div v-if="folders.length > 0 && !isSharedView" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
             <FolderCard 
               v-for="folder in folders" 
               :key="folder.folderId"
@@ -372,7 +420,7 @@ export default {
 
           <!-- Documents Section -->
           <div v-if="documents.length > 0">
-            <div class="flex items-center justify-between mb-4">
+            <div v-if="!isSharedView" class="flex items-center justify-between mb-4">
               <h3 class="text-sm font-medium text-accent">Papairs</h3>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -383,7 +431,7 @@ export default {
                 @click="openDocument(doc.pageId)"
                 @delete="deleteDocument(doc.pageId)"
                 @rename="startRenameDocument(doc)"
-                @share="startShareDocument(doc)"
+                @share="isSharedView ? null : startShareDocument(doc)"
               />
             </div>
           </div>
@@ -391,25 +439,25 @@ export default {
       </div>
     </main>
 
-    <!-- Create Folder Modal -->
+    <!-- Create Folder Modal (Drive View Only) -->
     <CreateFolderModal 
-      v-if="showCreateFolderModal"
+      v-if="showCreateFolderModal && !isSharedView"
       :parent-folder-id="currentFolderId"
       @close="showCreateFolderModal = false"
       @created="onFolderCreated"
     />
 
-    <!-- Create Document Modal -->
+    <!-- Create Document Modal (Drive View Only) -->
     <CreateDocumentModal 
-      v-if="showCreateDocModal"
+      v-if="showCreateDocModal && !isSharedView"
       :folder-id="currentFolderId"
       @close="showCreateDocModal = false"
       @created="onDocumentCreated"
     />
 
-    <!-- Rename Folder Modal -->
+    <!-- Rename Folder Modal (Drive View Only) -->
     <RenameFolderModal 
-      v-if="showRenameFolderModal"
+      v-if="showRenameFolderModal && !isSharedView"
       :folder="folderToRename"
       @close="showRenameFolderModal = false"
       @renamed="onFolderRenamed"
@@ -423,9 +471,9 @@ export default {
       @renamed="onDocumentRenamed"
     />
 
-    <!-- Share Document Modal -->
+    <!-- Share Document Modal (Drive View Only) -->
     <ShareDocumentModal 
-      v-if="showShareDocModal"
+      v-if="showShareDocModal && !isSharedView"
       :document="documentToShare"
       @close="showShareDocModal = false"
       @shared="onDocumentShared"

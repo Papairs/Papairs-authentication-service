@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-xl hover:shadow-md transition-all cursor-pointer overflow-visible"
+    class="group relative bg-surface-light border border-content-primary rounded-xl hover:shadow-md transition-all cursor-pointer overflow-visible"
     style="aspect-ratio: 1; width: 100%"
     @click="$emit('click')"
   >
@@ -10,13 +10,13 @@
       <div class="flex items-center space-x-3 flex-1 min-w-0">
         <!-- Document Icon -->
         <div class="flex-shrink-0">
-          <svg class="w-5 h-5 text-content-primary dark:text-content-inverse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 text-content-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
         
         <!-- Document Title -->
-        <h3 class="text-sm font-medium text-content-primary dark:text-content-inverse truncate">
+        <h3 class="text-sm font-medium text-content-primary truncate">
           {{ document.title }}
         </h3>
       </div>
@@ -25,34 +25,32 @@
       <div v-if="canManageDocument" class="relative" ref="menuRef">
         <button 
           @click.stop="showMenu = !showMenu"
-          class="flex-shrink-0 p-1 rounded hover:bg-surface-light-secondary dark:hover:bg-surface-dark transition-colors"
+          class="flex-shrink-0 p-1 rounded hover:bg-surface-light-secondary transition-colors"
         >
-          <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+          <MenuIcon :size="20" class-name="text-content-primary" />
         </button>
         
         <!-- Dropdown Menu -->
         <div 
           v-if="showMenu"
           @click.stop
-          class="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg z-50"
+          class="absolute right-0 top-full mt-1 w-40 bg-surface-light border border-content-primary rounded-lg shadow-lg z-50 text-content-primary text-sm"
         >
           <button 
             @click.stop="handleRename"
-            class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark first:rounded-t-lg"
+            class="w-full text-left px-4 py-2 hover:bg-surface-light-secondary first:rounded-t-lg"
           >
             Rename
           </button>
           <button 
             @click.stop="handleShare"
-            class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
+            class="w-full text-left px-4 py-2 hover:bg-surface-light-secondary"
           >
             Share
           </button>
           <button 
             @click.stop="handleDelete"
-            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900 last:rounded-b-lg"
+            class="w-full text-left px-4 py-2 hover:bg-red last:rounded-b-lg"
           >
             Delete
           </button>
@@ -67,10 +65,14 @@
 
 <script>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import MenuIcon from '@/components/icons/MenuIcon.vue'
 import auth from '@/utils/auth'
 
 export default {
   name: 'DocumentCard',
+  components: {
+    MenuIcon
+  },
   props: {
     document: {
       type: Object,

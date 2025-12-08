@@ -1,29 +1,29 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
+  <div class="min-h-screen bg-surface-light py-8">
     <div class="max-w-4xl mx-auto px-4">
       <!-- Header -->
       <div class="mb-8">
         <div class="flex items-center justify-between mb-4">
-          <h1 class="text-3xl font-bold text-gray-900">Study Mode</h1>
+          <h1 class="text-3xl font-bold text-content-primary">Study Mode</h1>
           <button
             @click="exitStudyMode"
-            class="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+            class="px-4 py-2 text-content-secondary hover:text-content-primary transition-colors"
           >
             ← Back to Flashcards
           </button>
         </div>
 
         <!-- Progress Bar -->
-        <div class="bg-white rounded-lg shadow-sm p-4">
+        <div class="bg-surface-light border border-border-opa rounded-lg shadow-sm p-4">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-700">
+            <span class="text-sm font-medium text-content-primary">
               Progress: {{ completedCount }} / {{ totalCards }}
             </span>
-            <span class="text-sm text-gray-500">
+            <span class="text-sm text-content-secondary">
               {{ remainingCount }} cards remaining
             </span>
           </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="w-full bg-surface-light-secondary rounded-full h-2">
             <div
               class="bg-accent h-2 rounded-full transition-all duration-300"
               :style="{ width: progressPercentage + '%' }"
@@ -33,32 +33,32 @@
       </div>
 
       <!-- Study Complete Message -->
-      <div v-if="studyComplete" class="bg-white rounded-lg shadow-lg p-8 text-center">
+      <div v-if="studyComplete" class="bg-surface-light border border-border-opa rounded-lg shadow-lg p-8 text-center">
         <!-- Circular Progress -->
         <div class="flex justify-center mb-6">
           <CircularProgress :current="learnedCount" :total="totalFlashcards" :size="160" :stroke-width="12" />
         </div>
         
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">Study Session Complete!</h2>
-        <p class="text-gray-600 mb-6">
+        <h2 class="text-2xl font-bold text-content-primary mb-2">Study Session Complete!</h2>
+        <p class="text-content-secondary mb-6">
           You've reviewed all {{ totalCards }} flashcard{{ totalCards !== 1 ? 's' : '' }}!
         </p>
         <div class="flex gap-4 justify-center flex-wrap">
           <button
             @click="restartStudy"
-            class="px-6 py-3 bg-accent text-white rounded-lg hover:opacity-90 transition-opacity"
+            class="px-6 py-3 bg-accent text-content-white rounded-lg hover:bg-[#E66900] transition-colors"
           >
             Study Unlearned Cards
           </button>
           <button
             @click="resetAllAndRestart"
-            class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            class="px-6 py-3 border-2 border-border-opa text-content-primary rounded-lg hover:bg-surface-light-secondary transition-colors"
           >
             Study Again
           </button>
           <button
             @click="exitStudyMode"
-            class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            class="px-6 py-3 bg-surface-light-secondary text-content-primary rounded-lg hover:bg-surface-light transition-colors"
           >
             Back to Flashcards
           </button>
@@ -75,26 +75,26 @@
         >
           <!-- Front of Card (Question) -->
           <div
-            class="absolute inset-0 bg-white rounded-lg shadow-xl p-8 flex flex-col justify-center items-center backface-hidden"
+            class="absolute inset-0 bg-surface-light border border-border-opa rounded-lg shadow-xl p-8 flex flex-col justify-center items-center backface-hidden"
             style="backface-visibility: hidden"
           >
-            <div class="text-sm text-gray-500 mb-4">Question</div>
-            <div class="text-2xl font-semibold text-gray-900 text-center">
+            <div class="text-sm text-content-secondary mb-4">Question</div>
+            <div class="text-2xl font-semibold text-content-primary text-center">
               {{ currentCard.question }}
             </div>
-            <div class="mt-6 text-sm text-gray-400">Click to flip</div>
+            <div class="mt-6 text-sm text-content-secondary">Click to flip</div>
           </div>
 
           <!-- Back of Card (Answer) -->
           <div
-            class="absolute inset-0 bg-blue-50 rounded-lg shadow-xl p-8 flex flex-col justify-center items-center backface-hidden rotate-y-180"
+            class="absolute inset-0 bg-surface-light-secondary border border-border-opa rounded-lg shadow-xl p-8 flex flex-col justify-center items-center backface-hidden rotate-y-180"
             style="backface-visibility: hidden; transform: rotateY(180deg)"
           >
-            <div class="text-sm text-blue-600 mb-4">Answer</div>
-            <div class="text-2xl font-semibold text-gray-900 text-center">
+            <div class="text-sm text-accent mb-4">Answer</div>
+            <div class="text-2xl font-semibold text-content-primary text-center">
               {{ currentCard.answer }}
             </div>
-            <div class="mt-6 text-sm text-gray-400">Click to flip back</div>
+            <div class="mt-6 text-sm text-content-secondary">Click to flip back</div>
           </div>
         </div>
 
@@ -103,7 +103,7 @@
           <span
             v-for="tag in currentCard.tags"
             :key="tag"
-            class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+            class="px-3 py-1 bg-surface-light-secondary text-content-primary text-sm rounded-full"
           >
             #{{ tag }}
           </span>
@@ -114,7 +114,7 @@
           <button
             @click="markAsNotLearned"
             :disabled="processingAction"
-            class="px-8 py-4 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-8 py-4 bg-[#FEE2E2] text-[#DC2626] rounded-lg hover:bg-[#FECACA] transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <XmarkIcon :size="20" />
             {{ processingAction ? 'Processing...' : 'Not Learned' }}
@@ -122,9 +122,9 @@
           <button
             @click="markAsLearned"
             :disabled="processingAction"
-            class="px-8 py-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-8 py-4 bg-[#D1FAE5] text-[#059669] rounded-lg hover:bg-[#A7F3D0] transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <CheckmarkIcon :size="20" class="text-green-700" />
+            <CheckmarkIcon :size="20" class="text-[#059669]" />
             {{ processingAction ? 'Processing...' : 'Learned' }}
           </button>
         </div>
@@ -134,7 +134,7 @@
           <button
             @click="skipCard"
             :disabled="processingAction"
-            class="px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-content-secondary hover:text-content-primary transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Skip for now →
           </button>
@@ -142,21 +142,21 @@
       </div>
 
       <!-- Loading State -->
-      <div v-else-if="loading" class="bg-white rounded-lg shadow-lg p-8 text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p class="mt-4 text-gray-600">Loading flashcards...</p>
+      <div v-else-if="loading" class="bg-surface-light border border-border-opa rounded-lg shadow-lg p-8 text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
+        <p class="mt-4 text-content-secondary">Loading flashcards...</p>
       </div>
 
       <!-- No Cards Message -->
-      <div v-else class="bg-white rounded-lg shadow-lg p-8 text-center">
+      <div v-else class="bg-surface-light border border-border-opa rounded-lg shadow-lg p-8 text-center">
         <div class="text-6xl mb-4">📚</div>
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">No Cards to Study</h2>
-        <p class="text-gray-600 mb-6">
+        <h2 class="text-2xl font-bold text-content-primary mb-2">No Cards to Study</h2>
+        <p class="text-content-secondary mb-6">
           All your flashcards are marked as learned, or you don't have any flashcards yet.
         </p>
         <button
           @click="exitStudyMode"
-          class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          class="px-6 py-3 bg-accent text-content-white rounded-lg hover:bg-[#E66900] transition-colors"
         >
           Back to Flashcards
         </button>

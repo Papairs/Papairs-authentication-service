@@ -189,7 +189,7 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-col h-full w-full overflow-hidden bg-surface-light dark:bg-surface-dark">
+  <div class="flex flex-col h-full w-full overflow-hidden bg-surface-light">
     <!-- Header -->
     <FlashcardsHeader
       :loading="loading"

@@ -6,23 +6,72 @@
   --accent: #FF7700;
   --surface-light: #FFFFFF;
   --surface-light-secondary: #F3F3F3;
-  --surface-dark: #191919;
+  --surface-dark: #2A2A2A;
   --surface-dark-secondary: #202020;
   --content-primary: #2A2A2A;
   --content-secondary: #B8B8B8;
   --content-inverse: #F0EFED;
+  --content-black: #000000;
+  --content-white: #FFFFFF;
   --border-light: rgba(25, 25, 25, 0.75);
   --border-dark: rgba(32, 32, 32, 0.75);
+  --border-light-subtle: rgba(25, 25, 25, 0.1);
+  --border-dark-subtle: rgba(243, 243, 243, 0.05);
+  --border-opa: rgba(25, 25, 25, 0.1);
+  --red: #FF0000;
 }
 
 .dark {
+  --accent: #FF7700;
   --surface-light: #191919;
   --surface-light-secondary: #202020;
-  --surface-dark: #FFFFFF;
+  --surface-dark: #F0EFED;
   --surface-dark-secondary: #F3F3F3;
-  --content-primary: #F0EFED;
-  --content-secondary: #B8B8B8;
+  --content-primary: #B8B8B8;
+  --content-secondary: #F0EFED;
   --content-inverse: #2A2A2A;
-  --border-light: rgba(32, 32, 32, 0.75);
-  --border-dark: rgba(25, 25, 25, 0.75);
+  --content-black: #FFFFFF;
+  --content-white: #000000;
+  --border-light: rgba(25, 25, 25, 0.75);
+  --border-dark: rgba(32, 32, 32, 0.75);
+  --border-light-subtle: rgba(25, 25, 25, 0.1);
+  --border-dark-subtle: rgba(243, 243, 243, 0.05);
+  --border-opa: rgba(243, 243, 243, 0.05);
+  --red: #FF0000;
+}
+
+/* Number Input Styling - Remove background and hide spinner arrows */
+input[type="number"] {
+  background: transparent;
+  -moz-appearance: textfield; /* Firefox */
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Custom Scrollbar Styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--content-secondary) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--content-secondary);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--content-primary);
 }

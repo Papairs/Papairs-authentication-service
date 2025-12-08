@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbar flex items-center justify-center gap-1 p-2 bg-white flex-shrink-0 sticky top-0 z-10 flex-wrap px-12">
+  <div class="toolbar flex items-center border-b border-border-opa justify-center gap-1 p-2 bg-surface-light flex-shrink-0 sticky top-0 z-10 flex-wrap px-12 w-[90%] self-center">
     <!-- Headings & Normal Text -->
     <select 
       @change="$emit('set-heading', $event)"
@@ -16,7 +16,7 @@
     </select>
 
     <!-- Separator -->
-    <div class="w-px h-6 bg-gray-300 mx-2"></div>
+    <div class="w-px h-6 bg-border-opa mx-2"></div>
 
     <!-- Font Family -->
     <select 
@@ -34,7 +34,7 @@
     </select>
 
     <!-- Separator -->
-    <div class="w-px h-6 bg-gray-300 mx-2"></div>
+    <div class="w-px h-6 bg-border-opa mx-2"></div>
 
     <!-- Font Size -->
     <div class="flex items-center gap-1">
@@ -82,7 +82,7 @@
     </div>
 
     <!-- Separator -->
-    <div class="w-px h-6 bg-gray-300 mx-2"></div>
+    <div class="w-px h-6 bg-border-opa mx-2"></div>
 
     <!-- Text Formatting -->
     <button
@@ -130,7 +130,7 @@
     </button>
 
     <!-- Separator -->
-    <div class="w-px h-6 bg-gray-300 mx-2"></div>
+    <div class="w-px h-6 bg-border-opa mx-2"></div>
 
     <!-- Text Color -->
     <div class="flex items-center gap-1">
@@ -149,7 +149,7 @@
     </div>
 
     <!-- Separator -->
-    <div class="w-px h-6 bg-gray-300 mx-2"></div>
+    <div class="w-px h-6 bg-border-opa mx-2"></div>
 
     <!-- Text Alignment -->
     <button
@@ -197,7 +197,7 @@
     </button>
 
     <!-- Separator -->
-    <div class="w-px h-6 bg-gray-300 mx-2"></div>
+    <div class="w-px h-6 bg-border-opa mx-2"></div>
 
     <!-- Lists -->
     <button
@@ -223,7 +223,7 @@
     </button>
 
     <!-- Separator -->
-    <div class="w-px h-6 bg-gray-300 mx-2"></div>
+    <div class="w-px h-6 bg-border-opa mx-2"></div>
 
     <!-- Code & Code Block -->
     <button
@@ -250,7 +250,7 @@
     </button>
 
     <!-- Separator -->
-    <div class="w-px h-6 bg-gray-300 mx-2"></div>
+    <div class="w-px h-6 bg-border-opa mx-2"></div>
 
     <!-- Undo/Redo -->
     <button

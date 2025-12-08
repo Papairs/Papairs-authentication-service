@@ -39,18 +39,18 @@ export default {
 
 <template>
   <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-6 justify-between">
-    <h1 class="text-2xl font-bold text-content-primary dark:text-content-inverse">My Flashcards</h1>
+    <h1 class="text-2xl font-bold text-content-primary">My Flashcards</h1>
     
     <!-- Filter by Document and Study Button -->
     <div v-if="!loading && flashcardsCount > 0" class="flex items-center gap-3">
-      <label for="page-filter" class="text-sm text-content-secondary font-medium">
+      <label for="page-filter" class="text-sm text-content-primary font-medium">
         Filter by Document:
       </label>
       <select
         id="page-filter"
         :value="selectedPageId"
         @change="handlePageChange"
-        class="px-4 py-2 border border-border-light-subtle dark:border-border-dark-subtle rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-white dark:bg-surface-dark-secondary text-content-primary dark:text-content-inverse"
+        class="px-4 py-2 border border-border-opa rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-surface-light text-content-primary"
       >
         <option value="all">All Documents ({{ flashcardsCount }})</option>
         <option
@@ -64,14 +64,14 @@ export default {
       
       <button
         @click="handleStartStudy"
-        class="px-4 py-2 bg-accent text-white rounded-md text-sm font-medium hover:bg-accent-dark transition-colors flex items-center gap-2"
+        class="px-4 py-2 bg-accent text-content-white rounded-md text-sm font-medium hover:bg-[#E66900] transition-colors flex items-center gap-2"
       >
         Study Mode
       </button>
       
       <button
         @click="handleResetAll"
-        class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+        class="px-4 py-2 bg-surface-light-secondary border border-border-opa text-content-primary rounded-md text-sm font-medium hover:bg-[#059669] transition-colors flex items-center gap-2"
         title="Reset all flashcards to unlearned"
       >
         Reset All

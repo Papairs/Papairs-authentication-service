@@ -242,7 +242,7 @@ export default {
     </button>
 
     <!-- Warning Message -->
-    <p v-if="warning" class="text-red-600 dark:text-red-400 text-sm mb-2">
+    <p v-if="warning" class="text-red-600 text-sm mb-2">
       ⚠️ {{ warning }}
     </p>
 

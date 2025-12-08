@@ -282,7 +282,7 @@ export default {
       <!-- Top Header -->
       <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-4 justify-between">
         <div class="flex items-center gap-4">
-          <h1 class="text-lg font-semibold text-gray-800">Document {{ documentId }}</h1>
+          <h1 class="text-lg font-semibold text-content-primary">Document {{ documentId }}</h1>
           
           <!-- Connection Status -->
           <div class="flex items-center gap-2">
@@ -292,14 +292,14 @@ export default {
                 isConnected ? 'bg-green-500' : 'bg-red-500'
               ]"
             ></div>
-            <span class="text-sm text-gray-600">
+            <span class="text-sm text-content-secondary">
               {{ isConnected ? 'Connected' : 'Disconnected' }}
             </span>
           </div>
           
           <!-- Loading Status -->
-          <div v-if="isLoading" class="flex items-center gap-2 text-sm text-gray-600">
-            <div class="animate-spin w-3 h-3 border border-gray-400 border-t-transparent rounded-full"></div>
+          <div v-if="isLoading" class="flex items-center gap-2 text-sm text-content-secondary">
+            <div class="animate-spin w-3 h-3 border border-content-secondary border-t-transparent rounded-full"></div>
             <span>Loading...</span>
           </div>
           
@@ -314,14 +314,14 @@ export default {
         <div class="flex items-center gap-3">
           <!-- Number of cards input -->
           <div class="flex items-center gap-2">
-            <label for="cardCount" class="text-sm text-gray-600">Cards:</label>
+            <label for="cardCount" class="text-sm text-content-primary">Cards:</label>
             <input 
               id="cardCount"
               v-model.number="numberOfCards" 
               type="number" 
               min="1" 
               max="20" 
-              class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-accent"
+              class="w-16 px-2 py-1 text-sm border border-border-opa rounded focus:outline-none focus:border-accent text-content-primary"
             />
           </div>
           
@@ -329,7 +329,7 @@ export default {
           <button
             @click="generateFlashcards"
             :disabled="isGenerating"
-            class="px-4 py-1.5 text-sm font-medium text-white bg-accent hover:bg-accent-dark rounded transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            class="px-4 py-1.5 text-sm font-medium text-surface-light bg-accent hover:bg-[#E66900] rounded transition-colors disabled:bg-content-secondary disabled:cursor-not-allowed flex items-center gap-2"
           >
             <span v-if="isGenerating" class="animate-spin w-3 h-3 border border-white border-t-transparent rounded-full"></span>
             <span>{{ isGenerating ? 'Generating...' : 'Generate Flashcards' }}</span>
@@ -345,7 +345,7 @@ export default {
           <!-- Toggle flashcards panel button -->
           <button
             @click="toggleFlashcardsPanel"
-            class="px-4 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center gap-2"
+            class="px-4 py-1.5 text-sm font-medium text-content-primary bg-surface-light-secondary hover:bg-surface-light rounded transition-colors flex items-center gap-2 border border-border-light"
           >
             <span>{{ showFlashcards ? 'Hide' : 'Show' }} Flashcards</span>
           </button>
@@ -357,21 +357,21 @@ export default {
         <!-- Error Overlay (Full Screen) -->
         <div 
           v-if="hasError"
-          class="absolute inset-0 bg-white z-50 flex items-center justify-center"
+          class="absolute inset-0 bg-surface-light z-50 flex items-center justify-center"
         >
           <div class="text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="mx-auto h-12 w-12 text-content-secondary mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h2 class="text-2xl font-semibold text-gray-800 mb-2">{{ errorMessage }}</h2>
-            <p class="text-gray-600">The document you're looking for doesn't exist or you don't have access to it.</p>
+            <h2 class="text-2xl font-semibold text-content-primary mb-2">{{ errorMessage }}</h2>
+            <p class="text-content-secondary">The document you're looking for doesn't exist or you don't have access to it.</p>
           </div>
         </div>
         
         <!-- Editor Container -->
         <div 
           class="flex flex-col flex-1 h-full w-full overflow-auto transition-all duration-300 ease-out"
-          :class="{ 'mr-96': showFlashcards }"
+          :class="{ 'mr-80': showFlashcards }"
         >
           <TiptapEditor
             v-if="!hasError"
@@ -383,8 +383,8 @@ export default {
         </div>
         <!-- Flashcards Panel -->
         <transition name="slide">
-          <div v-if="showFlashcards && !hasError" class=" absolute right-0 top-0 h-full w-96 bg-white border-l-2 border-accent overflow-y-auto">
-              <div class="sticky top-0 bg-white border-b border-border-light-subtle p-4 flex justify-between items-center">
+          <div v-if="showFlashcards && !hasError" class="absolute right-0 top-0 h-full w-80 bg-surface-light border-l-2 border-border-opa overflow-y-auto">
+              <div class="sticky top-0 bg-surface-light border-b border-border-opa p-4 flex justify-between items-center">
                 <h3 class="font-semibold text-content-primary">Page Flashcards</h3>
                 <button @click="toggleFlashcardsPanel" class="text-content-secondary hover:text-content-primary transition-colors">✕</button>
               </div>
@@ -394,7 +394,7 @@ export default {
                 <p class="text-sm">Generate some flashcards from your document!</p>
               </div>
               <div v-else class="p-4 space-y-3">
-                <div v-for="card in pageFlashcards" :key="card.flashcardId" class="bg-surface-light border border-border-light-subtle rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div v-for="card in pageFlashcards" :key="card.flashcardId" class="bg-surface-light-secondary border border-border-light rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div class="flex justify-end mb-2">
                     <button @click="deleteFlashcard(card.flashcardId)" class="text-xs text-content-secondary hover:text-red-600 transition-colors" title="Delete flashcard">
                       <TrashIcon :size="16" />
@@ -402,11 +402,11 @@ export default {
                   </div>
                   <div class="mb-3">
                     <p class="text-xs text-content-secondary font-medium mb-1">Question:</p>
-                    <p class="text-sm text-content-primary">{{ card.question }}</p>
+                    <p class="text-xs text-content-primary">{{ card.question }}</p>
                   </div>
                   <div>
                     <p class="text-xs text-content-secondary font-medium mb-1">Answer:</p>
-                    <p class="text-sm text-content-primary">{{ card.answer }}</p>
+                    <p class="text-xs text-content-primary">{{ card.answer }}</p>
                   </div>
                   <div v-if="card.tags && card.tags.length > 0" class="mt-3 flex flex-wrap gap-1">
                     <span v-for="tag in card.tags" :key="tag" class="text-xs px-2 py-1 bg-accent/10 text-accent rounded">{{ tag }}</span>

@@ -11,6 +11,9 @@ import PlusIcon from '@/components/icons/PlusIcon.vue'
 import FlashcardIcon from '@/components/icons/FlashcardIcon.vue'
 import FolderIcon from '@/components/icons/FolderIcon.vue'
 import DocumentIcon from '@/components/icons/DocumentIcon.vue'
+import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
+import DarkModeIcon from '@/components/icons/DarkModeIcon.vue'
+import SettingsIcon from '@/components/icons/SettingsIcon.vue'
 import FolderTreeItem from '@/components/FolderTreeItem.vue'
 import NewDropdown from '@/components/NewDropdown.vue'
 import { driveService } from '@/utils/driveService'
@@ -28,6 +31,9 @@ export default {
     FlashcardIcon,
     FolderIcon,
     DocumentIcon,
+    ChevronDownIcon,
+    DarkModeIcon,
+    SettingsIcon,
     FolderTreeItem,
     NewDropdown
   },
@@ -56,8 +62,9 @@ export default {
       return userId ? userId.substring(0, 4) : 'User'
     })
 
-    const isHomeActive = computed(() => route.path === '/' || route.path === '/drive')
+    const isHomeActive = computed(() => route.path === '/' || route.path === '/drive' || route.path.startsWith('/drive/'))
     const isSharedActive = computed(() => route.path === '/drive/shared')
+    const isNotebook = computed(() => route.path === '/' || route.path === '/drive')
     const isFlashcardsView = computed(() => route.path.startsWith('/flashcards'))
 
     // Navigation
@@ -194,6 +201,7 @@ export default {
       assistedWritingEnabled,
       isHomeActive,
       isSharedActive,
+      isNotebook,
       isFlashcardsView,
       isDark,
       isSearchActive,
@@ -222,17 +230,16 @@ export default {
 </script>
 
 <template>
-    <div class="flex flex-col w-[280px] bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark h-screen">
-        <div class="h-[50px] px-4 flex flex-row items-center relative">
-            <User3Icon :size="28" class="w-7 h-7 text-accent flex-shrink-0" />
+    <div class="flex flex-col w-[230px] bg-surface-light-secondary border-r border-border-light-subtle h-screen text-content-primary">
+        <div class="h-[50px] px-4 flex items-center relative">
+            <User3Icon :size="28" class="text-accent flex-shrink-0" />
             <div class="flex flex-col flex-1 ml-2">
-                <div class="flex flex-row justify-between w-full items-center">
-                    <h1 class="text-sm font-medium text-surface-dark dark:text-surface-light">{{ userDisplayName }}</h1>
-                    <button @click="toggleDropdown" class="focus:outline-none p-0.5">
-                        <img 
-                            src="@/assets/icons/chevron-down.svg" 
-                            alt="Menu" 
-                            class="w-4 h-4 transition-transform"
+                <div class="flex justify-between w-full items-center">
+                    <h1 class="text-sm font-medium">{{ userDisplayName }}</h1>
+                    <button @click="toggleDropdown" class="focus:outline-none">
+                        <ChevronDownIcon 
+                            :size="20" 
+                            class-name="transition-transform"
                             :class="{ 'rotate-180': isDropdownOpen }"
                         />
                     </button>
@@ -242,11 +249,11 @@ export default {
             <!-- Dropdown Menu -->
             <div 
                 v-if="isDropdownOpen" 
-                class="absolute top-12 right-4 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg shadow-lg z-10 min-w-[120px]"
+                class="absolute top-12 right-4 bg-surface-light content-center border border-border-dark rounded-lg shadow-lg z-10 min-w-[120px] "
             >
                 <button 
                     @click="handleLogout" 
-                    class="w-full text-left px-4 py-2 hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary text-sm rounded-lg"
+                    class="w-full text-left px-4 py-2 hover:bg-surface-light-secondary text-sm rounded-lg"
                 >
                     Logout
                 </button>
@@ -260,9 +267,9 @@ export default {
             <div class="relative mb-3">
                 <button 
                     @click="toggleNewDropdown"
-                    class="inline-flex items-center justify-center px-3 py-2.5 w-[120px] bg-surface-light dark:bg-surface-dark border-[1.5px] border-content-primary dark:border-content-inverse rounded-lg hover:bg-gray-50 dark:hover:bg-surface-dark-secondary transition-colors"
+                    class="inline-flex items-center justify-center px-3 py-2 w-[50%] border border-content-primary rounded-lg hover:bg-surface-light-secondary"
                 >
-                    <span class="text-sm font-semibold text-surface-dark dark:text-surface-light">New</span>
+                    <span class="text-sm font-semibold">New</span>
                     <span class="text-base text-accent font-bold leading-none ml-0.5 -mt-1.5">+</span>
                 </button>
                 
@@ -278,16 +285,15 @@ export default {
             <div 
                 v-if="!isSearchActive"
                 @click="activateSearch"
-                class="flex gap-3 items-center px-2 py-2 rounded cursor-pointer hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary"
+                class="flex gap-3 items-center px-2 py-2 rounded cursor-pointer hover:bg-surface-light-secondary"
             >
-                <SearchIcon :size="24" class="w-6 h-6 text-content-primary dark:text-content-inverse" />
-                <span class="text-base text-surface-dark dark:text-surface-light">Search</span>
+                <SearchIcon :size="24" />
+                <span class="text-base">Search</span>
             </div>
             <div 
                 v-else
-                class="flex gap-3 items-center px-2 py-2 rounded bg-surface-light-secondary dark:bg-surface-dark-secondary relative"
-            >
-                <SearchIcon :size="20" class="text-accent flex-shrink-0" />
+                class="flex gap-3 items-center px-2 py-2 rounded bg-surface-light-secondary relative">
+                <SearchIcon :size="20" class="text-content-primary flex-shrink-0" />
                 <input
                     id="sidebar-search-input"
                     v-model="searchQuery"
@@ -295,12 +301,12 @@ export default {
                     @blur="deactivateSearch"
                     type="text"
                     placeholder="Search..."
-                    class="flex-1 bg-transparent outline-none text-content-primary dark:text-content-inverse text-base"
+                    class="flex-1 bg-transparent outline-none text-base w-full"
                 />
                 <button 
                     v-if="searchQuery"
                     @mousedown.prevent="clearSearch"
-                    class="text-gray-400 hover:text-gray-600"
+                    class="text-content-secondary hover:text-content-primary"
                 >
                     ✕
                 </button>
@@ -309,17 +315,17 @@ export default {
             <!-- Search Results Dropdown -->
             <div 
                 v-if="isSearchActive && searchResults.length > 0" 
-                class="bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg shadow-lg mt-1 max-h-64 overflow-y-auto mx-2"
+                class="bg-surface-light border border-border-light rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto mx-2 relative z-50"
             >
                 <button
                     v-for="result in searchResults"
                     :key="result.pageId"
                     @mousedown.prevent="navigateToPage(result.pageId)"
-                    class="w-full text-left px-3 py-2 hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary flex items-start gap-2 border-b border-border-light-subtle dark:border-border-dark-subtle last:border-0"
+                    class="w-full text-left px-3 py-2 hover:bg-surface-light-secondary flex items-start gap-2 border-b border-border-light-subtle last:border-0"
                 >
-                    <DocumentIcon :size="14" class="text-content-primary dark:text-content-inverse mt-1 flex-shrink-0" />
+                    <DocumentIcon :size="14" class="mt-1 flex-shrink-0" />
                     <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-surface-dark dark:text-surface-light truncate">{{ result.title }}</div>
+                        <div class="text-sm font-medium truncate">{{ result.title }}</div>
                     </div>
                 </button>
             </div>
@@ -327,7 +333,7 @@ export default {
             <!-- No Results Message -->
             <div 
                 v-if="isSearchActive && searchQuery && searchResults.length === 0" 
-                class="bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg shadow-lg mt-1 mx-2 px-3 py-2 text-sm text-gray-500 text-center"
+                class="bg-surface-light border border-border-light rounded-lg shadow-lg mt-1 mx-2 px-3 py-2 text-sm text-content-secondary text-center"
             >
                 No results found
             </div>
@@ -336,55 +342,52 @@ export default {
             <a 
                 href="/drive" 
                 class="flex gap-3 items-center px-2 py-2 rounded"
-                :class="isHomeActive ? 'bg-surface-light-secondary dark:bg-surface-dark-secondary' : 'hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary'"
             >
-                <HomeIconNew :size="24" class="w-6 h-6" :class="isHomeActive ? 'text-accent' : 'text-content-primary dark:text-content-inverse'" />
-                <span class="text-base" :class="isHomeActive ? 'text-accent font-medium' : 'text-surface-dark dark:text-surface-light'">Home</span>
+                <HomeIconNew :size="24" :class="isHomeActive ? 'text-accent' : ''" />
+                <span class="text-base" :class="isHomeActive ? 'text-accent font-medium' : ''">Home</span>
             </a>
             
             <!-- Flashcards -->
             <button
                 @click="navigateTo('/flashcards')"
-                class="flex gap-3 items-center px-2 py-2 rounded cursor-pointer"
-                :class="isFlashcardsView ? 'bg-surface-light-secondary dark:bg-surface-dark-secondary' : 'hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary'"
+                class="flex gap-3 items-center px-2 py-2 rounded"
             >
-                <FlashcardIcon :size="24" :class="isFlashcardsView ? 'text-accent' : 'text-content-primary dark:text-content-inverse'" />
-                <span class="text-base" :class="isFlashcardsView ? 'text-accent font-medium' : 'text-surface-dark dark:text-surface-light'">Flashcards</span>
+                <FlashcardIcon :size="24" :class="isFlashcardsView ? 'text-accent' : ''" />
+                <span class="text-base" :class="isFlashcardsView ? 'text-accent font-medium' : ''">Flashcards</span>
             </button>
             
             <!-- My papairs Section -->
             <div class="mt-3 mb-1">
-                <h2 class="text-xs font-semibold text-surface-dark-secondary dark:text-surface-light-secondary px-2">My papairs</h2>
+                <h2 class="text-xs font-semibold text-content-primary px-2">My papairs</h2>
             </div>
             
             <!-- My notebook -->
             <a 
                 href="/drive" 
                 class="flex gap-3 items-center px-2 py-2 rounded"
-                :class="isHomeActive ? 'bg-surface-light-secondary dark:bg-surface-dark-secondary' : 'hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary'"
             >
-                <FolderIcon :size="20" :class="isHomeActive ? 'text-accent' : 'text-content-primary dark:text-content-inverse'" />
-                <span class="text-base" :class="isHomeActive ? 'text-accent font-medium' : 'text-surface-dark dark:text-surface-light'">My notebook</span>
+                <FolderIcon :size="20" :class="isNotebook ? 'text-accent' : ''" />
+                <span class="text-base" :class="isNotebook ? 'text-accent font-medium' : ''">My notebook</span>
             </a>
             
             <!-- Shared with me -->
             <a 
                 href="/drive/shared" 
-                class="flex gap-3 items-center px-2 py-2 rounded cursor-pointer"
-                :class="isSharedActive ? 'bg-surface-light-secondary dark:bg-surface-dark-secondary' : 'hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary'"
+                class="flex gap-3 items-center px-2 py-2 rounded"
+                :class="isSharedActive ? 'bg-surface-light-secondary' : 'hover:bg-surface-light-secondary'"
             >
-                <svg class="w-5 h-5" :class="isSharedActive ? 'text-accent' : 'text-surface-dark dark:text-surface-light'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5" :class="isSharedActive ? 'text-accent' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <span class="text-base" :class="isSharedActive ? 'text-accent font-medium' : 'text-surface-dark dark:text-surface-light'">Shared with me</span>
+                <span class="text-base" :class="isSharedActive ? 'text-accent font-medium' : ''">Shared with me</span>
             </a>
             
             <!-- Papairs Section -->
             <div class="mt-3 mb-1">
                 <div class="flex justify-between items-center px-2 relative">
-                    <h2 class="text-xs font-semibold text-surface-dark-secondary dark:text-surface-light-secondary">Papairs</h2>
+                    <h2 class="text-xs font-semibold text-content-primary">Papairs</h2>
                     <button @click="toggleFolderTreeDropdown" class="text-accent hover:text-orange-600">
-                        <PlusIcon :size="20" class="w-5 h-5" />
+                        <PlusIcon :size="20" />
                     </button>
                     
                     <NewDropdown 
@@ -398,8 +401,8 @@ export default {
             
             <!-- Folder Tree -->
             <div class="folder-tree-container">
-                <div v-if="loading" class="text-sm text-gray-500 px-2">Loading...</div>
-                <div v-else-if="folderTree.length === 0" class="text-sm text-gray-500 px-2">No folders yet</div>
+                <div v-if="loading" class="text-sm text-content-secondary px-2">Loading...</div>
+                <div v-else-if="folderTree.length === 0" class="text-sm text-content-secondary px-2">No folders yet</div>
                 <div v-else>
                     <FolderTreeItem
                         v-for="folder in folderTree"
@@ -419,22 +422,18 @@ export default {
                 <p class="text-xs text-accent font-medium">Papairs v1.0</p>
             </div>
             
-            <div class="flex flex-col gap-0.5">
+            <div class="flex flex-col gap-2 pb-2">
                 <!-- Settings with Dropdown -->
                 <div class="relative">
                     <button 
                         @click="toggleSettingsDropdown"
-                        class="w-full flex gap-3 items-center px-2 py-1.5 hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary rounded cursor-pointer"
+                        class="w-full flex gap-3 items-center px-2 hover:bg-surface-light-secondary rounded"
                     >
-                        <svg class="w-5 h-5 text-surface-dark-secondary dark:text-surface-light-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span class="text-sm text-surface-dark dark:text-surface-light text-left flex-1">Settings</span>
-                        <img 
-                            src="@/assets/icons/chevron-down.svg" 
-                            alt="Expand" 
-                            class="w-4 h-4 transition-transform"
+                        <SettingsIcon :size="20" class-name="text-content-primary" />
+                        <span class="text-sm text-left flex-1">Settings</span>
+                        <ChevronDownIcon 
+                            :size="20" 
+                            class="transition-transform text-content-primary"
                             :class="{ 'rotate-180': isSettingsDropdownOpen }"
                         />
                     </button>
@@ -442,15 +441,15 @@ export default {
                     <!-- Settings Dropdown -->
                     <div 
                         v-if="isSettingsDropdownOpen"
-                        class="mt-1 ml-4 pl-3 border-l-2 border-border-light dark:border-border-dark space-y-0.5"
+                        class="mt-1 ml-4 pl-3 border-l-2 border-border-light space-y-0.5"
                     >
                         <!-- Assisted Writing -->
-                        <div class="flex gap-2 items-center px-2 py-1.5 hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary rounded cursor-pointer" @click="toggleAssistedWriting">
-                            <AssistedIcon :size="20" class="w-5 h-5 text-accent flex-shrink-0" />
-                            <span class="text-sm text-surface-dark dark:text-surface-light flex-1">Assisted Writing</span>
+                        <div class="flex gap-2 items-center px-2 py-1.5 hover:bg-surface-light-secondary rounded cursor-pointer" @click="toggleAssistedWriting">
+                            <AssistedIcon :size="20" class="text-accent flex-shrink-0" />
+                            <span class="text-sm flex-1">Assisted Writing</span>
                             <div 
                                 class="w-8 h-4 rounded-full relative transition-colors duration-200 cursor-pointer flex-shrink-0"
-                                :class="assistedWritingEnabled ? 'bg-accent' : 'bg-gray-300'"
+                                :class="assistedWritingEnabled ? 'bg-accent' : 'bg-content-secondary'"
                             >
                                 <div 
                                     class="absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all duration-200"
@@ -462,11 +461,9 @@ export default {
                 </div>
                 
                 <!-- Dark Mode -->
-                <button @click="toggleTheme" class="flex gap-3 items-center px-2 py-1.5 hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary rounded cursor-pointer">
-                    <svg class="w-5 h-5 text-surface-dark-secondary dark:text-surface-light-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
-                    <span class="text-sm text-surface-dark dark:text-surface-light">Dark Mode</span>
+                <button @click="toggleTheme" class="flex gap-3 items-center px-2 hover:bg-surface-light-secondary rounded">
+                    <DarkModeIcon :size="20" class="text-content-primary" />
+                    <span class="text-sm">Dark Mode</span>
                 </button>
             </div>
         </div>

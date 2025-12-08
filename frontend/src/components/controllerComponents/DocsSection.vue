@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <h2 class="text-2xl font-bold text-content-primary dark:text-content-inverse mb-4">
+    <h2 class="text-2xl font-bold text-content-primary mb-4">
       Documentation Service Tests
     </h2>
     
@@ -17,14 +17,14 @@
       />
 
       <!-- File Upload for AI Context -->
-      <div class="bg-white dark:bg-surface-dark-secondary rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-content-primary dark:text-content-inverse mb-4">
+      <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-content-primary mb-4">
           AI Context Files
         </h3>
         
         <!-- Upload Section -->
         <div class="mb-4">
-          <label class="block mb-2 text-sm font-medium text-content-primary dark:text-content-inverse">
+          <label class="block mb-2 text-sm font-medium text-content-primary">
             Upload File
           </label>
           <input
@@ -41,7 +41,7 @@
 
         <!-- Files List -->
         <div class="space-y-2 max-h-96 overflow-y-auto">
-          <h4 class="text-sm font-medium text-content-primary dark:text-content-inverse mb-2">
+          <h4 class="text-sm font-medium text-content-primary mb-2">
             Your Files ({{ userFiles.length }})
           </h4>
           <div v-if="userFiles.length === 0" class="text-sm text-content-secondary italic">
@@ -50,7 +50,7 @@
           <div
             v-for="file in userFiles"
             :key="file.fileId"
-            class="flex items-center justify-between p-2 border border-border-light dark:border-border-dark rounded hover:bg-surface-light dark:hover:bg-surface-dark transition-colors"
+            class="flex items-center justify-between p-2 border border-border-light rounded hover:bg-surface-light transition-colors"
           >
             <label class="flex items-center flex-1 cursor-pointer">
               <input
@@ -60,7 +60,7 @@
                 class="mr-2 w-4 h-4 text-accent bg-gray-100 border-gray-300 rounded focus:ring-accent"
               />
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-content-primary dark:text-content-inverse truncate">
+                <p class="text-sm font-medium text-content-primary truncate">
                   {{ file.filename }}
                 </p>
                 <p class="text-xs text-content-secondary">{{ (file.fileSize / 1024).toFixed(1) }} KB</p>
@@ -76,8 +76,8 @@
           </div>
         </div>
 
-        <div v-if="selectedFiles.length > 0" class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded text-sm">
-          <p class="font-medium text-blue-900 dark:text-blue-100">
+        <div v-if="selectedFiles.length > 0" class="mt-4 p-3 bg-blue-50 rounded text-sm">
+          <p class="font-medium text-blue-900">
             {{ selectedFiles.length }} file(s) selected for AI context
           </p>
         </div>

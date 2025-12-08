@@ -191,7 +191,7 @@ export default {
 
 <template>
   <div class="space-y-6">
-    <h2 class="text-2xl font-bold text-content-primary dark:text-content-inverse mb-4">
+    <h2 class="text-2xl font-bold text-content-primary mb-4">
       Page Management Tests
     </h2>
     
