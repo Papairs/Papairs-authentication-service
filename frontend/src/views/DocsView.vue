@@ -54,31 +54,11 @@ export default {
     const updateEditorContent = (newContent) => {
       if (!editor.value || editor.value.getHTML() === newContent) return
       
-      // Store current cursor position before update
-      const { from, to } = editor.value.state.selection
-      const wasEditorFocused = editor.value.isFocused
-      
       isReceivingUpdate.value = true
-      
-      // Update content without emitting events
-      editor.value.commands.setContent(newContent, false)
-      
-      // Restore cursor position if editor was focused
-      if (wasEditorFocused) {
-        // Ensure the position is still valid after content update
-        const docSize = editor.value.state.doc.content.size
-        const safeFrom = Math.min(from, docSize)
-        const safeTo = Math.min(to, docSize)
-        
-        try {
-          editor.value.commands.setTextSelection({ from: safeFrom, to: safeTo })
-        } catch (e) {
-          // If position is invalid, just continue without restoring
-          console.debug('Could not restore cursor position')
-        }
-      }
-      
-      setTimeout(() => { isReceivingUpdate.value = false }, 100)
+      setTimeout(() => {
+        editor.value.commands.setContent(newContent, false)
+        setTimeout(() => { isReceivingUpdate.value = false }, 100)
+      }, 50)
     }
 
     // Validate document ID
