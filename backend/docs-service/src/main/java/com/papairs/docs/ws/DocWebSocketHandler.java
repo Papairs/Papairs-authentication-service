@@ -55,7 +55,8 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
 
             switch (msg.action) {
                 case "join" -> handleJoinRequest(session, docId, userId);
-                case "op" -> handleOperationRequest(session, docId, userId, msg.op);
+                case "op" -> handleOperationRequest(session, docId, userId, msg.op, msg.cursor);
+                case "cursor" -> handleCursorUpdate(session, docId, userId, msg.cursor);
                 default -> logger.warning("Unknown action: " + msg.action);
             }
         } catch (Exception e) {
@@ -86,7 +87,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
     /**
      * Handles HTML-based collaborative editing operations
      */
-    private void handleOperationRequest(WebSocketSession session, String docId, String userId, Object incomingOp) {
+    private void handleOperationRequest(WebSocketSession session, String docId, String userId, Object incomingOp, com.papairs.docs.model.CursorPosition cursor) {
         if (incomingOp == null) {
             logger.warning("Received null operation from user: " + userId);
             return;
@@ -100,7 +101,26 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
 
         try {
             var operation = (com.papairs.docs.model.OT.Op) incomingOp;
-            String sanitizedHtml = collaborationService.applyOperation(document, operation, userId);
+            
+            // Get edit position for cursor transformation
+            Integer editPosition = (cursor != null) ? cursor.from : null;
+            
+            // Apply operation and transform cursors
+            String sanitizedHtml = collaborationService.applyOperationWithCursorTransform(
+                document, operation, userId, editPosition
+            );
+            
+            // Update cursor position if provided
+            if (cursor != null) {
+                cursor.userId = userId;
+                cursor.userName = userId;
+                document.updateCursor(userId, cursor);
+                logger.info("Cursor position for user " + userId + ": from=" + cursor.from + ", to=" + cursor.to);
+            }
+            
+            // Log all cursor positions
+            logAllCursorPositions(document);
+            
             broadcastOperation(document, operation, sanitizedHtml);
             
         } catch (IllegalArgumentException e) {
@@ -112,6 +132,40 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error processing operation from user: " + userId, e);
             sendError(session, "Error processing operation", document.getVersion());
+        }
+    }
+
+    /**
+     * Handles cursor position updates without operations
+     */
+    private void handleCursorUpdate(WebSocketSession session, String docId, String userId, com.papairs.docs.model.CursorPosition cursor) {
+        DocumentSession document = collaborationService.getSession(docId);
+        if (document == null) {
+            sendError(session, "Document session not found", 0);
+            return;
+        }
+
+        if (cursor != null) {
+            cursor.userId = userId;
+            cursor.userName = userId;
+            document.updateCursor(userId, cursor);
+            logger.fine("Cursor update for user " + userId + ": from=" + cursor.from + ", to=" + cursor.to);
+            broadcastCursorUpdate(document, userId, cursor);
+        }
+    }
+
+    /**
+     * Logs all cursor positions in the document
+     */
+    private void logAllCursorPositions(DocumentSession document) {
+        var cursors = document.getAllCursors();
+        if (!cursors.isEmpty()) {
+            StringBuilder logMsg = new StringBuilder("Current cursor positions in document " + document.getDocumentId() + ":\n");
+            cursors.forEach((userId, cursor) -> {
+                logMsg.append("  User ").append(userId).append(": from=").append(cursor.from)
+                      .append(", to=").append(cursor.to).append("\n");
+            });
+            logger.info(logMsg.toString());
         }
     }
 
@@ -138,6 +192,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         snapshot.type = "snapshot";
         snapshot.version = document.getVersion();
         snapshot.content = document.getContent();
+        snapshot.cursors = document.getAllCursors();
         sendMessage(session, snapshot);
     }
 
@@ -164,7 +219,18 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         message.clientId = operation.clientId;
         message.opId = operation.opId;
         message.htmlContent = htmlContent;
+        message.cursors = document.getAllCursors();
         broadcastToAll(document, message);
+    }
+
+    private void broadcastCursorUpdate(DocumentSession document, String userId, com.papairs.docs.model.CursorPosition cursor) {
+        var message = new AppliedOp();
+        message.type = "cursor";
+        message.version = document.getVersion();
+        message.clientId = userId;
+        message.cursor = cursor;
+        message.cursors = document.getAllCursors();
+        broadcastToOthers(document, message, null);
     }
 
     private void sendMessage(WebSocketSession session, AppliedOp message) {

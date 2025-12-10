@@ -44,6 +44,11 @@ export default {
     const hasError = ref(false)
     const errorMessage = ref('')
     
+    // Cursor tracking
+    const collaborativeCursors = ref(new Map())
+    const localCursorPosition = ref({ from: 0, to: 0 })
+    let cursorUpdateTimer = null
+    
     // Flashcard state
     const showSuccess = ref(false)
     const numberOfCards = ref(5)
@@ -52,13 +57,35 @@ export default {
     const isLoadingFlashcards = ref(false)
 
     const updateEditorContent = (newContent) => {
-      if (!editor.value || editor.value.getHTML() === newContent) return
+      if (!editor.value) return
+      
+      // Don't update if content is the same
+      const currentContent = editor.value.getHTML()
+      if (currentContent === newContent) return
       
       isReceivingUpdate.value = true
-      setTimeout(() => {
-        editor.value.commands.setContent(newContent, false)
-        setTimeout(() => { isReceivingUpdate.value = false }, 100)
-      }, 50)
+      
+      // Save current selection
+      const { from, to } = editor.value.state.selection
+      
+      // Update content without adding to history
+      editor.value.commands.setContent(newContent, false)
+      
+      // Restore cursor position immediately (not in setTimeout)
+      try {
+        const docSize = editor.value.state.doc.content.size
+        const safeFrom = Math.min(from, docSize)
+        const safeTo = Math.min(to, docSize)
+        
+        // Only restore if positions are valid
+        if (safeFrom >= 0 && safeTo >= 0 && safeFrom <= docSize && safeTo <= docSize) {
+          editor.value.commands.setTextSelection({ from: safeFrom, to: safeTo })
+        }
+      } catch (e) {
+        console.warn('Could not restore cursor position:', e)
+      }
+      
+      isReceivingUpdate.value = false
     }
 
     // Validate document ID
@@ -100,13 +127,44 @@ export default {
         if (document.handleSnapshot(message)) {
           updateEditorContent(document.htmlContent.value)
         }
+        // Update cursors from snapshot (exclude own cursor)
+        if (message.cursors) {
+          const userId = wsService.getUserId()
+          const filteredCursors = Object.entries(message.cursors)
+            .filter(([id]) => id !== userId)
+          collaborativeCursors.value = new Map(filteredCursors)
+        }
       })
     })
 
     wsService.on('onOperation', (message) => {
       errorHandler.safe(() => {
+        // Don't process operations from ourselves
+        if (message.clientId === wsService.getClientId()) {
+          return
+        }
+        
         if (document.handleServerOperation(message)) {
           updateEditorContent(document.htmlContent.value)
+        }
+        
+        // Use cursor positions from server (already transformed by backend)
+        if (message.cursors) {
+          const userId = wsService.getUserId()
+          const filteredCursors = Object.entries(message.cursors)
+            .filter(([id]) => id !== userId)
+          collaborativeCursors.value = new Map(filteredCursors)
+        }
+      })
+    })
+
+    wsService.on('onCursorUpdate', (message) => {
+      errorHandler.safe(() => {
+        if (message.cursors) {
+          const userId = wsService.getUserId()
+          const filteredCursors = Object.entries(message.cursors)
+            .filter(([id]) => id !== userId)
+          collaborativeCursors.value = new Map(filteredCursors)
         }
       })
     })
@@ -127,11 +185,30 @@ export default {
         const operation = document.handleHTMLInput(html)
         if (operation && isConnected.value) {
           const userId = wsService.getUserId()
-          wsService.sendOperation(documentId.value, operation, userId)
+          // Get current cursor position from editor
+          if (editor.value) {
+            const { from, to } = editor.value.state.selection
+            localCursorPosition.value = { from, to }
+          }
+          wsService.sendOperation(documentId.value, operation, userId, localCursorPosition.value)
         }
       })
     }
     
+    const handleCursorChange = (cursor) => {
+      localCursorPosition.value = cursor
+      
+      // Send cursor update to server (throttled to avoid spam)
+      if (isConnected.value) {
+        if (cursorUpdateTimer) {
+          clearTimeout(cursorUpdateTimer)
+        }
+        cursorUpdateTimer = setTimeout(() => {
+          const userId = wsService.getUserId()
+          wsService.sendCursorUpdate(documentId.value, userId, cursor)
+        }, 200) // 200ms throttle
+      }
+    }
 
     const handleEditorReady = (editorInstance) => {
       editor.value = editorInstance
@@ -258,7 +335,11 @@ export default {
       
       // Event handlers
       handleContentChange,
+      handleCursorChange,
       handleEditorReady,
+      
+      // Cursor tracking
+      collaborativeCursors,
       
       // Flashcard functionality
       isGenerating,
@@ -376,7 +457,9 @@ export default {
           <TiptapEditor
             v-if="!hasError"
             :model-value="htmlContent"
+            :collaborative-cursors="collaborativeCursors"
             @content-change="handleContentChange"
+            @cursor-change="handleCursorChange"
             @ready="handleEditorReady"
             placeholder="Start writing your document..."
           />

@@ -174,3 +174,30 @@
 .tiptap-editor-container {
   min-height: 100%;
 }
+
+/* Collaborative cursor styles */
+.collaboration-cursor {
+  position: relative;
+  display: inline;
+  pointer-events: none;
+}
+
+.collaboration-cursor__label {
+  z-index: 10;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.collaboration-cursor__selection {
+  pointer-events: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

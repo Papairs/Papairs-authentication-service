@@ -18,6 +18,7 @@ public class DocumentSession {
     private final List<Op> operationHistory = Collections.synchronizedList(new ArrayList<>());
     private final Set<WebSocketSession> activeSessions = Collections.synchronizedSet(new HashSet<>());
     private final Map<WebSocketSession, String> sessionToUser = new ConcurrentHashMap<>();
+    private final Map<String, CursorPosition> userCursors = new ConcurrentHashMap<>();
     private volatile boolean isDirty = false;
     private volatile ScheduledFuture<?> saveTimer;
 
@@ -88,6 +89,66 @@ public class DocumentSession {
 
     public String getAnyActiveUser() {
         return sessionToUser.values().stream().findFirst().orElse("system");
+    }
+
+    // Cursor tracking methods
+    public void updateCursor(String userId, CursorPosition cursor) {
+        if (cursor != null) {
+            userCursors.put(userId, cursor);
+        } else {
+            userCursors.remove(userId);
+        }
+    }
+
+    public CursorPosition getCursor(String userId) {
+        return userCursors.get(userId);
+    }
+
+    public Map<String, CursorPosition> getAllCursors() {
+        return new HashMap<>(userCursors);
+    }
+
+    public void removeCursor(String userId) {
+        userCursors.remove(userId);
+    }
+
+    /**
+     * Transform cursor positions after content change
+     * @param editingUserId The user who made the edit
+     * @param editPosition The position where edit occurred
+     * @param oldLength Previous content length
+     * @param newLength New content length
+     */
+    public void transformCursorsAfterEdit(String editingUserId, int editPosition, int oldLength, int newLength) {
+        int sizeDiff = newLength - oldLength;
+        
+        if (sizeDiff == 0) {
+            return; // No transformation needed
+        }
+        
+        userCursors.forEach((userId, cursor) -> {
+            // Don't transform the editing user's cursor
+            if (userId.equals(editingUserId)) {
+                return;
+            }
+            
+            // Transform cursor positions based on where the edit happened
+            int newFrom = cursor.from;
+            int newTo = cursor.to;
+            
+            // If cursor is after the edit position, shift it by the size difference
+            if (cursor.from >= editPosition) {
+                newFrom = Math.max(0, cursor.from + sizeDiff);
+            }
+            
+            if (cursor.to >= editPosition) {
+                newTo = Math.max(0, cursor.to + sizeDiff);
+            }
+            
+            // Update cursor with transformed positions
+            cursor.from = Math.min(newFrom, newLength);
+            cursor.to = Math.min(newTo, newLength);
+        });
     }
 
     // Auto-save timer management

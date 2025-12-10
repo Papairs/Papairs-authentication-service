@@ -57,7 +57,12 @@ public class CollaborationService {
             throw new IllegalArgumentException("Missing HTML content");
         }
 
+        // Store old content state for cursor transformation
+        int oldLength = document.getContent().length();
+        
         String sanitizedHtml = htmlSanitizer.sanitize(operation.htmlContent);
+        int newLength = sanitizedHtml.length();
+        
         document.setContent(sanitizedHtml);
         document.addOperation(operation);
         document.incrementVersion();
@@ -69,6 +74,41 @@ public class CollaborationService {
         
         return sanitizedHtml;
     }
+    
+    /**
+     * Apply an operation and transform cursor positions
+     */
+    public String applyOperationWithCursorTransform(DocumentSession document, Op operation, String userId, Integer editPosition) {
+        if (operation.htmlContent == null) {
+            throw new IllegalArgumentException("Missing HTML content");
+        }
+
+        // Store old content state for cursor transformation
+        int oldLength = document.getContent().length();
+        
+        String sanitizedHtml = htmlSanitizer.sanitize(operation.htmlContent);
+        int newLength = sanitizedHtml.length();
+        
+        document.setContent(sanitizedHtml);
+        document.addOperation(operation);
+        document.incrementVersion();
+        
+        // Transform other users' cursors based on the edit
+        if (editPosition != null) {
+            document.transformCursorsAfterEdit(userId, editPosition, oldLength, newLength);
+            logger.info("Transformed cursors after edit at position " + editPosition + 
+                       " (size change: " + (newLength - oldLength) + ")");
+        }
+        
+        autoSaveManager.scheduleDelayedSave(document);
+        
+        logger.info("User " + userId + " updated document " + document.getDocumentId() + 
+                   " (length: " + sanitizedHtml.length() + ")");
+        
+        return sanitizedHtml;
+    }
+
+
 
     /**
      * Handle user disconnect
@@ -79,6 +119,7 @@ public class CollaborationService {
             document.removeSession(session);
             
             if (userId != null) {
+                document.removeCursor(userId);
                 logger.info("User " + userId + " disconnected from document " + document.getDocumentId());
             }
             

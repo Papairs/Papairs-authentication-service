@@ -55,6 +55,7 @@ import { Extension } from '@tiptap/core'
 import { onBeforeUnmount, ref, watch, nextTick, computed } from 'vue'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorContentArea from './EditorContent.vue'
+import { CollaborationCursor } from './CollaborationCursor.js'
 import './TiptapEditor.css'
 
 export default {
@@ -71,9 +72,13 @@ export default {
     placeholder: {
       type: String,
       default: 'Start writing your document...',
+    },
+    collaborativeCursors: {
+      type: Map,
+      default: () => new Map()
     }
   },
-  emits: ['update:modelValue', 'ready', 'content-change'],
+  emits: ['update:modelValue', 'ready', 'content-change', 'cursor-change'],
   setup(props, { emit }) {
     // Constants
     const DEFAULT_TEXT_COLOR = '#000000'
@@ -153,6 +158,13 @@ export default {
           FontFamily,
           FontSize,
           Color,
+          CollaborationCursor.configure({
+            provider: null,
+            user: {
+              name: 'You',
+              color: '#3b82f6',
+            },
+          }),
         ],
         content: props.modelValue,
         onUpdate: ({ editor }) => {
@@ -163,6 +175,10 @@ export default {
             lastContent.value = html
             emit('update:modelValue', html)
             emit('content-change', html)
+            
+            // Emit cursor position after content change
+            const { from, to } = editor.state.selection
+            emit('cursor-change', { from, to })
           }
         },
         onCreate: ({ editor }) => {
@@ -195,6 +211,12 @@ export default {
           
           // If not in heading, use textStyle fontSize or default
           currentFontSize.value = fontSize || DEFAULT_FONT_SIZE
+          
+          // Emit cursor position only when selection explicitly changes (not during typing)
+          const { from, to } = editor.state.selection
+          if (from !== to) {
+            emit('cursor-change', { from, to })
+          }
         },
         editorProps: {
           attributes: {
@@ -289,6 +311,17 @@ export default {
       lastContent.value = newValue
       nextTick(() => { isInitialized.value = true })
     })
+
+    // Watch for collaborative cursor updates
+    watch(() => props.collaborativeCursors, (newCursors) => {
+      if (!editor.value) return
+      
+      const tr = editor.value.state.tr
+      tr.setMeta('collaborationCursor', {
+        cursors: newCursors
+      })
+      editor.value.view.dispatch(tr)
+    }, { deep: true })
 
     // Initialize editor on mount
     initEditor()
