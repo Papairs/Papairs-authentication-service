@@ -155,7 +155,7 @@ public class DocsServiceRoutingTest extends AbstractE2ETest {
         public void routeUpdatePage() throws Exception {
             String pageId = "page-to-update";
             authMock.stubValidTokenValidation(TEST_TOKEN, TEST_USER_ID, TEST_EMAIL);
-            docsMock.stubUpdatePage(pageId);
+            docsMock.stubUpdatePage(pageId, TEST_USER_ID);
 
             webTestClient.put()
                     .uri("/api/docs/pages/" + pageId)

@@ -141,7 +141,7 @@ public class TestFixtures {
                 .andExpect(jsonPath("$[?(@.userId == '%s')].role".formatted(memberId)).value(expectedRole.name()));
     }
 
-    public void updatePageContent(String pageId, String content) throws Exception {
+    public void updatePageContent(String pageId, String userId, String content) throws Exception {
         String requestBody = """
             {
                 "content": "%s"
@@ -149,6 +149,7 @@ public class TestFixtures {
             """.formatted(content);
 
         mockMvc.perform(put("/api/docs/pages/" + pageId)
+                        .header(userIdHeader, userId)
                         .contentType(contentTypeJson)
                         .content(requestBody))
                 .andExpect(status().isOk());

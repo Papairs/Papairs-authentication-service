@@ -116,12 +116,13 @@ public class DocsServiceMock {
                         .withBody("{\"pageId\": \"" + pageId + "\", \"title\": \"Test Page\", \"ownerId\": \"" + userId + "\"}")));
     }
 
-    public void stubUpdatePage(String pageId) {
+    public void stubUpdatePage(String pageId, String userId) {
         wireMockServer.stubFor(put(urlEqualTo("/api/docs/pages/" + pageId))
+                .withHeader("X-User-Id", equalTo(userId))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("{\"pageId\": \"" + pageId + "\", \"title\": \"Updated Page\"}")));
+                        .withBody("{\"pageId\": \"" + pageId + "\", \"title\": \"Updated Page\", \"ownerId\": \"" + userId + "\"}")));
     }
 
     public void stubDeletePage(String pageId, String userId) {

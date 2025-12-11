@@ -277,7 +277,7 @@ public class AuthenticationFilterTest extends AbstractE2ETest {
         public void authenticatePutRequests() throws Exception {
             String pageId = "page-123";
             authMock.stubValidTokenValidation(TEST_TOKEN, TEST_USER_ID, TEST_EMAIL);
-            docsMock.stubUpdatePage(pageId);
+            docsMock.stubUpdatePage(pageId, TEST_USER_ID);
 
             webTestClient.put()
                     .uri("/api/docs/pages/" + pageId)
