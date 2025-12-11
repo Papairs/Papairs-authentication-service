@@ -68,7 +68,6 @@ public class AutoSaveManager {
             logger.info("Saving document with userId: " + userId);
             pageService.updatePage(
                 document.getDocumentId(), 
-                userId,
                 document.getContent()
             );
             document.markClean();

@@ -7,4 +7,5 @@ public class Message {
     public String docId;
     public String userId;  // Add user identification
     public Op op;
+    public CursorPosition cursor;
 }

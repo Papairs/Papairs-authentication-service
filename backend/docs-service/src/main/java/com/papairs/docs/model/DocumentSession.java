@@ -18,6 +18,7 @@ public class DocumentSession {
     private final List<Op> operationHistory = Collections.synchronizedList(new ArrayList<>());
     private final Set<WebSocketSession> activeSessions = Collections.synchronizedSet(new HashSet<>());
     private final Map<WebSocketSession, String> sessionToUser = new ConcurrentHashMap<>();
+    private final Map<String, CursorPosition> userCursors = new ConcurrentHashMap<>();
     private volatile boolean isDirty = false;
     private volatile ScheduledFuture<?> saveTimer;
 
@@ -88,6 +89,40 @@ public class DocumentSession {
 
     public String getAnyActiveUser() {
         return sessionToUser.values().stream().findFirst().orElse("system");
+    }
+
+    // Cursor tracking methods
+    public void updateCursor(String userId, CursorPosition cursor) {
+        if (cursor != null) {
+            userCursors.put(userId, cursor);
+        } else {
+            userCursors.remove(userId);
+        }
+    }
+
+    public CursorPosition getCursor(String userId) {
+        return userCursors.get(userId);
+    }
+
+    public Map<String, CursorPosition> getAllCursors() {
+        return new HashMap<>(userCursors);
+    }
+
+    public void removeCursor(String userId) {
+        userCursors.remove(userId);
+    }
+
+    /**
+     * Transform cursor positions after content change
+     * Note: Cursor transformation is disabled for HTML-based editing.
+     * ProseMirror positions don't map directly to HTML character positions.
+     * Each client manages cursor positions based on their own document state.
+     * @deprecated This method is no longer used for HTML-based collaboration
+     */
+    @Deprecated
+    public void transformCursorsAfterEdit(String editingUserId, int editPosition, int oldLength, int newLength) {
+        // Cursor transformation disabled - clients manage their own cursor positions
+        // based on their ProseMirror document state
     }
 
     // Auto-save timer management

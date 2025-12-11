@@ -18,6 +18,7 @@ export class DocumentWebSocketService {
       onOperation: null,
       onUserJoined: null,
       onUserLeft: null,
+      onCursorUpdate: null,
       onError: null
     }
   }
@@ -67,12 +68,26 @@ export class DocumentWebSocketService {
    * @param {string} docId - Document ID
    * @param {object} operation - Operation to send
    * @param {string} userId - User ID (required)
+   * @param {object} cursor - Cursor position { from, to }
    */
-  sendOperation(docId, operation, userId) {
+  sendOperation(docId, operation, userId, cursor = null) {
     if (!userId) {
       throw new Error('User ID is required')
     }
-    return this.webSocket.send({ action: 'op', docId, op: operation, userId })
+    return this.webSocket.send({ action: 'op', docId, op: operation, userId, cursor })
+  }
+
+  /**
+   * Send cursor position update
+   * @param {string} docId - Document ID
+   * @param {string} userId - User ID (required)
+   * @param {object} cursor - Cursor position { from, to }
+   */
+  sendCursorUpdate(docId, userId, cursor) {
+    if (!userId) {
+      throw new Error('User ID is required')
+    }
+    return this.webSocket.send({ action: 'cursor', docId, userId, cursor })
   }
 
   /**
@@ -91,6 +106,8 @@ export class DocumentWebSocketService {
         this.callbacks.onUserJoined?.(message)
       } else if (message.type === 'user_left') {
         this.callbacks.onUserLeft?.(message)
+      } else if (message.type === 'cursor') {
+        this.callbacks.onCursorUpdate?.(message)
       } else if (message.clientId !== this.clientId) {
         this.callbacks.onOperation?.(message)
       }

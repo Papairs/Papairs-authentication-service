@@ -109,13 +109,11 @@ public class PageService {
     /**
      * Updates the content of a specific page
      * @param pageId  The ID of the page to update
-     * @param userId  The ID of the user performing the update. Requires edit permission
      * @param content The new content for the page
      * @return The updated {@link PageContentResponse} dto
      */
     @Transactional
-    public PageContentResponse updatePage(String pageId, String userId, String content) {
-        permissionService.requirePageEdit(pageId, userId);
+    public PageContentResponse updatePage(String pageId, String content) {
         Page page = pageRepository.findById(pageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
         page.setContent(content);
