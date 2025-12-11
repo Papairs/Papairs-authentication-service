@@ -102,15 +102,13 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
         try {
             var operation = (com.papairs.docs.model.OT.Op) incomingOp;
             
-            // Get edit position for cursor transformation
-            Integer editPosition = (cursor != null) ? cursor.from : null;
-            
-            // Apply operation and transform cursors
+            // Apply operation without cursor transformation
+            // Note: editPosition is no longer used for transformation
             String sanitizedHtml = collaborationService.applyOperationWithCursorTransform(
-                document, operation, userId, editPosition
+                document, operation, userId, null
             );
             
-            // Update cursor position if provided
+            // Update cursor position if provided (without transformation)
             if (cursor != null) {
                 cursor.userId = userId;
                 cursor.userName = userId;

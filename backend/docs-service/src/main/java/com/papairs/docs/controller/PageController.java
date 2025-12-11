@@ -96,7 +96,7 @@ public class PageController {
             @RequestHeader("X-User-Id") String userId
     ) {
         String sanitizedContent = htmlSanitizer.sanitize(updatePageRequest.getContent());
-        PageContentResponse updated = pageService.updatePage(pageId, userId, sanitizedContent);
+        PageContentResponse updated = pageService.updatePage(pageId, sanitizedContent);
         return ResponseEntity.ok(updated);
     }
 

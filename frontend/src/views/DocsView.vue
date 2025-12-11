@@ -131,7 +131,17 @@ export default {
         if (message.cursors) {
           const userId = wsService.getUserId()
           const filteredCursors = Object.entries(message.cursors)
-            .filter(([id]) => id !== userId)
+            .filter(([id]) => id !== userId) // Exclude own cursor
+            .map(([id, cursor]) => {
+              // Ensure cursor positions are valid numbers
+              return [id, {
+                from: Math.max(0, Number(cursor.from) || 0),
+                to: Math.max(0, Number(cursor.to) || 0),
+                userId: cursor.userId || id,
+                userName: cursor.userName || id,
+                color: cursor.color
+              }]
+            })
           collaborativeCursors.value = new Map(filteredCursors)
         }
       })
@@ -148,11 +158,21 @@ export default {
           updateEditorContent(document.htmlContent.value)
         }
         
-        // Use cursor positions from server (already transformed by backend)
+        // Update cursor positions from other users
         if (message.cursors) {
           const userId = wsService.getUserId()
           const filteredCursors = Object.entries(message.cursors)
-            .filter(([id]) => id !== userId)
+            .filter(([id]) => id !== userId) // Exclude own cursor
+            .map(([id, cursor]) => {
+              // Ensure cursor positions are valid numbers
+              return [id, {
+                from: Math.max(0, Number(cursor.from) || 0),
+                to: Math.max(0, Number(cursor.to) || 0),
+                userId: cursor.userId || id,
+                userName: cursor.userName || id,
+                color: cursor.color
+              }]
+            })
           collaborativeCursors.value = new Map(filteredCursors)
         }
       })
@@ -160,11 +180,25 @@ export default {
 
     wsService.on('onCursorUpdate', (message) => {
       errorHandler.safe(() => {
-        if (message.cursors) {
+        if (message.cursor && message.clientId) {
           const userId = wsService.getUserId()
-          const filteredCursors = Object.entries(message.cursors)
-            .filter(([id]) => id !== userId)
-          collaborativeCursors.value = new Map(filteredCursors)
+          // Don't update if it's our own cursor
+          if (message.clientId === userId) {
+            return
+          }
+          
+          // Update specific user's cursor
+          const cursor = {
+            from: Math.max(0, Number(message.cursor.from) || 0),
+            to: Math.max(0, Number(message.cursor.to) || 0),
+            userId: message.cursor.userId || message.clientId,
+            userName: message.cursor.userName || message.clientId,
+            color: message.cursor.color
+          }
+          
+          const newCursors = new Map(collaborativeCursors.value)
+          newCursors.set(message.clientId, cursor)
+          collaborativeCursors.value = newCursors
         }
       })
     })

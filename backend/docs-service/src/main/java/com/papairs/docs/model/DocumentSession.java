@@ -114,41 +114,15 @@ public class DocumentSession {
 
     /**
      * Transform cursor positions after content change
-     * @param editingUserId The user who made the edit
-     * @param editPosition The position where edit occurred
-     * @param oldLength Previous content length
-     * @param newLength New content length
+     * Note: Cursor transformation is disabled for HTML-based editing.
+     * ProseMirror positions don't map directly to HTML character positions.
+     * Each client manages cursor positions based on their own document state.
+     * @deprecated This method is no longer used for HTML-based collaboration
      */
+    @Deprecated
     public void transformCursorsAfterEdit(String editingUserId, int editPosition, int oldLength, int newLength) {
-        int sizeDiff = newLength - oldLength;
-        
-        if (sizeDiff == 0) {
-            return; // No transformation needed
-        }
-        
-        userCursors.forEach((userId, cursor) -> {
-            // Don't transform the editing user's cursor
-            if (userId.equals(editingUserId)) {
-                return;
-            }
-            
-            // Transform cursor positions based on where the edit happened
-            int newFrom = cursor.from;
-            int newTo = cursor.to;
-            
-            // If cursor is after the edit position, shift it by the size difference
-            if (cursor.from >= editPosition) {
-                newFrom = Math.max(0, cursor.from + sizeDiff);
-            }
-            
-            if (cursor.to >= editPosition) {
-                newTo = Math.max(0, cursor.to + sizeDiff);
-            }
-            
-            // Update cursor with transformed positions
-            cursor.from = Math.min(newFrom, newLength);
-            cursor.to = Math.min(newTo, newLength);
-        });
+        // Cursor transformation disabled - clients manage their own cursor positions
+        // based on their ProseMirror document state
     }
 
     // Auto-save timer management

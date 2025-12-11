@@ -76,29 +76,21 @@ public class CollaborationService {
     }
     
     /**
-     * Apply an operation and transform cursor positions
+     * Apply an operation without cursor transformation
+     * Note: Cursor transformation is not performed because ProseMirror positions
+     * don't map directly to HTML character positions. Each client manages cursor
+     * positions based on their own document state.
      */
     public String applyOperationWithCursorTransform(DocumentSession document, Op operation, String userId, Integer editPosition) {
         if (operation.htmlContent == null) {
             throw new IllegalArgumentException("Missing HTML content");
         }
-
-        // Store old content state for cursor transformation
-        int oldLength = document.getContent().length();
         
         String sanitizedHtml = htmlSanitizer.sanitize(operation.htmlContent);
-        int newLength = sanitizedHtml.length();
         
         document.setContent(sanitizedHtml);
         document.addOperation(operation);
         document.incrementVersion();
-        
-        // Transform other users' cursors based on the edit
-        if (editPosition != null) {
-            document.transformCursorsAfterEdit(userId, editPosition, oldLength, newLength);
-            logger.info("Transformed cursors after edit at position " + editPosition + 
-                       " (size change: " + (newLength - oldLength) + ")");
-        }
         
         autoSaveManager.scheduleDelayedSave(document);
         

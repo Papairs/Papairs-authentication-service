@@ -62,13 +62,16 @@ export const CollaborationCursor = Extension.create({
             if (meta) {
               const { cursors } = meta
               const decorations = []
+              const docSize = newState.doc.content.size
 
               cursors.forEach((cursor, userId) => {
                 if (cursor && cursor.from !== undefined && cursor.to !== undefined) {
-                  const from = Math.max(0, Math.min(cursor.from, newState.doc.content.size))
-                  const to = Math.max(0, Math.min(cursor.to, newState.doc.content.size))
+                  // Ensure cursor positions are within valid document bounds
+                  const from = Math.max(0, Math.min(cursor.from, docSize))
+                  const to = Math.max(0, Math.min(cursor.to, docSize))
                   
-                  if (from <= newState.doc.content.size) {
+                  // Only create decorations if positions are valid
+                  if (from <= docSize && from >= 0) {
                     const decoration = Decoration.widget(from, () => {
                       return extension.options.render({
                         name: cursor.userId || userId || 'Anonymous',
@@ -79,7 +82,8 @@ export const CollaborationCursor = Extension.create({
                     decorations.push(decoration)
                   }
 
-                  if (from !== to && to <= newState.doc.content.size) {
+                  // Only create selection decoration if there's a valid range
+                  if (from !== to && to <= docSize && to >= from) {
                     const selectionDecoration = Decoration.inline(from, to, {
                       class: 'collaboration-cursor__selection',
                       style: `background-color: ${cursor.color || getUserColor(userId)}33;`,
