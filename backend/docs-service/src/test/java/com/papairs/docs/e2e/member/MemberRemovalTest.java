@@ -273,7 +273,7 @@ public class MemberRemovalTest extends AbstractE2ETest {
         String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Page with Content");
 
         String content = "Important content";
-        fixtures.updatePageContent(pageId, TEST_USER_1_ID, content);
+        fixtures.updatePageContent(pageId, content);
 
         fixtures.addMemberToPage(pageId, TEST_USER_1_ID, TEST_USER_2_ID, MemberRole.VIEWER);
 

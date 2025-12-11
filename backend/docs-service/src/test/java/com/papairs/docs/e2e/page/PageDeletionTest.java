@@ -257,7 +257,7 @@ public class PageDeletionTest extends AbstractE2ETest {
     public void canDeletePageWithContent() throws Exception {
         String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Page with Content");
 
-        fixtures.updatePageContent(pageId, TEST_USER_1_ID, "This is some content that will be deleted");
+        fixtures.updatePageContent(pageId, "This is some content that will be deleted");
 
         mockMvc.perform(delete("/api/docs/pages/" + pageId)
                         .header(USER_ID_HEADER, TEST_USER_1_ID))

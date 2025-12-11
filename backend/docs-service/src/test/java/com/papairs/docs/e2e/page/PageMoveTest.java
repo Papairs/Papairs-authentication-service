@@ -417,7 +417,7 @@ public class PageMoveTest extends AbstractE2ETest {
         String pageId = fixtures.createPageInFolder(TEST_USER_1_ID, "Page with Content", sourceFolderId);
 
         String content = "Important content that should not be lost";
-        fixtures.updatePageContent(pageId, TEST_USER_1_ID, content);
+        fixtures.updatePageContent(pageId, content);
 
         String moveRequest = """
             {

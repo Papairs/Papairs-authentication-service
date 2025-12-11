@@ -546,7 +546,7 @@ public class MemberAdditionTest extends AbstractE2ETest {
     public void addingMemberDoesNotAffectContent() throws Exception {
         String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Page");
         String content = "Important content";
-        fixtures.updatePageContent(pageId, TEST_USER_1_ID, content);
+        fixtures.updatePageContent(pageId, content);
 
         fixtures.addMemberToPage(pageId, TEST_USER_1_ID, TEST_USER_2_ID, MemberRole.VIEWER);
 
