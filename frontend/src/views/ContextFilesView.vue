@@ -20,7 +20,7 @@
         </div>
       </div>
       
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-surface-light rounded-lg shadow p-6 border-content-primary border">
         <h3 class="text-lg font-semibold text-content-primary mb-4">
           Manage Your Files
         </h3>
@@ -64,7 +64,7 @@
           <div
             v-for="file in userFiles"
             :key="file.fileId"
-            class="flex items-center justify-between p-3 border border-border-light rounded hover:bg-surface-light transition-colors"
+            class="flex items-center justify-between p-3 border border-content-primary rounded hover:bg-surface-light transition-colors"
           >
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-content-primary truncate">
@@ -74,7 +74,7 @@
             </div>
             <button
               @click="deleteFile(file.fileId)"
-              class="ml-4 px-3 py-1 text-sm text-white bg-red-600 hover:bg-red-700 rounded transition-colors"
+              class="ml-4 px-3 py-1 text-sm text-content-primary bg-red-600 hover:bg-red-700 rounded transition-colors"
               title="Delete file"
             >
               Delete
