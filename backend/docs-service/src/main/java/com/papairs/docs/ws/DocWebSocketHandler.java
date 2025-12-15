@@ -233,6 +233,7 @@ public class DocWebSocketHandler extends TextWebSocketHandler {
 
     private void sendMessage(WebSocketSession session, AppliedOp message) {
         if (!session.isOpen()) return;
+        logger.info("Broadcasting to others: " + message);
         try {
             session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
         } catch (Exception e) {
