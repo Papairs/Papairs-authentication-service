@@ -176,5 +176,4 @@ const server = Server.configure({
   },
 })
 
-server.listen().then(() => {
-})
+server.listen()
