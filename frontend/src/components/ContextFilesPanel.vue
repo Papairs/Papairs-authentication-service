@@ -1,9 +1,39 @@
 <template>
   <transition name="slide-left">
     <div v-if="show" class="absolute left-0 top-0 h-full w-80 bg-surface-light border-r-2 border-border-opa overflow-y-auto">
-      <div class="sticky top-0 bg-surface-light border-b border-border-opa p-4 flex justify-between items-center">
-        <h3 class="font-semibold text-content-primary">Context Files</h3>
-        <button @click="$emit('close')" class="text-content-secondary hover:text-content-primary transition-colors">✕</button>
+      <div class="sticky top-0 bg-surface-light border-b border-border-opa p-4">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="font-semibold text-content-primary">Context Files</h3>
+          <button @click="$emit('close')" class="text-content-secondary hover:text-content-primary transition-colors">✕</button>
+        </div>
+        
+        <!-- AI Mode Switcher -->
+        <div class="flex items-center gap-1 bg-surface-light-secondary rounded-lg p-1">
+          <button
+            @click="$emit('update:mode', 'fast')"
+            :class="[
+              'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all flex-1 justify-center',
+              mode === 'fast' 
+                ? 'bg-accent text-white shadow-sm' 
+                : 'text-content-secondary hover:text-content-primary'
+            ]"
+          >
+            <BoltIcon :size="14" />
+            <span>Fast</span>
+          </button>
+          <button
+            @click="$emit('update:mode', 'advanced')"
+            :class="[
+              'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all flex-1 justify-center',
+              mode === 'advanced' 
+                ? 'bg-accent text-white shadow-sm' 
+                : 'text-content-secondary hover:text-content-primary'
+            ]"
+          >
+            <RocketIcon :size="14" />
+            <span>Advanced</span>
+          </button>
+        </div>
       </div>
       
       <!-- Upload Section -->
@@ -75,8 +105,15 @@
 </template>
 
 <script>
+import BoltIcon from '@/components/icons/BoltIcon.vue'
+import RocketIcon from '@/components/icons/RocketIcon.vue'
+
 export default {
   name: 'ContextFilesPanel',
+  components: {
+    BoltIcon,
+    RocketIcon
+  },
   props: {
     show: {
       type: Boolean,
@@ -105,9 +142,13 @@ export default {
     currentUploadFile: {
       type: String,
       default: null
+    },
+    mode: {
+      type: String,
+      default: 'fast'
     }
   },
-  emits: ['close', 'upload', 'delete', 'toggle-selection'],
+  emits: ['close', 'upload', 'delete', 'toggle-selection', 'update:mode'],
   methods: {
     isFileSelected(fileId) {
       return this.selectedFiles.some(f => f.fileId === fileId)

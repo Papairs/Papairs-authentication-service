@@ -89,11 +89,12 @@ export default {
       }
 
       try {
+        const authHeaders = await auth.getAuthHeaders()
         const response = await fetch(`${API_BASE_URL}/api/ai/autocomplete`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.getToken()}`
+            ...authHeaders
           },
           body: JSON.stringify({ 
             userInput: text,

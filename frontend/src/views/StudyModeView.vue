@@ -235,9 +235,7 @@ async function loadFlashcards() {
     // Filter to only unlearned cards
     const allCards = response.data.data || []
     allFlashcards.value = allCards
-    console.log('All cards:', allCards.length, 'Learned cards:', allCards.filter(card => card.learned).length)
     flashcards.value = allCards.filter(card => !card.learned)
-    console.log('Unlearned cards to study:', flashcards.value.length)
     
     if (flashcards.value.length === 0) {
       studyComplete.value = true
@@ -282,7 +280,7 @@ async function markAsNotLearned() {
 async function updateLearnedStatus(learned) {
   try {
     const headers = await auth.getAuthHeaders(router)
-    const response = await axios.put(
+    await axios.put(
       `${API_BASE_URL}/api/docs/flashcards/${currentCard.value.flashcardId}/learned`,
       learned,
       { 
@@ -296,7 +294,6 @@ async function updateLearnedStatus(learned) {
     if (currentCard.value) {
       currentCard.value.learned = learned
     }
-    console.log('Updated learned status:', response.data)
   } catch (error) {
     console.error('Failed to update learned status:', error)
     console.error('Error details:', error.response?.data)
@@ -336,8 +333,6 @@ async function resetAllAndRestart() {
       null,
       { headers }
     )
-    
-    console.log('All flashcards reset to unlearned')
     
     // Reload and restart
     currentIndex.value = 0

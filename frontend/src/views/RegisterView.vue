@@ -43,7 +43,6 @@ export default {
             this.$router.push({ name: 'Login' })
           }, 2000)
         } else {
-          console.log('Unexpected response structure')
           this.$refs.registerForm.error = 'Registration failed. Please try again.'
           this.$refs.registerForm.loading = false
         }

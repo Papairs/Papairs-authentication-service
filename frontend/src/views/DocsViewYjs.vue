@@ -51,6 +51,7 @@ export default {
     const isUploading = ref(false)
     const currentUploadFile = ref(null)
     const uploadAbortController = ref(null)
+    const aiMode = ref('fast') // 'fast' or 'advanced'
 
     // Get user info for collaborative cursor
     const userId = auth.getUserId()
@@ -96,7 +97,6 @@ export default {
 
     const handleEditorReady = (editorInstance) => {
       editor.value = editorInstance
-      console.log('Editor ready')
     }
 
     async function generateFlashcards() {
@@ -230,7 +230,6 @@ export default {
           }
         )
         userFiles.value = response.data
-        console.log('Loaded user files:', userFiles.value.length, userFiles.value)
       } catch (error) {
         console.error('Error loading files:', error)
       }
@@ -320,10 +319,8 @@ export default {
       const index = selectedFiles.value.findIndex(f => f.fileId === file.fileId)
       if (index === -1) {
         selectedFiles.value.push(file)
-        console.log('File selected:', file.filename, 'Total selected:', selectedFiles.value.length)
       } else {
         selectedFiles.value.splice(index, 1)
-        console.log('File deselected:', file.filename, 'Total selected:', selectedFiles.value.length)
       }
     }
 
@@ -337,12 +334,9 @@ export default {
 
     // Lifecycle hooks
     onMounted(async () => {
-      console.log('\n🌐 [DocsView] Mounting document view for:', documentId.value)
-      
       // First, try to fetch existing HTML content for migration
       try {
         const token = auth.getToken()
-        console.log('📡 [DocsView] Fetching HTML content for potential migration...')
         const response = await axios.get(
           `${API_BASE_URL}/api/docs/pages/${documentId.value}/content`,
           {
@@ -354,13 +348,9 @@ export default {
         )
         
         if (response.data && response.data.length > 0) {
-          console.log(`✅ [DocsView] HTML content available (${response.data.length} chars) - will pass to editor`)
           initialContent.value = response.data
-        } else {
-          console.log('📭 [DocsView] No HTML content - starting with empty document')
         }
       } catch (error) {
-        console.log('⚠️  [DocsView] Could not fetch HTML:', error.message)
         // Continue anyway - document might be new or already migrated
       } finally {
         isLoadingContent.value = false
@@ -410,7 +400,8 @@ export default {
       deleteFile,
       toggleFileSelection,
       isFileSelected,
-      toggleContextFilesPanel
+      toggleContextFilesPanel,
+      aiMode
     }
   }
 }
@@ -528,6 +519,7 @@ export default {
             :user="user"
             :initial-content="initialContent"
             :selected-files="selectedFiles"
+            :ai-mode="aiMode"
             @ready="handleEditorReady"
             placeholder="Start writing your document..."
           />
@@ -554,10 +546,12 @@ export default {
           :upload-success="uploadSuccess"
           :is-uploading="isUploading"
           :current-upload-file="currentUploadFile"
+          :mode="aiMode"
           @close="toggleContextFilesPanel"
           @upload="uploadFile"
           @delete="deleteFile"
           @toggle-selection="toggleFileSelection"
+          @update:mode="aiMode = $event"
         />
       </div>
     </div>

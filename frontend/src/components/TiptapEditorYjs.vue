@@ -94,6 +94,10 @@ export default {
     selectedFiles: {
       type: Array,
       default: () => []
+    },
+    aiMode: {
+      type: String,
+      default: 'fast'
     }
   },
   emits: ['ready'],
@@ -329,19 +333,16 @@ export default {
                   mimeType: f.mimeType || 'application/octet-stream'
                 }))
                 
-                console.log('AI Autocomplete Request:')
-                console.log('  - Context (last 100 words):', last100Words)
-                console.log('  - Selected files:', selectedFilesForAI.length, selectedFilesForAI)
-                
+                const authHeaders = await auth.getAuthHeaders()
                 const response = await fetch(`${API_BASE_URL}/api/ai/autocomplete`, {
                   method: 'POST',
                   headers: { 
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${auth.getToken()}`
+                    ...authHeaders
                   },
                   body: JSON.stringify({ 
                     userInput: last100Words,
-                    mode: 'fast',
+                    mode: props.aiMode,
                     selectedFiles: selectedFilesForAI
                   })
                 })
