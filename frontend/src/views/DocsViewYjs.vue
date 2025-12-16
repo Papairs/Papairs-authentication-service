@@ -1,7 +1,8 @@
 <script>
 import TiptapEditorYjs from '@/components/TiptapEditorYjs.vue'
+import FlashcardsPanel from '@/components/FlashcardsPanel.vue'
+import ContextFilesPanel from '@/components/ContextFilesPanel.vue'
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import TrashIcon from '@/components/icons/TrashIcon.vue'
 import { useYjsDocument } from '@/composables/useYjsDocument'
 import { API_BASE_URL } from '@/config'
 import auth from '@/utils/auth'
@@ -11,7 +12,8 @@ export default {
   name: 'DocsView',
   components: { 
     TiptapEditorYjs,
-    TrashIcon
+    FlashcardsPanel,
+    ContextFilesPanel
   },
   props: {
     id: {
@@ -39,6 +41,16 @@ export default {
     const showFlashcards = ref(false)
     const pageFlashcards = ref([])
     const isLoadingFlashcards = ref(false)
+
+    // Context files state
+    const showContextFiles = ref(false)
+    const userFiles = ref([])
+    const selectedFiles = ref([])
+    const uploadError = ref(null)
+    const uploadSuccess = ref(null)
+    const isUploading = ref(false)
+    const currentUploadFile = ref(null)
+    const uploadAbortController = ref(null)
 
     // Get user info for collaborative cursor
     const userId = auth.getUserId()
@@ -203,6 +215,126 @@ export default {
       }
     }
 
+    // Context files functions
+    const loadUserFiles = async () => {
+      const token = auth.getToken()
+      if (!token) return
+
+      try {
+        const response = await axios.get(
+          `${API_BASE_URL}/api/docs/files`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        )
+        userFiles.value = response.data
+        console.log('Loaded user files:', userFiles.value.length, userFiles.value)
+      } catch (error) {
+        console.error('Error loading files:', error)
+      }
+    }
+
+    const uploadFile = async (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+
+      uploadError.value = null
+      uploadSuccess.value = null
+      isUploading.value = true
+      currentUploadFile.value = file.name
+      uploadAbortController.value = new AbortController()
+
+      const token = auth.getToken()
+      if (!token) {
+        uploadError.value = 'Token not found. Please log in.'
+        isUploading.value = false
+        currentUploadFile.value = null
+        uploadAbortController.value = null
+        return
+      }
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      try {
+        await axios.post(`${API_BASE_URL}/api/docs/files`, formData, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          signal: uploadAbortController.value.signal
+        })
+
+        uploadSuccess.value = `File "${file.name}" uploaded successfully!`
+        await loadUserFiles()
+        event.target.value = ''
+
+        setTimeout(() => {
+          uploadSuccess.value = null
+        }, 3000)
+      } catch (error) {
+        if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+          uploadError.value = 'Upload canceled'
+        } else if (error.response?.status === 409) {
+          uploadError.value = `File "${file.name}" already exists`
+        } else {
+          uploadError.value = error.response?.data?.message || 'Error uploading file'
+        }
+      } finally {
+        isUploading.value = false
+        currentUploadFile.value = null
+        uploadAbortController.value = null
+      }
+    }
+
+    const deleteFile = async (fileId) => {
+      try {
+        const token = auth.getToken()
+        if (!token) {
+          uploadError.value = 'Token not found. Please log in.'
+          return
+        }
+
+        await axios.delete(
+          `${API_BASE_URL}/api/docs/files/${fileId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        )
+        uploadSuccess.value = 'File deleted successfully'
+        await loadUserFiles()
+        selectedFiles.value = selectedFiles.value.filter(f => f.fileId !== fileId)
+        
+        setTimeout(() => {
+          uploadSuccess.value = null
+        }, 3000)
+      } catch (error) {
+        uploadError.value = error.response?.data?.error || error.response?.data?.message || 'Error deleting file'
+      }
+    }
+
+    const toggleFileSelection = (file) => {
+      const index = selectedFiles.value.findIndex(f => f.fileId === file.fileId)
+      if (index === -1) {
+        selectedFiles.value.push(file)
+        console.log('File selected:', file.filename, 'Total selected:', selectedFiles.value.length)
+      } else {
+        selectedFiles.value.splice(index, 1)
+        console.log('File deselected:', file.filename, 'Total selected:', selectedFiles.value.length)
+      }
+    }
+
+    const isFileSelected = (fileId) => {
+      return selectedFiles.value.some(f => f.fileId === fileId)
+    }
+
+    const toggleContextFilesPanel = () => {
+      showContextFiles.value = !showContextFiles.value
+    }
+
     // Lifecycle hooks
     onMounted(async () => {
       console.log('\n🌐 [DocsView] Mounting document view for:', documentId.value)
@@ -236,6 +368,9 @@ export default {
       
       // Connect to Y.js for collaboration
       connect()
+      
+      // Load context files
+      loadUserFiles()
     })
 
     onBeforeUnmount(() => {
@@ -263,7 +398,19 @@ export default {
       generateFlashcards,
       toggleFlashcardsPanel,
       deleteFlashcard,
-      documentId
+      documentId,
+      showContextFiles,
+      userFiles,
+      selectedFiles,
+      uploadError,
+      uploadSuccess,
+      isUploading,
+      currentUploadFile,
+      uploadFile,
+      deleteFile,
+      toggleFileSelection,
+      isFileSelected,
+      toggleContextFilesPanel
     }
   }
 }
@@ -342,6 +489,14 @@ export default {
           >
             <span>{{ showFlashcards ? 'Hide' : 'Show' }} Flashcards</span>
           </button>
+          
+          <!-- Toggle context files panel button -->
+          <button
+            @click="toggleContextFilesPanel"
+            class="px-4 py-1.5 text-sm font-medium text-content-primary bg-surface-light-secondary hover:bg-surface-light rounded transition-colors flex items-center gap-2 border border-border-light"
+          >
+            <span>{{ showContextFiles ? 'Hide' : 'Show' }} Context Files</span>
+          </button>
         </div>
       </div>
       
@@ -364,7 +519,7 @@ export default {
         <!-- Editor Container -->
         <div 
           class="flex flex-col flex-1 h-full w-full overflow-auto transition-all duration-300 ease-out"
-          :class="{ 'mr-80': showFlashcards }"
+          :class="{ 'mr-80': showFlashcards, 'ml-80': showContextFiles }"
         >
           <TiptapEditorYjs
             v-if="!hasError && provider && ydoc && !isLoadingContent"
@@ -372,6 +527,7 @@ export default {
             :provider="provider"
             :user="user"
             :initial-content="initialContent"
+            :selected-files="selectedFiles"
             @ready="handleEditorReady"
             placeholder="Start writing your document..."
           />
@@ -381,39 +537,28 @@ export default {
         </div>
         
         <!-- Flashcards Panel -->
-        <transition name="slide">
-          <div v-if="showFlashcards && !hasError" class="absolute right-0 top-0 h-full w-80 bg-surface-light border-l-2 border-border-opa overflow-y-auto">
-            <div class="sticky top-0 bg-surface-light border-b border-border-opa p-4 flex justify-between items-center">
-              <h3 class="font-semibold text-content-primary">Page Flashcards</h3>
-              <button @click="toggleFlashcardsPanel" class="text-content-secondary hover:text-content-primary transition-colors">✕</button>
-            </div>
-            <div v-if="isLoadingFlashcards" class="p-6 text-center text-content-secondary">Loading flashcards...</div>
-            <div v-else-if="pageFlashcards.length === 0" class="p-6 text-center text-content-secondary">
-              <p class="mb-2">No flashcards yet</p>
-              <p class="text-sm">Generate some flashcards from your document!</p>
-            </div>
-            <div v-else class="p-4 space-y-3">
-              <div v-for="card in pageFlashcards" :key="card.flashcardId" class="bg-surface-light-secondary border border-border-light rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div class="flex justify-end mb-2">
-                  <button @click="deleteFlashcard(card.flashcardId)" class="text-xs text-content-secondary hover:text-red-600 transition-colors" title="Delete flashcard">
-                    <TrashIcon :size="16" />
-                  </button>
-                </div>
-                <div class="mb-3">
-                  <p class="text-xs text-content-secondary font-medium mb-1">Question:</p>
-                  <p class="text-xs text-content-primary">{{ card.question }}</p>
-                </div>
-                <div>
-                  <p class="text-xs text-content-secondary font-medium mb-1">Answer:</p>
-                  <p class="text-xs text-content-primary">{{ card.answer }}</p>
-                </div>
-                <div v-if="card.tags && card.tags.length > 0" class="mt-3 flex flex-wrap gap-1">
-                  <span v-for="tag in card.tags" :key="tag" class="text-xs px-2 py-1 bg-accent/10 text-accent rounded">{{ tag }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </transition>
+        <FlashcardsPanel
+          :show="showFlashcards && !hasError"
+          :flashcards="pageFlashcards"
+          :is-loading="isLoadingFlashcards"
+          @close="toggleFlashcardsPanel"
+          @delete="deleteFlashcard"
+        />
+        
+        <!-- Context Files Panel -->
+        <ContextFilesPanel
+          :show="showContextFiles && !hasError"
+          :files="userFiles"
+          :selected-files="selectedFiles"
+          :upload-error="uploadError"
+          :upload-success="uploadSuccess"
+          :is-uploading="isUploading"
+          :current-upload-file="currentUploadFile"
+          @close="toggleContextFilesPanel"
+          @upload="uploadFile"
+          @delete="deleteFile"
+          @toggle-selection="toggleFileSelection"
+        />
       </div>
     </div>
   </div>
@@ -425,9 +570,6 @@ export default {
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-.slide-enter-active, .slide-leave-active { transition: transform 0.3s ease-out; }
-.slide-enter-from { transform: translateX(100%); }
-.slide-leave-to { transform: translateX(100%); }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

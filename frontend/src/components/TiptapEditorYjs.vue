@@ -52,12 +52,17 @@ import TextStyle from '@tiptap/extension-text-style'
 import FontFamily from '@tiptap/extension-font-family'
 import { Color } from '@tiptap/extension-color'
 import { Extension } from '@tiptap/core'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import { onBeforeUnmount, ref, computed } from 'vue'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorContentArea from './EditorContent.vue'
 import './TiptapEditor.css'
+import { API_BASE_URL } from '@/config'
+import auth from '@/utils/auth'
+import { useAssistedWriting } from '@/composables/useAssistedWriting'
 
 export default {
   name: 'TiptapEditorYjs',
@@ -85,6 +90,10 @@ export default {
     initialContent: {
       type: String,
       default: null
+    },
+    selectedFiles: {
+      type: Array,
+      default: () => []
     }
   },
   emits: ['ready'],
@@ -94,10 +103,94 @@ export default {
     const DEFAULT_FONT_SIZE = '12pt'
     const FONT_SIZES = ['8pt', '9pt', '10pt', '11pt', '12pt', '14pt', '18pt', '24pt', '30pt', '36pt', '48pt', '60pt', '72pt', '96pt']
     
+    // Assisted Writing
+    const { isAssistedWritingEnabled } = useAssistedWriting()
+    
     // State
     const editor = ref(null)
     const currentTextColor = ref(DEFAULT_TEXT_COLOR)
     const currentFontSize = ref(DEFAULT_FONT_SIZE)
+    const aiSuggestion = ref(null)
+    const isLoadingAI = ref(false)
+    const lastLocalText = ref('')
+    let aiTimer = null
+
+    // AI Autocomplete Extension
+    const AIAutocomplete = Extension.create({
+      name: 'aiAutocomplete',
+
+      addProseMirrorPlugins() {
+        return [
+          new Plugin({
+            key: new PluginKey('aiAutocomplete'),
+            state: {
+              init() {
+                return DecorationSet.empty
+              },
+              apply(tr, oldState) {
+                // If there's a suggestion and decoration metadata
+                if (tr.getMeta('addAISuggestion')) {
+                  const { pos, suggestion } = tr.getMeta('addAISuggestion')
+                  const decoration = Decoration.widget(pos, () => {
+                    const span = document.createElement('span')
+                    span.className = 'ai-suggestion'
+                    span.style.color = '#FF7A00'
+                    span.style.opacity = '0.6'
+                    span.style.fontStyle = 'italic'
+                    span.textContent = suggestion
+                    return span
+                  })
+                  return DecorationSet.create(tr.doc, [decoration])
+                }
+
+                // Clear suggestion
+                if (tr.getMeta('clearAISuggestion')) {
+                  return DecorationSet.empty
+                }
+
+                // Map decorations through document changes
+                return oldState.map(tr.mapping, tr.doc)
+              }
+            },
+            props: {
+              decorations(state) {
+                return this.getState(state)
+              },
+              handleKeyDown(view, event) {
+                const { state } = view
+                const decorations = this.getState(state)
+                
+                // If Tab is pressed and there's a suggestion
+                if (event.key === 'Tab' && decorations.find().length > 0) {
+                  event.preventDefault()
+                  
+                  const suggestion = aiSuggestion.value
+                  if (suggestion) {
+                    const tr = state.tr
+                    // Insert the suggestion at current position
+                    tr.insertText(suggestion, tr.selection.from)
+                    tr.setMeta('clearAISuggestion', true)
+                    view.dispatch(tr)
+                    
+                    aiSuggestion.value = null
+                  }
+                  return true
+                }
+
+                // Clear suggestion on any other key
+                if (decorations.find().length > 0 && event.key !== 'Tab') {
+                  const tr = state.tr.setMeta('clearAISuggestion', true)
+                  view.dispatch(tr)
+                  aiSuggestion.value = null
+                }
+
+                return false
+              }
+            }
+          })
+        ]
+      }
+    })
 
     // Custom font size extension
     const FontSize = Extension.create({
@@ -156,6 +249,7 @@ export default {
           FontFamily,
           FontSize,
           Color,
+          AIAutocomplete,
           // Y.js Collaboration
           Collaboration.configure({
             document: props.ydoc,
@@ -195,6 +289,86 @@ export default {
           }
           
           emit('ready', editor)
+        },
+        onUpdate: ({ editor, transaction }) => {
+          // Only trigger AI for local changes, not remote Y.js updates
+          const isRemoteUpdate = transaction.getMeta('y-sync$')
+          if (isRemoteUpdate) {
+            return
+          }
+
+          // Clear any existing timer
+          if (aiTimer) clearTimeout(aiTimer)
+          
+          // Clear existing suggestion
+          if (aiSuggestion.value) {
+            const { state, view } = editor
+            const tr = state.tr.setMeta('clearAISuggestion', true)
+            view.dispatch(tr)
+            aiSuggestion.value = null
+          }
+          
+          const text = editor.getText()
+          lastLocalText.value = text
+          
+          // Trigger AI after 3 seconds of inactivity (only if assisted writing is enabled)
+          if (text.trim().length > 0 && isAssistedWritingEnabled.value) {
+            aiTimer = setTimeout(async () => {
+              isLoadingAI.value = true
+              
+              try {
+                // Get cursor position and extract 100 words before it
+                const cursorPos = editor.state.selection.from
+                const textBeforeCursor = editor.state.doc.textBetween(0, cursorPos, ' ')
+                const words = textBeforeCursor.trim().split(/\s+/)
+                const last100Words = words.slice(-100).join(' ')
+                
+                const selectedFilesForAI = props.selectedFiles.map(f => ({
+                  fileId: f.fileId,
+                  filename: f.filename,
+                  mimeType: f.mimeType || 'application/octet-stream'
+                }))
+                
+                console.log('AI Autocomplete Request:')
+                console.log('  - Context (last 100 words):', last100Words)
+                console.log('  - Selected files:', selectedFilesForAI.length, selectedFilesForAI)
+                
+                const response = await fetch(`${API_BASE_URL}/api/ai/autocomplete`, {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${auth.getToken()}`
+                  },
+                  body: JSON.stringify({ 
+                    userInput: last100Words,
+                    mode: 'fast',
+                    selectedFiles: selectedFilesForAI
+                  })
+                })
+                
+                if (response.ok) {
+                  const data = await response.json()
+                  const suggestion = data.suggestion || ''
+                  
+                  if (suggestion) {
+                    aiSuggestion.value = suggestion
+                    
+                    // Add decoration with suggestion
+                    const { state, view } = editor
+                    const tr = state.tr.setMeta('addAISuggestion', {
+                      pos: state.selection.from,
+                      suggestion: suggestion
+                    })
+                    view.dispatch(tr)
+                  }
+                }
+              } catch (error) {
+                console.error('AI autocomplete error:', error)
+              } finally {
+                isLoadingAI.value = false
+              }
+            }, 3000)
+          }
         },
       })
     }
