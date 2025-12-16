@@ -23,9 +23,9 @@ The original OT implementation had critical issues:
   - Automatic state persistence to database
 
 **Key Files**:
-- `collaboration-service/index.js` - Hocuspocus server configuration
-- `collaboration-service/package.json` - Dependencies (yjs, @hocuspocus/server)
-- `collaboration-service/Dockerfile` - Container configuration
+- `backend/collaboration-service/index.js` - Hocuspocus server configuration
+- `backend/collaboration-service/package.json` - Dependencies (yjs, @hocuspocus/server)
+- `backend/collaboration-service/Dockerfile` - Container configuration
 
 #### 2. **docs-service** (Updated - Java Spring Boot)
 - **Port**: 8082  
@@ -86,7 +86,7 @@ The original OT implementation had critical issues:
 **docker-compose.yml** - Added collaboration-service:
 ```yaml
 collaboration-service:
-  build: ./collaboration-service
+  build: ./backend/collaboration-service
   ports:
     - "8083:8083"
   environment:
@@ -176,7 +176,7 @@ Y.js is used in production by CodeMirror, Notion, and other major collaborative 
    cd ../orchestration-service
    mvn clean install
    
-   cd ../../collaboration-service
+   cd ../collaboration-service
    npm install
    ```
 
