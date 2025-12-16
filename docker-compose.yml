@@ -150,7 +150,7 @@ services:
   # ============================================
   collaboration-service:
     build:
-      context: ./collaboration-service
+      context: ./backend/collaboration-service
       dockerfile: Dockerfile
     container_name: papairs-collaboration-service
     ports:
