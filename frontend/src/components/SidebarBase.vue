@@ -10,6 +10,7 @@ import HomeIconNew from '@/components/icons/HomeIconNew.vue'
 import AssistedIcon from '@/components/icons/AssistedIcon.vue'
 import PlusIcon from '@/components/icons/PlusIcon.vue'
 import FlashcardIcon from '@/components/icons/FlashcardIcon.vue'
+import FileIcon from '@/components/icons/FileIcon.vue'
 import FolderIcon from '@/components/icons/FolderIcon.vue'
 import DocumentIcon from '@/components/icons/DocumentIcon.vue'
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon.vue'
@@ -30,6 +31,7 @@ export default {
     AssistedIcon,
     PlusIcon,
     FlashcardIcon,
+    FileIcon,
     FolderIcon,
     DocumentIcon,
     ChevronDownIcon,
@@ -67,6 +69,7 @@ export default {
     const isSharedActive = computed(() => route.path === '/drive/shared')
     const isNotebook = computed(() => route.path === '/' || route.path === '/drive')
     const isFlashcardsView = computed(() => route.path.startsWith('/flashcards'))
+    const isContextFilesView = computed(() => route.path.startsWith('/context-files'))
 
     // Navigation
     const navigateTo = (path) => router.push(path)
@@ -199,6 +202,7 @@ export default {
       isSharedActive,
       isNotebook,
       isFlashcardsView,
+      isContextFilesView,
       isDark,
       isSearchActive,
       searchQuery,
@@ -350,6 +354,15 @@ export default {
             >
                 <FlashcardIcon :size="24" :class="isFlashcardsView ? 'text-accent' : ''" />
                 <span class="text-base" :class="isFlashcardsView ? 'text-accent font-medium' : ''">Flashcards</span>
+            </button>
+            
+            <!-- Context Files -->
+            <button
+                @click="navigateTo('/context-files')"
+                class="flex gap-3 items-center px-2 py-2 rounded"
+            >
+                <FileIcon :size="24" :class="isContextFilesView ? 'text-accent' : ''" />
+                <span class="text-base" :class="isContextFilesView ? 'text-accent font-medium' : ''">Context Files</span>
             </button>
             
             <!-- My papairs Section -->

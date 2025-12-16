@@ -305,7 +305,7 @@ public class TestFixtures {
         mockMvc.perform(put("/api/docs/flashcards/" + flashcardId + "/learned")
                         .header(userIdHeader, userId)
                         .contentType(contentTypeJson)
-                        .content(String.valueOf(learned)))
+                        .content("{\"learned\": " + learned + "}"))
                 .andExpect(status().isOk());
     }
 

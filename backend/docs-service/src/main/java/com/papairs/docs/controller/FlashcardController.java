@@ -1,5 +1,8 @@
 package com.papairs.docs.controller;
 
+import com.papairs.docs.dto.request.CreateFlashcardRequest;
+import com.papairs.docs.dto.request.UpdateLearnedRequest;
+import com.papairs.docs.dto.response.FlashcardResponse;
 import com.papairs.docs.model.ApiResponse;
 import com.papairs.docs.model.Flashcard;
 import com.papairs.docs.service.FlashcardService;
@@ -8,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/docs/flashcards")
@@ -25,12 +29,19 @@ public class FlashcardController {
     @PostMapping
     public ResponseEntity<ApiResponse> createFlashcard(
             @RequestHeader("X-User-Id") String userId,
-            @RequestBody Flashcard flashcard) {
+            @RequestBody CreateFlashcardRequest request) {
+        
+        Flashcard flashcard = new Flashcard();
+        flashcard.setPageId(request.pageId());
+        flashcard.setQuestion(request.question());
+        flashcard.setAnswer(request.answer());
+        flashcard.setTags(request.tags());
         
         Flashcard saved = flashcardService.createFlashcard(flashcard, userId);
+        FlashcardResponse response = FlashcardResponse.from(saved);
         
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Flashcard created successfully", saved));
+                .body(ApiResponse.success("Flashcard created successfully", response));
     }
 
     /**
@@ -41,7 +52,10 @@ public class FlashcardController {
             @RequestHeader("X-User-Id") String userId) {
         
         List<Flashcard> flashcards = flashcardService.getUserFlashcards(userId);
-        return ResponseEntity.ok(ApiResponse.success("Flashcards retrieved successfully", flashcards));
+        List<FlashcardResponse> responses = flashcards.stream()
+                .map(FlashcardResponse::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success("Flashcards retrieved successfully", responses));
     }
 
     /**
@@ -53,7 +67,10 @@ public class FlashcardController {
             @PathVariable String pageId) {
         
         List<Flashcard> flashcards = flashcardService.getPageFlashcards(pageId, userId);
-        return ResponseEntity.ok(ApiResponse.success("Page flashcards retrieved successfully", flashcards));
+        List<FlashcardResponse> responses = flashcards.stream()
+                .map(FlashcardResponse::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success("Page flashcards retrieved successfully", responses));
     }
 
     /**
@@ -63,11 +80,12 @@ public class FlashcardController {
     public ResponseEntity<ApiResponse> updateLearnedStatus(
             @RequestHeader("X-User-Id") String userId,
             @PathVariable String flashcardId,
-            @RequestBody Boolean learned) {
+            @RequestBody UpdateLearnedRequest request) {
         
-        Flashcard updated = flashcardService.updateLearnedStatus(flashcardId, userId, learned);
+        Flashcard updated = flashcardService.updateLearnedStatus(flashcardId, userId, request.learned());
+        FlashcardResponse response = FlashcardResponse.from(updated);
         
-        return ResponseEntity.ok(ApiResponse.success("Flashcard learned status updated", updated));
+        return ResponseEntity.ok(ApiResponse.success("Flashcard learned status updated", response));
     }
 
     /**

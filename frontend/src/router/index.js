@@ -8,6 +8,7 @@ import AutocompleteView from '../views/AutocompleteView.vue'
 import FlashcardsView from '../views/FlashcardsView.vue'
 import StudyModeView from '../views/StudyModeView.vue'
 import AIView from '../views/AIView.vue'
+import ContextFilesView from '../views/ContextFilesView.vue'
 import auth from '../utils/auth'
 
 const routes = [
@@ -73,6 +74,12 @@ const routes = [
     path: '/flashcards',
     name: 'Flashcards',
     component: FlashcardsView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/context-files',
+    name: 'ContextFiles',
+    component: ContextFilesView,
     meta: { requiresAuth: true }
   },
   {
