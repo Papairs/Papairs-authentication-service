@@ -93,13 +93,9 @@ import AISection from '@/components/controllerComponents/AISection.vue';
         }
         
         const userId = auth.getUserId()
-        console.log('User ID from auth.getUserId():', userId)
-        console.log('User data from localStorage:', auth.getUser())
-        console.log('Auth headers:', auth.getUserIdHeader())
         
         // Temporary workaround: use a known user ID if no user is logged in
         const actualUserId = userId
-        console.log('Using user ID:', actualUserId)
         if (!actualUserId) {
           this.pageError = 'You must be logged in to create a page'
           return
@@ -120,8 +116,6 @@ import AISection from '@/components/controllerComponents/AISection.vue';
           
           this.pageResult = response.data
           this.pageName = '' // Clear the form
-          
-          console.log('Page created successfully:', response.data)
           
         } catch (error) {
           console.error('Error creating page:', error)

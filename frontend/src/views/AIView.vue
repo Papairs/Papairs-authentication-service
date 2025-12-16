@@ -258,11 +258,12 @@ export default {
           }))
         }
         
+        const authHeaders = await auth.getAuthHeaders()
         const response = await fetch(`${API_BASE_URL}/api/ai/autocomplete`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.getToken()}`
+            ...authHeaders
           },
           body: JSON.stringify(requestBody)
         })
@@ -275,7 +276,6 @@ export default {
         }
         
         const data = await response.json()
-        console.log('Response data:', data) // Debug log
         suggestion.value = data.suggestion || ''
       } catch (error) {
         console.error('Error fetching suggestion:', error)

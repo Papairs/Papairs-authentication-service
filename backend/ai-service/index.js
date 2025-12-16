@@ -27,11 +27,9 @@ function loadSystemPrompt() {
     const promptPath = path.join(__dirname, 'prompt.txt');
     if (fs.existsSync(promptPath)) {
       const prompt = fs.readFileSync(promptPath, 'utf-8');
-      console.log('Loaded custom system prompt from prompt.txt');
       return prompt;
     }
   } catch (error) {
-    console.error('Failed to load prompt.txt, using default:', error.message);
   }
   return defaultPrompt;
 }
@@ -45,7 +43,7 @@ app.get('/health', (req, res) => {
 app.post('/autocomplete', async (req, res) => {
   try {
     const { prompt, userInput, mode = 'fast' } = req.body;
-    const userId = req.headers['X-User-Id'];
+    const userId = req.headers['x-user-id'];
     const inputText = prompt || userInput;
 
     if (!inputText || typeof inputText !== 'string' || inputText.trim() === '') {
@@ -53,7 +51,6 @@ app.post('/autocomplete', async (req, res) => {
     }
 
     const startTime = Date.now();
-    console.log(`[${mode.toUpperCase()}] Request: ${inputText.substring(0, 50)}...`);
 
     let suggestion;
     
@@ -74,7 +71,6 @@ app.post('/autocomplete', async (req, res) => {
     }
 
     const elapsed = Date.now() - startTime;
-    console.log(`[${mode.toUpperCase()}] Response in ${elapsed}ms`);
 
     res.json({ suggestion });
   } catch (error) {
@@ -124,7 +120,6 @@ Do not include any other text, explanations, or markdown formatting.`;
     }
 
     const duration = Date.now() - startTime;
-    console.log(`Generated ${flashcards.length} flashcards in ${duration}ms`);
     
     res.json({ flashcards });
   } catch (error) {
@@ -140,5 +135,4 @@ Do not include any other text, explanations, or markdown formatting.`;
 });
 
 app.listen(PORT, () => {
-  console.log(`AI Service is running on http://localhost:${PORT}`);
 });

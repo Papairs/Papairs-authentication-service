@@ -20,7 +20,6 @@ async function parseFile(buffer, fileName, mimeType) {
     }
   }
   
-  console.log(`No parser found for ${fileName} (${mimeType})`);
   return null;
 }
 

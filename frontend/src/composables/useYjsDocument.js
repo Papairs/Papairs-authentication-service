@@ -40,7 +40,6 @@ export function useYjsDocument(documentId) {
 
       // Connection status handlers
       provider.value.on('status', ({ status }) => {
-        console.log('Y.js connection status:', status)
         isConnected.value = status === 'connected'
         
         if (status === 'disconnected') {
@@ -61,7 +60,6 @@ export function useYjsDocument(documentId) {
       })
 
       provider.value.on('connection-close', (event) => {
-        console.log('Y.js connection closed:', event)
         if (event.code === 1008) {
           error.value = 'Access denied'
         }

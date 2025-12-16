@@ -241,7 +241,6 @@ export default {
     const onDocumentShared = () => {
       // Modal handles sharing internally, just keep it open
       // User can close it manually when done
-      console.log('Member added successfully')
     }
     
     const handleNavigate = (destination) => {
@@ -259,7 +258,6 @@ export default {
         case 'favorites':
         case 'invite':
           // Navigate to these pages when implemented
-          console.log(`Navigate to ${destination}`)
           break
       }
     }

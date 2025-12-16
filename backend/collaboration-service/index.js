@@ -30,8 +30,6 @@ const server = Server.configure({
    * Authenticate users before allowing document access
    */
   async onAuthenticate({ token, documentName }) {
-    console.log(`Auth attempt for document: ${documentName}`)
-    
     if (!token) {
       throw new Error('Authentication required')
     }
@@ -50,7 +48,6 @@ const server = Server.configure({
 
       if (response.status === 200 && response.data?.userId) {
         const userId = response.data.userId
-        console.log(`User ${userId} authenticated for document ${documentName}`)
         return {
           userId,
           documentName
@@ -179,7 +176,4 @@ const server = Server.configure({
   },
 })
 
-server.listen().then(() => {
-  console.log(`🚀 Collaboration service running on port ${PORT}`)
-  console.log(`📡 Docs service: ${DOCS_SERVICE_URL}`)
-})
+server.listen()
