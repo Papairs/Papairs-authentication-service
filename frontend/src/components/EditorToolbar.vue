@@ -135,16 +135,18 @@
     <!-- Text Color -->
     <div class="flex items-center gap-1">
       <div class="relative">
-        <button
-          class="toolbar-button flex items-center gap-1"
-          title="Text Color"
-          @click="$emit('open-text-color')"
-        >
+        <label class="toolbar-button flex items-center gap-1 cursor-pointer" title="Text Color">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M11 3L5.5 17h2.25l1.12-3h6.25l1.12 3h2.25L13 3h-2zm-1.38 9L12 5.67 14.38 12H9.62z"/>
           </svg>
           <div class="w-4 h-1 rounded" :style="{ backgroundColor: currentTextColor }"></div>
-        </button>
+          <input 
+            type="color" 
+            :value="currentTextColor"
+            @input="$emit('set-text-color', $event)"
+            class="absolute opacity-0 w-0 h-0"
+          />
+        </label>
       </div>
     </div>
 
@@ -153,7 +155,7 @@
 
     <!-- Text Alignment -->
     <button
-      @click="$emit('set-alignment', 'left')"
+      @click="$emit('set-text-align', 'left')"
       :class="{ 'is-active': isActive?.textAlignLeft }"
       class="toolbar-button"
       title="Align Left"
@@ -164,7 +166,7 @@
     </button>
 
     <button
-      @click="$emit('set-alignment', 'center')"
+      @click="$emit('set-text-align', 'center')"
       :class="{ 'is-active': isActive?.textAlignCenter }"
       class="toolbar-button"
       title="Align Center"
@@ -175,7 +177,7 @@
     </button>
 
     <button
-      @click="$emit('set-alignment', 'right')"
+      @click="$emit('set-text-align', 'right')"
       :class="{ 'is-active': isActive?.textAlignRight }"
       class="toolbar-button"
       title="Align Right"
@@ -186,7 +188,7 @@
     </button>
 
     <button
-      @click="$emit('set-alignment', 'justify')"
+      @click="$emit('set-text-align', 'justify')"
       :class="{ 'is-active': isActive?.textAlignJustify }"
       class="toolbar-button"
       title="Justify"
@@ -298,8 +300,8 @@ export default {
     'toggle-italic',
     'toggle-underline',
     'toggle-strike',
-    'open-text-color',
-    'set-alignment',
+    'set-text-color',
+    'set-text-align',
     'toggle-bullet-list',
     'toggle-ordered-list',
     'toggle-code',

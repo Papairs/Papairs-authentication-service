@@ -15,25 +15,28 @@ export const CollaborationCursor = Extension.create({
       render: (user) => {
         const cursor = document.createElement('span')
         cursor.classList.add('collaboration-cursor')
+        cursor.style.position = 'absolute'
         cursor.style.borderLeft = `2px solid ${user.color || '#3b82f6'}`
-        cursor.style.marginLeft = '-1px'
-        cursor.style.marginRight = '-1px'
+        cursor.style.height = '1.2em'
+        cursor.style.width = '0'
         cursor.style.pointerEvents = 'none'
+        cursor.style.zIndex = '100'
 
         const label = document.createElement('div')
         label.classList.add('collaboration-cursor__label')
         label.style.backgroundColor = user.color || '#3b82f6'
         label.style.color = '#fff'
-        label.style.fontSize = '12px'
-        label.style.fontWeight = '600'
-        label.style.padding = '2px 6px'
-        label.style.borderRadius = '3px'
+        label.style.fontSize = '11px'
+        label.style.fontWeight = '500'
+        label.style.padding = '1px 4px'
+        label.style.borderRadius = '2px'
         label.style.position = 'absolute'
-        label.style.top = '-1.4em'
-        label.style.left = '-1px'
+        label.style.top = '-1.5em'
+        label.style.left = '0'
         label.style.whiteSpace = 'nowrap'
         label.style.pointerEvents = 'none'
         label.style.userSelect = 'none'
+        label.style.zIndex = '1000'
         label.textContent = user.name
 
         cursor.appendChild(label)
@@ -86,7 +89,7 @@ export const CollaborationCursor = Extension.create({
                   if (from !== to && to <= docSize && to >= from) {
                     const selectionDecoration = Decoration.inline(from, to, {
                       class: 'collaboration-cursor__selection',
-                      style: `background-color: ${cursor.color || getUserColor(userId)}33;`,
+                      style: `background-color: ${cursor.color || getUserColor(userId)}20;`,
                     })
                     decorations.push(selectionDecoration)
                   }

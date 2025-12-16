@@ -123,6 +123,20 @@ public class PageService {
     }
 
     /**
+     * Updates the Y.js state of a specific page
+     * This is used by the collaboration service to persist Y.js CRDT state
+     * @param pageId The ID of the page to update
+     * @param yjsState The new Y.js state for the page
+     */
+    @Transactional
+    public void updateYjsState(String pageId, byte[] yjsState) {
+        Page page = pageRepository.findById(pageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
+        page.setYjsState(yjsState);
+        pageRepository.save(page);
+    }
+
+    /**
      * Renames a page
      * @param pageId The ID of the page to rename
      * @param userId The ID of the user performing the action. Requires edit permission
