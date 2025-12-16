@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
+import { useAssistedWriting } from '@/composables/useAssistedWriting'
 import { API_BASE_URL } from '@/config'
 import User3Icon from '@/components/icons/User3Icon.vue'
 import SearchIcon from '@/components/icons/SearchIcon.vue'
@@ -43,6 +44,7 @@ export default {
     const router = useRouter()
     const route = useRoute()
     const { isDark, toggleTheme } = useTheme()
+    const { isAssistedWritingEnabled, toggleAssistedWriting } = useAssistedWriting()
 
     // State
     const loading = ref(false)
@@ -51,7 +53,6 @@ export default {
     const isSettingsDropdownOpen = ref(false)
     const isNewDropdownOpen = ref(false)
     const isFolderTreeDropdownOpen = ref(false)
-    const assistedWritingEnabled = ref(false)
     const isSearchActive = ref(false)
     const searchQuery = ref('')
     const searchResults = ref([])
@@ -96,11 +97,6 @@ export default {
     }
 
     // Settings
-    const toggleAssistedWriting = () => {
-      assistedWritingEnabled.value = !assistedWritingEnabled.value
-      console.log('Assisted Writing:', assistedWritingEnabled.value ? 'Enabled' : 'Disabled')
-    }
-
     const handleLogout = () => {
       auth.logout()
       window.location.href = '/login'
@@ -201,7 +197,7 @@ export default {
       isSettingsDropdownOpen,
       isNewDropdownOpen,
       isFolderTreeDropdownOpen,
-      assistedWritingEnabled,
+      assistedWritingEnabled: isAssistedWritingEnabled,
       isHomeActive,
       isSharedActive,
       isNotebook,

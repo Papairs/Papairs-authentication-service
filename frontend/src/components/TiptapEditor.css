@@ -175,20 +175,58 @@
   min-height: 100%;
 }
 
-/* Collaborative cursor styles */
+/* Collaborative cursor styles - for custom CollaborationCursor.js */
 .collaboration-cursor {
-  position: relative;
-  display: inline;
+  position: absolute;
   pointer-events: none;
+  height: 1.2em;
+  width: 0;
+  z-index: 100;
 }
 
 .collaboration-cursor__label {
-  z-index: 10;
-  animation: fadeIn 0.2s ease-in;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .collaboration-cursor__selection {
   pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+/* Collaborative cursor styles - for @tiptap/extension-collaboration-cursor */
+.collaboration-cursor__caret {
+  position: absolute;
+  border-left: 2px solid;
+  border-color: inherit;
+  height: 1.2em;
+  width: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.collaboration-cursor__label {
+  position: absolute;
+  top: -1.5em;
+  left: 0;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 4px;
+  border-radius: 2px;
+  color: #fff;
+  background-color: inherit;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-in;
+}
+
+.ProseMirror .collaboration-cursor__selection {
+  pointer-events: none;
+  mix-blend-mode: multiply;
 }
 
 @keyframes fadeIn {

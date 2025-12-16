@@ -109,6 +109,15 @@ public class GatewayConfig {
                                         .setFallbackUri("forward:/fallback/ai-service"))
                         )
                         .uri(serviceProperties.aiService().url()))
+
+                .route("collaboration-websocket", r -> r
+                        .path("/collaboration/**")
+                        .filters(f -> f
+                                .removeRequestHeader("Origin")
+                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
+                                .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")
+                        )
+                        .uri(serviceProperties.collaborationService().url()))
                 .build();
     }
 }

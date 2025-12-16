@@ -53,6 +53,8 @@ services:
       - SERVICES_COMPENSATION_TIMEOUT_SECONDS=3
       - SERVICES_AI_SERVICE_URL=http://ai-service:3001
       - SERVICES_AI_SERVICE_TIMEOUT_SECONDS=5
+      - SERVICES_COLLABORATION_SERVICE_URL=http://collaboration-service:8083
+      - SERVICES_COLLABORATION_SERVICE_TIMEOUT_SECONDS=5
       - TZ=Europe/Copenhagen
     depends_on:
       - auth-service
@@ -139,6 +141,31 @@ services:
       - TZ=Europe/Copenhagen
       - STORAGE_MODE=b2
       - STORAGE_LOCAL_PATH=/app/uploads
+    networks:
+      - papairs-network
+    restart: unless-stopped
+
+  # ============================================
+  # COLLABORATION SERVICE (Hocuspocus Y.js)
+  # ============================================
+  collaboration-service:
+    build:
+      context: ./backend/collaboration-service
+      dockerfile: Dockerfile
+    container_name: papairs-collaboration-service
+    ports:
+      - "8083:8083"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - PORT=8083
+      - DOCS_SERVICE_URL=http://docs-service:8082
+      - ORCHESTRATION_URL=http://orchestration-service:8080
+      - TZ=Europe/Copenhagen
+    depends_on:
+      - docs-service
+      - orchestration-service
     networks:
       - papairs-network
     restart: unless-stopped
