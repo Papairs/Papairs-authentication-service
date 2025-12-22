@@ -5,6 +5,7 @@ import LoginHeader from '../components/LoginHeader.vue'
 import LoginForm from '../components/LoginForm.vue'
 import ImagePanel from '../components/ImagePanel.vue'
 import auth from '@/utils/auth'
+import { API_BASE_URL } from "@/config";
 
 export default {
   name: 'LoginView',
@@ -29,20 +30,19 @@ export default {
   methods: {
     async handleLogin(loginData) {
       try {
-        const resp = await axios.post('http://localhost:8081/api/auth/login', {
+        const resp = await axios.post(`${API_BASE_URL}/api/auth/login`, {
           email: loginData.email,
           password: loginData.password
         })
         
-        const token = resp.data?.sessionToken || null
+        const token = resp.data?.token || null
         const user = resp.data?.user || null
         
         if (token && user) {
           // Store auth data using utility
           auth.setAuthData(token, user)
           
-          console.log('Login successful, stored user ID:', user.id)
-          setTimeout(() => this.$router.push({ name: 'Home' }), 700)
+          setTimeout(() => this.$router.push({ name: 'Drive' }), 700)
         } else {
           this.$refs.loginForm.error = 'Login succeeded but no token or user data returned.'
         }
@@ -62,7 +62,7 @@ export default {
 
 
 <template>
-  <div class="min-h-screen bg-surface-light dark:bg-surface-dark" :style="gridBg">
+  <div class="min-h-screen bg-surface-light" :style="gridBg">
     <!-- Header with height 100px -->
     <LoginHeader />
     

@@ -1,140 +1,71 @@
-# Papairs Project
+# Papairs
 
-A simple full-stack application with Vue.js frontend and Spring Boot microservices backend.
+A collaborative document platform built with microservices architecture.
+
+## Architecture
+
+![System Architecture](./docs/architecture.png)
+
+The system follows a gateway pattern where all client requests flow through the **Orchestration Service**, which handles routing, authentication validation and service coordination.
+
+| Service | Technology | Purpose |
+|---------|------------|---------|
+| **Frontend** | Vue.js 3, Tailwind CSS | Client-side rendered SPA |
+| **Orchestration** | Spring Cloud Gateway | API Gateway, routing, auth orchestration |
+| **Auth Service** | Spring Boot, MySQL | User authentication and session management |
+| **Docs Service** | Spring Boot, MySQL | Document CRUD and file storage (B2) |
+| **AI Service** | Node.js, OpenAI | Autocomplete and document analysis |
+| **Collaboration** | Hocuspocus (Y.js) | Real-time collaborative editing |
+
+## Quick Start
+
+```bash
+# Start all services
+docker compose up --build
+
+# Or for development with hot-reload
+docker compose up
+```
+
+**Access points:**
+- Frontend: http://localhost:3000
+- API Gateway: http://localhost:8080
 
 ## Project Structure
 
 ```
 Papairs/
-├── frontend/                 # Vue.js frontend with Tailwind CSS
+├── frontend/                    # Vue.js SPA
 ├── backend/
-│   ├── auth-service/        # Authentication service (Port 8081)
-│   └── docs-service/        # Documentation service (Port 8082)
-├── start-all.bat           # Windows batch script to run all services
-├── start-all.ps1           # PowerShell script to run all services
-└── README.md              # This file
+│   ├── orchestration-service/   # API Gateway (8080)
+│   ├── auth-service/            # Authentication (8081)
+│   ├── docs-service/            # Documents & Files (8082)
+│   ├── ai-service/              # AI features (3001)
+│   └── collaboration-service/   # Real-time sync (8083)
+└── docker-compose.yml
+```
+
+## Development
+
+Some services require `.env` files — see [`docs/example.env`](./docs/example.env) for the full template.
+
+### Running individual services
+
+```bash
+# Java services (auth, docs, orchestration)
+cd backend/<service-name>
+mvn spring-boot:run
+
+# Node services (ai, collaboration)
+cd backend/<service-name>
+npm install && npm start
+
+# Frontend
+cd frontend
+npm install && npm run serve
 ```
 
 ## Prerequisites
 
-- **Node.js** (v16 or higher) - for Vue.js frontend
-- **Java 17** - for Spring Boot backends
-- **Maven** - for building Spring Boot applications
-
-## Quick Start
-
-### Option 1: Use the startup script (Recommended)
-
-Double-click `start-all.bat` or run in PowerShell:
-```powershell
-.\start-all.ps1
-```
-
-### Option 2: Manual startup
-
-1. **Start Auth Service:**
-   ```bash
-   cd backend/auth-service
-   mvn spring-boot:run
-   ```
-
-2. **Start Docs Service:**
-   ```bash
-   cd backend/docs-service  
-   mvn spring-boot:run
-   ```
-
-3. **Start Frontend:**
-   ```bash
-   cd frontend
-   npm install  # Only needed first time
-   npm run serve
-   ```
-
-## Access Points
-
-- **Frontend:** http://localhost:3000
-- **Auth Service:** http://localhost:8081
-- **Docs Service:** http://localhost:8082
-
-## Services Overview
-
-### Frontend (Vue.js + Tailwind CSS)
-- Port: 3000
-- Simple responsive UI with navigation
-- Home page with service testing buttons
-- Documentation page displaying mock data
-
-### Auth Service (Spring Boot)
-- Port: 8081
-- Endpoints:
-  - `GET /api/auth/health` - Health check
-  - `POST /api/auth/login` - User login (use username: "test", password: "test")
-  - `POST /api/auth/register` - User registration
-  - `GET /api/auth/validate` - Token validation
-
-### Docs Service (Spring Boot)  
-- Port: 8082
-- Endpoints:
-  - `GET /api/docs/health` - Health check
-  - `GET /api/docs/pages` - Get all accessible pages
-  - `GET /api/docs/pages/{pageId}` - Get specific page
-  - `POST /api/docs/pages` - Create new page
-  - `PUT /api/docs/pages/{pageId}` - Update page content
-  - `PATCH /api/docs/pages/{pageId}` - Rename page
-  - `PATCH /api/docs/pages/{pageId}/move` - Move page to folder
-  - `DELETE /api/docs/pages/{pageId}` - Delete page
-
-## Development
-
-### Frontend Development
-```bash
-cd frontend
-npm install
-npm run serve    # Development server
-npm run build    # Production build
-npm run lint     # Lint code
-```
-
-### Backend Development
-Each service can be run independently:
-```bash
-cd backend/auth-service  # or docs-service
-mvn clean install
-mvn spring-boot:run
-```
-
-## Technologies Used
-
-### Frontend
-- Vue.js 3
-- Vue Router 4
-- Tailwind CSS 3
-- Axios for HTTP requests
-
-### Backend
-- Spring Boot 3.1.3
-- Spring Web
-- Spring Data JPA
-- H2 Database (in-memory)
-- Maven
-
-## Features
-
-- ✅ Responsive UI with Tailwind CSS
-- ✅ Microservices architecture
-- ✅ CORS configured for frontend-backend communication
-- ✅ Mock authentication system
-- ✅ Document management system
-- ✅ Health check endpoints
-- ✅ Easy startup with scripts
-
-## Next Steps
-
-1. Replace mock authentication with real JWT implementation
-2. Add persistent database (PostgreSQL/MySQL)
-3. Add user management features
-4. Implement real document CRUD operations
-5. Add API documentation with Swagger
-6. Add unit and integration tests
-7. Containerize with Docker
+- Docker & Docker Compose (recommended)
+- Or: Node.js 18+, Java 17+, Maven
