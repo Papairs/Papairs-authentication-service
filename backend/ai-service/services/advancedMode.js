@@ -28,7 +28,6 @@ async function getOrCreateAssistant(openai, userId, systemPrompt) {
   });
 
   userAssistants.set(userId, assistant.id);
-  console.log(`Created assistant ${assistant.id} for user ${userId}`);
   return assistant.id;
 }
 
@@ -42,7 +41,6 @@ async function getOrCreateVectorStore(openai, userId) {
   });
 
   userVectorStores.set(userId, vectorStore.id);
-  console.log(`Created vector store ${vectorStore.id} for user ${userId}`);
   return vectorStore.id;
 }
 
@@ -53,7 +51,6 @@ async function getOrCreateThread(openai, userId) {
 
   const thread = await openai.beta.threads.create();
   userThreads.set(userId, thread.id);
-  console.log(`Created thread ${thread.id} for user ${userId}`);
   return thread.id;
 }
 
@@ -62,7 +59,7 @@ async function uploadFileToOpenAI(openai, fileId, userId, fileName, docsServiceU
     return uploadedFiles.get(fileId);
   }
 
-  const downloadUrl = `${docsServiceUrl}/api/files/download/${fileId}`;
+  const downloadUrl = `${docsServiceUrl}/api/docs/files/download/${fileId}`;
   const response = await axios.get(downloadUrl, {
     responseType: 'arraybuffer',
     timeout: DOWNLOAD_TIMEOUT,
@@ -78,7 +75,6 @@ async function uploadFileToOpenAI(openai, fileId, userId, fileName, docsServiceU
   });
 
   uploadedFiles.set(fileId, file.id);
-  console.log(`  Uploaded ${fileName} to OpenAI: ${file.id}`);
   return file.id;
 }
 
@@ -114,7 +110,6 @@ async function handleRequest(openai, systemPrompt, docsServiceUrl, req, userId) 
   // Upload files if provided
   let vectorStoreId = null;
   if (selectedFiles.length > 0) {
-    console.log(`Processing ${selectedFiles.length} files`);
     vectorStoreId = await getOrCreateVectorStore(openai, userId);
     
     const openAIFileIds = [];
@@ -134,7 +129,6 @@ async function handleRequest(openai, systemPrompt, docsServiceUrl, req, userId) 
       await openai.vectorStores.fileBatches.createAndPoll(vectorStoreId, {
         file_ids: openAIFileIds
       });
-      console.log(`  Added ${openAIFileIds.length} files to vector store`);
     }
   }
 
@@ -149,7 +143,7 @@ async function handleRequest(openai, systemPrompt, docsServiceUrl, req, userId) 
     assistant_id: assistantId,
     max_prompt_tokens: 20000,
     max_completion_tokens: 500,
-    temperature: 0.3,
+    temperature: 0.1, // Lower temperature for more consistent completions
   };
 
   if (vectorStoreId) {

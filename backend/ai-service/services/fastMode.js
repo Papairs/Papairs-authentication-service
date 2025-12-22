@@ -8,7 +8,7 @@ const axios = require('axios');
 const { parseFile } = require('../parsers');
 
 async function downloadFile(fileId, userId, docsServiceUrl) {
-  const downloadUrl = `${docsServiceUrl}/api/files/download/${fileId}`;
+  const downloadUrl = `${docsServiceUrl}/api/docs/files/download/${fileId}`;
   const response = await axios.get(downloadUrl, {
     responseType: 'arraybuffer',
     headers: { 'X-User-Id': userId }
@@ -24,10 +24,6 @@ async function processFile(file, userId, docsServiceUrl) {
   try {
     const buffer = await downloadFile(fileId, userId, docsServiceUrl);
     const content = await parseFile(buffer, fileName, mimeType);
-    
-    if (content) {
-      console.log(`  Parsed ${fileName}: ${content.length} chars`);
-    }
     
     return content;
   } catch (error) {
@@ -49,7 +45,6 @@ async function handleRequest(openai, systemPrompt, docsServiceUrl, req, userId) 
     
     if (validContents.length > 0) {
       fileContext = validContents.join('\n\n---\n\n');
-      console.log(`Processed ${validContents.length} files: ${fileContext.length} chars`);
     }
   }
 
@@ -70,7 +65,7 @@ async function handleRequest(openai, systemPrompt, docsServiceUrl, req, userId) 
     model: 'gpt-4o-mini',
     messages,
     max_tokens: 300,
-    temperature: 0.3,
+    temperature: 0.1, // Lower temperature for more consistent completions
   });
 
   return completion.choices[0].message.content;

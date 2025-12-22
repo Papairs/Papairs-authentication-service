@@ -12,6 +12,9 @@ services:
   docs-service:
     url: ${SERVICES_DOCS_SERVICE_URL:http://docs-service:8082}
     timeout-seconds: ${SERVICES_DOCS_SERVICE_TIMEOUT_SECONDS:10}
+  collaboration-service:
+    url: ${SERVICES_COLLABORATION_SERVICE_URL:http://collaboration-service:8083}
+    timeout-seconds: ${SERVICES_COLLABORATION_SERVICE_TIMEOUT_SECONDS:30}
   compensation:
     timeout-seconds: ${SERVICES_COMPENSATION_TIMEOUT_SECONDS:5}
   ai-service:

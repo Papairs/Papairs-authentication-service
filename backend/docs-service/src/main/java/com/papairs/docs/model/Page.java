@@ -28,6 +28,10 @@ public class Page {
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
+    @Lob
+    @Column(name = "yjs_state", columnDefinition = "LONGBLOB")
+    private byte[] yjsState;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -98,5 +102,13 @@ public class Page {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public byte[] getYjsState() {
+        return yjsState;
+    }
+
+    public void setYjsState(byte[] yjsState) {
+        this.yjsState = yjsState;
     }
 }

@@ -109,19 +109,31 @@ public class PageService {
     /**
      * Updates the content of a specific page
      * @param pageId  The ID of the page to update
-     * @param userId  The ID of the user performing the update. Requires edit permission
      * @param content The new content for the page
      * @return The updated {@link PageContentResponse} dto
      */
     @Transactional
-    public PageContentResponse updatePage(String pageId, String userId, String content) {
-        permissionService.requirePageEdit(pageId, userId);
+    public PageContentResponse updatePage(String pageId, String content) {
         Page page = pageRepository.findById(pageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
         page.setContent(content);
         Page saved = pageRepository.save(page);
 
         return PageContentResponse.of(saved);
+    }
+
+    /**
+     * Updates the Y.js state of a specific page
+     * This is used by the collaboration service to persist Y.js CRDT state
+     * @param pageId The ID of the page to update
+     * @param yjsState The new Y.js state for the page
+     */
+    @Transactional
+    public void updateYjsState(String pageId, byte[] yjsState) {
+        Page page = pageRepository.findById(pageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Page not found"));
+        page.setYjsState(yjsState);
+        pageRepository.save(page);
     }
 
     /**

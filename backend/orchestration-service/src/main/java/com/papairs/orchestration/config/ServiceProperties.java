@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 public record ServiceProperties(
         ServiceConfig authService,
         ServiceConfig docsService,
+        ServiceConfig collaborationService,
         CompensationConfig compensation,
         ServiceConfig aiService
 ) {

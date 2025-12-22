@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import DocsView from '../views/DocsView.vue'
+import DocsViewYjs from '../views/DocsViewYjs.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import DriveView from '../views/DriveView.vue'
@@ -8,6 +8,7 @@ import AutocompleteView from '../views/AutocompleteView.vue'
 import FlashcardsView from '../views/FlashcardsView.vue'
 import StudyModeView from '../views/StudyModeView.vue'
 import AIView from '../views/AIView.vue'
+import ContextFilesView from '../views/ContextFilesView.vue'
 import auth from '../utils/auth'
 
 const routes = [
@@ -43,13 +44,13 @@ const routes = [
   {
     path: '/docs',
     name: 'Docs',
-    component: DocsView,
+    component: DocsViewYjs,
     meta: { requiresAuth: true }
   },
   {
     path: '/docs/:id',
     name: 'DocsWithId',
-    component: DocsView,
+    component: DocsViewYjs,
     props: true,
     meta: { requiresAuth: true }
   },
@@ -73,6 +74,12 @@ const routes = [
     path: '/flashcards',
     name: 'Flashcards',
     component: FlashcardsView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/context-files',
+    name: 'ContextFiles',
+    component: ContextFilesView,
     meta: { requiresAuth: true }
   },
   {

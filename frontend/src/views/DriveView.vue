@@ -55,9 +55,60 @@ export default {
     const showNotebookDropdown = ref(false)
     const searchQuery = ref('')
     const isSearching = ref(false)
+    const sortBy = ref('date-desc') // Options: 'date-desc', 'date-asc', 'name-asc', 'name-desc'
+    const showSortDropdown = ref(false)
 
     // Check if we're in shared view
     const isSharedView = computed(() => route.path === '/drive/shared')
+
+    // Sorted folders
+    const sortedFolders = computed(() => {
+      const sorted = [...folders.value]
+      switch (sortBy.value) {
+        case 'date-desc':
+          return sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        case 'date-asc':
+          return sorted.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))
+        case 'name-asc':
+          return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+        case 'name-desc':
+          return sorted.sort((a, b) => (b.name || '').localeCompare(a.name || ''))
+        default:
+          return sorted
+      }
+    })
+
+    // Sorted documents
+    const sortedDocuments = computed(() => {
+      const sorted = [...documents.value]
+      switch (sortBy.value) {
+        case 'date-desc':
+          return sorted.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0))
+        case 'date-asc':
+          return sorted.sort((a, b) => new Date(a.updatedAt || a.createdAt || 0) - new Date(b.updatedAt || b.createdAt || 0))
+        case 'name-asc':
+          return sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+        case 'name-desc':
+          return sorted.sort((a, b) => (b.title || '').localeCompare(a.title || ''))
+        default:
+          return sorted
+      }
+    })
+
+    const setSortBy = (value) => {
+      sortBy.value = value
+      showSortDropdown.value = false
+    }
+
+    const getSortLabel = () => {
+      switch (sortBy.value) {
+        case 'date-desc': return 'Newest first'
+        case 'date-asc': return 'Oldest first'
+        case 'name-asc': return 'Name (A-Z)'
+        case 'name-desc': return 'Name (Z-A)'
+        default: return 'Sort'
+      }
+    }
 
     const loadContent = async (folderId = null) => {
       loading.value = true
@@ -190,7 +241,6 @@ export default {
     const onDocumentShared = () => {
       // Modal handles sharing internally, just keep it open
       // User can close it manually when done
-      console.log('Member added successfully')
     }
     
     const handleNavigate = (destination) => {
@@ -208,7 +258,6 @@ export default {
         case 'favorites':
         case 'invite':
           // Navigate to these pages when implemented
-          console.log(`Navigate to ${destination}`)
           break
       }
     }
@@ -285,6 +334,8 @@ export default {
       loading,
       folders,
       documents,
+      sortedFolders,
+      sortedDocuments,
       currentFolderId,
       currentFolder,
       breadcrumbs,
@@ -295,8 +346,10 @@ export default {
       showRenameDocModal,
       showShareDocModal,
       showNotebookDropdown,
+      showSortDropdown,
       searchQuery,
       isSearching,
+      sortBy,
       folderToRename,
       documentToRename,
       documentToShare,
@@ -307,6 +360,8 @@ export default {
       deleteDocument,
       startRenameFolder,
       startRenameDocument,
+      setSortBy,
+      getSortLabel,
       startShareDocument,
       onFolderCreated,
       onDocumentCreated,
@@ -374,10 +429,61 @@ export default {
 
       <!-- Content Area -->
       <div class="pt-2 px-8 pb-8">
-        <!-- Section Labels -->
+        <!-- Section Labels with Sort -->
         <div class="mb-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-medium text-accent">{{ isSharedView ? 'Papairs' : 'Notebooks' }}</h3>
+            
+            <!-- Sort Dropdown -->
+            <div class="relative">
+              <button 
+                @click="showSortDropdown = !showSortDropdown"
+                class="flex items-center space-x-2 px-3 py-1.5 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark rounded-md transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                </svg>
+                <span>{{ getSortLabel() }}</span>
+                <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': showSortDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <!-- Sort Dropdown Menu -->
+              <div 
+                v-if="showSortDropdown"
+                class="absolute right-0 mt-2 w-48 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg overflow-hidden z-10"
+              >
+                <button 
+                  @click="setSortBy('date-desc')"
+                  class="w-full flex items-center px-4 py-2 text-sm hover:bg-surface-light dark:hover:bg-surface-dark text-content-primary dark:text-content-inverse transition-colors text-left"
+                  :class="{ 'bg-surface-light-secondary dark:bg-surface-dark': sortBy === 'date-desc' }"
+                >
+                  Newest first
+                </button>
+                <button 
+                  @click="setSortBy('date-asc')"
+                  class="w-full flex items-center px-4 py-2 text-sm hover:bg-surface-light dark:hover:bg-surface-dark text-content-primary dark:text-content-inverse transition-colors text-left"
+                  :class="{ 'bg-surface-light-secondary dark:bg-surface-dark': sortBy === 'date-asc' }"
+                >
+                  Oldest first
+                </button>
+                <button 
+                  @click="setSortBy('name-asc')"
+                  class="w-full flex items-center px-4 py-2 text-sm hover:bg-surface-light dark:hover:bg-surface-dark text-content-primary dark:text-content-inverse transition-colors text-left"
+                  :class="{ 'bg-surface-light-secondary dark:bg-surface-dark': sortBy === 'name-asc' }"
+                >
+                  Name (A-Z)
+                </button>
+                <button 
+                  @click="setSortBy('name-desc')"
+                  class="w-full flex items-center px-4 py-2 text-sm hover:bg-surface-light dark:hover:bg-surface-dark text-content-primary dark:text-content-inverse transition-colors text-left"
+                  :class="{ 'bg-surface-light-secondary dark:bg-surface-dark': sortBy === 'name-desc' }"
+                >
+                  Name (Z-A)
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -407,9 +513,9 @@ export default {
         <!-- Content Grid -->
         <div v-else>
           <!-- Folders Grid (Drive View Only) -->
-          <div v-if="folders.length > 0 && !isSharedView" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
+          <div v-if="sortedFolders.length > 0 && !isSharedView" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
             <FolderCard 
-              v-for="folder in folders" 
+              v-for="folder in sortedFolders" 
               :key="folder.folderId"
               :folder="folder"
               @click="navigateToFolder(folder.folderId)"
@@ -419,13 +525,13 @@ export default {
           </div>
 
           <!-- Documents Section -->
-          <div v-if="documents.length > 0">
+          <div v-if="sortedDocuments.length > 0">
             <div v-if="!isSharedView" class="flex items-center justify-between mb-4">
               <h3 class="text-sm font-medium text-accent">Papairs</h3>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               <DocumentCard 
-                v-for="doc in documents" 
+                v-for="doc in sortedDocuments" 
                 :key="doc.pageId"
                 :document="doc"
                 @click="openDocument(doc.pageId)"

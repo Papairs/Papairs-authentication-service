@@ -8,6 +8,7 @@ import com.papairs.docs.dto.response.PageContentResponse;
 import com.papairs.docs.dto.response.PageResponse;
 import com.papairs.docs.security.HtmlSanitizer;
 import com.papairs.docs.service.PageService;
+import com.papairs.docs.service.PermissionService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +20,12 @@ import java.util.List;
 public class PageController {
     private final PageService pageService;
     private final HtmlSanitizer htmlSanitizer;
+    private final PermissionService permissionService;
 
-    public PageController(PageService pageService, HtmlSanitizer htmlSanitizer) {
+    public PageController(PageService pageService, HtmlSanitizer htmlSanitizer, PermissionService permissionService) {
         this.pageService = pageService;
         this.htmlSanitizer = htmlSanitizer;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -95,8 +98,9 @@ public class PageController {
             @RequestBody UpdatePageRequest updatePageRequest,
             @RequestHeader("X-User-Id") String userId
     ) {
+        permissionService.requirePageEdit(pageId, userId);
         String sanitizedContent = htmlSanitizer.sanitize(updatePageRequest.getContent());
-        PageContentResponse updated = pageService.updatePage(pageId, userId, sanitizedContent);
+        PageContentResponse updated = pageService.updatePage(pageId, sanitizedContent);
         return ResponseEntity.ok(updated);
     }
 
