@@ -27,8 +27,3 @@ Thumbs.db
 
 # Logs
 *.log
-
-# Test
-.mvn/
-mvnw
-mvnw.cmd
