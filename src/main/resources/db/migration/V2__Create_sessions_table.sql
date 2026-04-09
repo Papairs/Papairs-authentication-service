@@ -10,13 +10,13 @@ CREATE TABLE IF NOT EXISTS sessions (
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_active_at TIMESTAMP NULL,
-    
-    INDEX idx_user_id (user_id),
-    INDEX idx_token (token),
-    INDEX idx_expires_at (expires_at),
-    
-    CONSTRAINT fk_session_user 
-        FOREIGN KEY (user_id) 
-        REFERENCES users(id) 
-        ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CONSTRAINT fk_session_user
+        FOREIGN KEY (user_id)
+            REFERENCES users(id)
+            ON DELETE CASCADE
+);
+
+CREATE INDEX idx_user_id ON sessions (user_id);
+CREATE INDEX idx_token ON sessions (token);
+CREATE INDEX idx_expires_at ON sessions (expires_at);
