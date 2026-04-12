@@ -79,10 +79,4 @@ public class Session {
     public void setLastActiveAt(LocalDateTime lastActiveAt) {
         this.lastActiveAt = lastActiveAt;
     }
-
-    @Override
-    public String toString(){
-        return "Session{id='" + id + "', userId='" + userId + "', token='" + token + "', expiresAt=" + expiresAt +
-               ", createdAt=" + createdAt + ", lastActiveAt=" + lastActiveAt + "}";
-    }
 }
