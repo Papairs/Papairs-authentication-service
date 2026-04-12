@@ -165,11 +165,11 @@ public class AuthService {
             throw new AuthenticationException("New password and confirmation password do not match");
         }
 
-        if (!userService.verifyPassword(request.getOldPassword(), user.getPasswordHash())) {
+        if (!userService.verifyPassword(request.oldPassword(), user.getPasswordHash())) {
             throw new AuthenticationException("Old password is incorrect");
         }
 
-        userService.changePassword(user.getId(), request.getNewPassword());
+        userService.changePassword(user.getId(), request.newPassword());
 
         sessionService.deleteAllUserSessions(user.getId());
     }
