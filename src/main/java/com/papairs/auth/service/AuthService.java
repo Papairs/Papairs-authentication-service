@@ -33,11 +33,11 @@ public class AuthService {
      */
     @Transactional
     public User register(RegisterRequest request) {
-        if (userService.emailExists(request.getEmail())) {
+        if (userService.emailExists(request.email())) {
             throw new UserAlreadyExistsException("Email already registered");
         }
 
-        return userService.createUser(request.getEmail(), request.getPassword())
+        return userService.createUser(request.email(), request.password())
                 .orElseThrow(() -> new AuthenticationException("Failed to create user"));
     }
 
