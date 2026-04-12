@@ -33,7 +33,6 @@ public interface SessionRepository extends JpaRepository<Session, String> {
      * @param userId user ID
      * @return List of sessions for the user
      */
-    @Query("SELECT s FROM Session s WHERE s.userId = :userId")
     List<Session> findByUserId(String userId);
 
     /** Delete a session by its token
@@ -47,12 +46,11 @@ public interface SessionRepository extends JpaRepository<Session, String> {
     /**
      * Delete all sessions for a given user ID
      * @param userId user ID
-     * @return number of rows affected
      */
     @Modifying
     @Transactional
     @Query("DELETE FROM Session s WHERE s.userId = :userId")
-    int deleteByUserId(String userId);
+    void deleteByUserId(String userId);
 
     /**
      * Delete all expired sessions
