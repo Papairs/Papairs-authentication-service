@@ -16,8 +16,8 @@ public class Session {
     @Column(name = "user_id", nullable = false, length = 36)
     private String userId;
 
-    @Column(nullable = false, unique = true)
-    private String token;
+    @Column(name = "token_hash", nullable = false, unique = true)
+    private String tokenHash;
 
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
@@ -48,12 +48,12 @@ public class Session {
         this.userId = userId;
     }
 
-    public String getToken() {
-        return token;
+    public String getTokenHash() {
+        return tokenHash;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setTokenHash(String token) {
+        this.tokenHash = token;
     }
 
     public LocalDateTime getExpiresAt() {

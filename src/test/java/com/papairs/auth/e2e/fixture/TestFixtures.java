@@ -122,7 +122,7 @@ public class TestFixtures {
         
         Session session = new Session();
         session.setUserId(userId);
-        session.setToken(hashedToken);
+        session.setTokenHash(hashedToken);
         session.setExpiresAt(LocalDateTime.now().minusHours(1));
         session.setLastActiveAt(LocalDateTime.now().minusHours(2));
         sessionRepository.save(session);
@@ -230,6 +230,6 @@ public class TestFixtures {
      */
     public boolean sessionExistsByToken(String plaintextToken) {
         String hashedToken = tokenHasher.hash(plaintextToken);
-        return sessionRepository.findByToken(hashedToken).isPresent();
+        return sessionRepository.findByTokenHash(hashedToken).isPresent();
     }
 }

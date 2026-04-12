@@ -42,7 +42,7 @@ public class SessionService {
         Session session = new Session();
         session.setId(UUID.randomUUID().toString());
         session.setUserId(userId);
-        session.setToken(tokenHash);
+        session.setTokenHash(tokenHash);
         session.setExpiresAt(LocalDateTime.now().plusHours(sessionDurationHours));
         session.setCreatedAt(LocalDateTime.now());
         session.setLastActiveAt(LocalDateTime.now());
@@ -65,7 +65,7 @@ public class SessionService {
      * @return Optional<Session> if found, else empty
      */
     public Optional<Session> findByToken(String token) {
-        return sessionRepository.findByToken(tokenHasher.hash(token));
+        return sessionRepository.findByTokenHash(tokenHasher.hash(token));
     }
 
     /**
@@ -91,12 +91,12 @@ public class SessionService {
     }
 
     /**
-     * Delete a session by token (logout)
-     * @param token session token
+     * Delete a session by unhashed token (logout)
+     * @param token unhashed session token
      */
     @Transactional
     public void deleteByToken(String token) {
-        sessionRepository.deleteByToken(tokenHasher.hash(token));
+        sessionRepository.deleteByTokenHash(tokenHasher.hash(token));
     }
 
     /**

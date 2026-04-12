@@ -19,14 +19,14 @@ public interface SessionRepository extends JpaRepository<Session, String> {
      * @param token session token
      * @return Optional<Session> if found, else empty
      */
-    Optional<Session> findByToken(String token);
+    Optional<Session> findByTokenHash(String token);
 
     /**
      * Check if a session with the given token exists
      * @param token session token
      * @return true if exists, else false
      */
-    boolean existsByToken(String token);
+    boolean existsByTokenHash(String token);
 
     /**
      * Find all sessions for a given user ID
@@ -35,13 +35,13 @@ public interface SessionRepository extends JpaRepository<Session, String> {
      */
     List<Session> findByUserId(String userId);
 
-    /** Delete a session by its token
-     * @param token session token
+    /** Delete a session by its hashed token
+     * @param hashedToken session token
      */
     @Modifying
     @Transactional
-    @Query("DELETE FROM Session s WHERE s.token = :token")
-    void deleteByToken(String token);
+    @Query("DELETE FROM Session s WHERE s.tokenHash = :hashedToken")
+    void deleteByTokenHash(String hashedToken);
 
     /**
      * Delete all sessions for a given user ID

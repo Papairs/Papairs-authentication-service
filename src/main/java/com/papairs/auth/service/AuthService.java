@@ -79,7 +79,7 @@ public class AuthService {
 
     /**
      * Logout user by deleting session
-     * @param token session token
+     * @param token unhashed session token
      * Does not throw error if session not found for security reasons
      */
     @Transactional
