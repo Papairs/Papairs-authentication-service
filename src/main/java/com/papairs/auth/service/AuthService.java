@@ -55,14 +55,14 @@ public class AuthService {
      */
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        User user = userService.findByEmail(request.getEmail())
+        User user = userService.findByEmail(request.email())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
         if (!userService.isActive(user)) {
             throw new UserDeactivatedException("Account is deactivated");
         }
 
-        if (!userService.verifyPassword(request.getPassword(), user.getPasswordHash())) {
+        if (!userService.verifyPassword(request.password(), user.getPasswordHash())) {
             throw new AuthenticationException("Invalid credentials");
         }
 
